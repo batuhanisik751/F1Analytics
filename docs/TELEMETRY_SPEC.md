@@ -9,7 +9,7 @@ may not exceed the file ownership stated there.
 
 **v1.8 amendment (2026-09-17, WP-B3).** `GAPFILL_SPEC §4.5` writes six standing rules into this
 file and `GAPFILL_SPEC §3.3` records a refusal against them. The amendment is additive and
-touches six places: **§1.1** (replication is the limit), **§2.1** (the corrected sampling
+touches six places: **§1.1** (replication — and §1.1.1, why it is not the limit), **§2.1** (the corrected sampling
 figures, `derive_version`, and the five v1.8 `lap_corner_speeds` columns), **§3.5** (derived
 columns need a version), **§4.2** (the release metre), **§4.3** (quantisation is not a validity
 floor, the sign test, the repeatability gate), **§4.4** (the trail-braking refusal, recorded in
@@ -136,7 +136,17 @@ introduces a selection step whose defensibility the app would then carry into ev
    standing rule immediately below; it is the reason the v1.8 trail-braking work ships a
    reading and refuses a rating (§4.4).
 
-### SR-5 — Replication is the limit (standing rule, v1.8)
+### SR-5 — Replication is the limit (standing rule, v1.8 — **superseded 2026-09-18, see §1.1.1**)
+
+> **SUPERSEDED. The rule below was v1.8's reading and it was wrong about which term binds.**
+> Replication is *a* limit; it is not *the* limit. §1.1.1 shows the binding constraint is
+> corner-specific execution scatter, which no amount of replication reduces, and which caps a
+> one-lap technique metric at **0.32–0.47** against the 0.70 a rating needs. The v2.0 release
+> that would have lifted the one-lap rule was costed in full and **deliberately not built**.
+> Read §1.1.1 before proposing more laps as a route to a technique skill; it is not one.
+
+The original v1.8 text, kept because the rest of this section's reasoning about the channel and
+the sampling still stands:
 
 > **`selection = 'fastest'` stores exactly one lap per driver per session. A per-lap technique
 > metric therefore has exactly one draw of a quantity whose lap-to-lap SD is as large as its
@@ -166,6 +176,43 @@ download (§3.5: `--force` re-reads the cache and makes zero API calls), and cha
 key story not at all — `lap_number` is already in it. What it does need is a **defensible
 selection rule for laps 2 and 3**, which is the argument §1.1 avoided by choosing "fastest" in
 the first place. That argument is the real work, and it is not v1.8's.
+
+### 1.1.1 The price, paid — and the answer (2026-09-18)
+
+§1.1 above asked a future release to *"price it rather than guess"*. It was priced, and the
+answer is that **the storage was never the problem.**
+
+Three independent architects and three judges (`docs/REPLICATION_SPEC.md`) designed the
+selection rule for laps 2 and 3 using three different variance decompositions that disagree
+with each other by up to 5x, and reached the same verdict unanimously. The diagnostic needs
+only two numbers this project had already measured: the trail-braking repeat correlation is
+**0.286 at one corner** and **0.412 for the driver-lap mean over ~15 corners**. Averaging
+fifteen corners shrinks corner-specific scatter by k while leaving lap- and session-level
+nuisance untouched — so noise concentrated at the lap or session level would have lifted that
+figure far more than 0.286 → 0.412 did. It follows that the variance is **inside the corner**,
+in the driver's own execution, and the corner-level ceiling for a single lap is **0.32–0.47**
+against the 0.70 a rating requires. Storing three laps was predicted to reach **0.36–0.52**.
+
+**No selection rule touches execution scatter.** Every rule considered — fastest-per-run,
+same-segment, same-compound, tyre-age-windowed — attacks the smaller term.
+
+> **Selecting on lap time stabilises lap time and nothing else.** The brake shape on the
+> fastest lap of a run is a single free draw from that driver's distribution, identical in
+> distribution to the draw on the fourth-fastest lap.
+
+There is also a **trap in the obvious rule**, recorded so nobody walks into it: three laps from
+the *same run* share fuel load, tyre age and track state. That shrinks the within-driver
+variance, which is the denominator of the repeat correlation, and would report a metric as
+roughly 50 % more repeatable than a claim about a driver can support. Within-run SD of push-lap
+time is **0.298 s**; between-run is **0.445 s**.
+
+**What replication would still buy, if a future release wants it for this reason alone:** every
+existing corner metric becomes an average rather than a single draw, and SR-5 becomes a
+measurement rather than an inference for *any* future technique metric. Cost: ~1,518 → 3,000–4,600
+`lap_telemetry` rows, ~24,963 → 50,000–75,000 `lap_corner_speeds` rows, a migration widening
+`CHECK (selection IN ('fastest'))`, and re-derivation of every pinned `TRAIL_*` constant. **Zero
+API calls.** That is a legitimate reason to do it. It is not a route to the rating, and a release
+that claims otherwise has not read this section.
 
 ## 1.2 T3 — the session set: 160 sessions, not 178
 
@@ -1282,7 +1329,7 @@ index, not a second copy** — the enforcing section is authoritative.
 | **SR-2** | Never differentiate against distance | **§6.2** | `dv/dx` on native chord samples returns 46–586 m/s². Use ≥ 25 m windows against `time_s` (4–23 m/s²). |
 | **SR-3** | The sign test | **§4.3** | Lower quartile with the wrong sign ⇒ refuse. Keep it computed as an unrendered diagnostic. |
 | **SR-4** | The repeatability gate | **§4.3** | No per-lap technique metric renders as a driver comparison until it passes the pooled sprint-weekend repeat test at a pre-registered threshold. Pool every weekend; one settles nothing. |
-| **SR-5** | Replication is the limit | **§1.1** | `selection = 'fastest'` ⇒ n = 1 per driver-session. A technique *skill* needs 2–3 laps per driver per session. Named; not proposed for v1.8. |
+| **SR-5** | **Replication is NOT the limit — execution scatter is** | **§1.1** | *Revised 2026-09-18.* n = 1 was never the binding constraint. 0.286 at one corner against 0.412 over ~15 corners proves the noise is corner-specific, so averaging laps cannot reach the 0.70 a rating needs: the ceiling is **0.32–0.47**. Costed in full and **deliberately not built**. Do not re-open it as a storage problem. |
 | **SR-6** | Sampling figures corrected | **§2.1** | Lap-wide `max_sample_gap_m` 54.78 m median / 89.72 p95 / **192.69 worst**; mean step 8.04 m; in-zone 4.94 m median (**p95 disputed — see §2.1**). Not "~74 m" and not "73.7–85.7 m". |
 | **SR-7** | Derived columns need a version | **§3.5** | `source_hash` covers the raw channels only. `derive_version` gates every derived column set, and the skip condition compares both. |
 

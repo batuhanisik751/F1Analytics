@@ -766,6 +766,38 @@ here as wrong.**
 | all corners of one lap (driver-lap mean) | **0.412** | still mostly the lap |
 | a driver's whole season (split-half by round parity) | **0.874** | a stable signature — of driver **and car and setup together** |
 
+**THE CEILING — why no amount of replication fixes this (settled 2026-09-18, v2.0 design).**
+The first two rows of that table are not just two measurements; together they bound what this
+metric can ever reach. Averaging ~15 corners shrinks corner-specific execution scatter by k,
+leaves lap- and session-level nuisance untouched (both are common to every corner of a lap), and
+shrinks the driver term only by the across-corner correlation of the driver effect. So if the
+noise lived at the lap or session level, going from one corner to fifteen would have raised the
+repeat correlation a great deal. **It went 0.286 to 0.412.** Solving that system across the full
+plausible range of the driver effect's across-corner correlation:
+
+| across-corner corr. of the driver effect | corner-level ceiling, one lap |
+|---|---|
+| 0.3 | **0.318** |
+| 0.6 | **0.369** |
+| 1.0 (the maximum arithmetically possible) | **0.466** |
+
+**Even if a selection rule eliminated every lap- and session-level nuisance — which none can —
+one lap tops out between 0.32 and 0.47**, against the 0.70 a rating needs. The binding constraint
+is corner-specific execution scatter, and **no selection rule touches it.** It is a fact about
+driving, not a fact about this corpus.
+
+> **Selecting on lap time stabilises lap time and nothing else.** The brake shape on the fastest
+> lap of a run is a single free draw from that driver's brake-shape distribution — identical in
+> distribution to the draw on the fourth-fastest lap. Nothing about being the quickest lap makes
+> the brake shape more typical, more repeatable, or more the driver's.
+
+This was designed out in full (`docs/REPLICATION_SPEC.md`, three independent architects and three
+judges, three variance decompositions disagreeing by up to 5x, unanimous). Storing 2-3 laps per
+driver-session was predicted to reach **0.36-0.52** at n = 3 — fails, not close. **The release was
+costed and deliberately not built.** The replication would still have had a secondary benefit —
+every corner metric becomes an average rather than a single draw — and that remains available at
+2.7x the rows if a future release wants it for that reason. It is not a route to the rating.
+
 The 0.874 is genuinely repeatable and is **still not a driver rating**: one lap per driver per
 session, no mobility variation, and a split by round parity holds the car fixed all season by
 construction. `§4.3` forbids a model laid over telemetry. **The surface therefore aggregates to
@@ -916,7 +948,7 @@ a mixed table and each blank carries its own reason string (§5.2).
 | **Never differentiate against distance** | `§6.2`: never differentiate `speed_kph` against `distance_m` on native samples — it returns 46–586 m/s² (up to 60 g) because chord samples compress in slow chicanes. Use windows of **≥ 25 m against `time_s`**, which yields a physical 4–23 m/s². |
 | **The sign test** | `§4.3`: if a candidate metric's lower quartile has the wrong sign, refuse it. Keep it computed as an unrendered diagnostic so the next release does not re-derive it. |
 | **The repeatability gate** | `§4.3`: no per-lap technique metric may be rendered as a driver comparison until it has passed the pooled sprint-weekend repeat test of §3.3 at a pre-registered threshold. Pool every available paired weekend; one weekend settles nothing. |
-| **Replication is the limit** | `§3.1`: `selection = 'fastest'` stores one lap per driver per session. Any future technique *skill* requires 2–3 representative laps per driver per session. Named, and not proposed for v1.8. |
+| **Replication is NOT the limit** *(revised 2026-09-18)* | `§3.1`: `selection = 'fastest'` stores one lap per driver per session — but v1.8 misread which term binds. §3.4's ceiling argument shows the variance is corner-specific execution scatter, which replication does not reduce; one lap caps at **0.32–0.47** against the 0.70 a rating needs. The release that would have stored 2–3 laps was costed in full and **deliberately not built**. |
 | **Derived columns need a version** | `§3.5`: `source_hash` covers raw channels only; every derived column set is gated by `derive_version` as well. |
 
 ## 4.6 Touch points
