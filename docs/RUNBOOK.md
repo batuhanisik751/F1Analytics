@@ -128,6 +128,47 @@ dev server needs no restart (every page is `force-dynamic`). If FastF1 has no ti
 the session is recorded as `failed` with `no timing data available …` (the race page shows
 *data unavailable* with that text) and retried automatically on the next run.
 
+### Unattended updates (v1.11, 2026-09-18)
+
+`scripts/update_season.py` is the same procedure run by a scheduler, so the nine remaining
+rounds of 2026 land without anybody remembering. It ingests, warms and derives telemetry,
+proves nothing that already existed moved, and refreshes the census baseline.
+
+```bash
+.venv/bin/python scripts/update_season.py --season 2026            # what the scheduler runs
+.venv/bin/python scripts/update_season.py --season 2026 --dry-run  # report, write nothing
+```
+
+Install it (macOS):
+
+```bash
+cp scripts/com.f1analytics.update.plist ~/Library/LaunchAgents/
+launchctl load ~/Library/LaunchAgents/com.f1analytics.update.plist
+```
+
+It runs **daily at 03:20**, not after each race. A race finishes on Sunday afternoon but the
+timing feed lands hours later and is sometimes a day late, so a single Sunday run would miss
+those weekends silently. Daily is self-healing: six days a week it finds nothing and exits in
+seconds, and a session recorded `failed` with *no timing data available* is retried on the next
+run. Watch it with `tail -f output/update_season.log`; stop it with `launchctl unload`.
+
+**It refuses to run rather than risk the corpus.** There must never be two writers — two
+concurrent ingests corrupted four sprint sessions earlier in this project, and a background
+process that outlived its shell widened the telemetry corpus by 42 sessions before anyone
+noticed. So it exits 2 if any other `f1lab` process is alive, and holds an exclusive lock at
+`output/update_season.lock` for the whole run. If a run is killed mid-way, delete that file.
+
+**It will not update the baseline if anything pre-existing changed.** Adding a race must not
+alter one row of a race already stored. The per-session census is compared before and after;
+if a stored session's counts moved, the run reports it and leaves the baseline alone, because
+that is a gate change or a re-derivation, not growth.
+
+**The census guard now permits growth.** `db/trail_census_baseline.json` records each session's
+counts. A session in it must never move again; a session absent from it is new and may add
+whatever it adds. The old check pinned grand totals, which could not tell "a race was ingested"
+from "a gate was quietly loosened" — both make the number rise — and would have failed on every
+race for the rest of the season.
+
 **Re-ingest one round** (both its race and its sprint, regardless of current status):
 
 ```bash

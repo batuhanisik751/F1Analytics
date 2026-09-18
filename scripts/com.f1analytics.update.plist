@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Daily unattended update for F1 Analytics.
+
+  WHY DAILY AND NOT "AFTER EACH RACE": a race finishes Sunday afternoon, but FastF1's timing
+  data lands hours later and is occasionally a day late. A single Sunday-evening run would
+  silently miss those weekends and nobody would notice until a page looked stale. A daily run
+  is self-healing instead: `ingest --season` is idempotent, so on six days a week it finds
+  nothing and exits in seconds, and on the seventh it does the work. A session recorded as
+  `failed` with "no timing data available" is retried automatically on the next run, which is
+  exactly the behaviour a late feed needs.
+
+  03:20 local: after any race anywhere in the world has settled, and while the machine is
+  unlikely to be busy. RunAtLoad is deliberately false -- loading the job should not kick off
+  an ingest while you are working.
+
+  INSTALL (from the project root):
+      cp scripts/com.f1analytics.update.plist ~/Library/LaunchAgents/
+      launchctl load  ~/Library/LaunchAgents/com.f1analytics.update.plist
+
+  CHECK / STOP:
+      launchctl list | grep f1analytics
+      tail -f output/update_season.log
+      launchctl unload ~/Library/LaunchAgents/com.f1analytics.update.plist
+
+  The job needs Docker running (Postgres lives there). If the container is down the run fails
+  cleanly, logs it, and the next day tries again -- it never leaves a half-written corpus,
+  because every session is committed in its own transaction.
+-->
+<plist version="1.0">
+<dict>
+  <key>Label</key>
+  <string>com.f1analytics.update</string>
+
+  <key>ProgramArguments</key>
+  <array>
+    <string>/Users/batuhanisik/Desktop/Projects/F1Analytics/.venv/bin/python</string>
+    <string>/Users/batuhanisik/Desktop/Projects/F1Analytics/scripts/update_season.py</string>
+    <string>--season</string>
+    <string>2026</string>
+  </array>
+
+  <key>WorkingDirectory</key>
+  <string>/Users/batuhanisik/Desktop/Projects/F1Analytics</string>
+
+  <key>EnvironmentVariables</key>
+  <dict>
+    <key>PYTHONPATH</key>
+    <string>/Users/batuhanisik/Desktop/Projects/F1Analytics</string>
+    <key>DATABASE_URL</key>
+    <string>postgres://f1:f1@localhost:5432/f1</string>
+  </dict>
+
+  <key>StartCalendarInterval</key>
+  <dict>
+    <key>Hour</key><integer>3</integer>
+    <key>Minute</key><integer>20</integer>
+  </dict>
+
+  <key>RunAtLoad</key>
+  <false/>
+
+  <!-- Both streams go to one file so the log reads in order. The script appends a dated
+       header per run, so this is a history rather than a snapshot. -->
+  <key>StandardOutPath</key>
+  <string>/Users/batuhanisik/Desktop/Projects/F1Analytics/output/update_season.log</string>
+  <key>StandardErrorPath</key>
+  <string>/Users/batuhanisik/Desktop/Projects/F1Analytics/output/update_season.log</string>
+
+  <!-- A run that somehow hangs must not hold the lock forever and block every later run. -->
+  <key>ExitTimeOut</key>
+  <integer>3600</integer>
+
+  <key>Nice</key>
+  <integer>5</integer>
+</dict>
+</plist>

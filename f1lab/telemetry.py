@@ -1274,6 +1274,23 @@ def closure_from_db(conn, session_id: int, top: int = 6) -> list[dict]:
     return out
 
 
+def trail_census_by_session(conn) -> dict[int, dict[str, int]]:
+    """The §4.3 census split per session, which is what makes the guard survive growth.
+
+    A grand total cannot tell "a new race was ingested" from "a gate was quietly loosened":
+    both make the number go up. Per session it is unambiguous -- an existing session's counts
+    must never move, and a session that did not exist before may add whatever it adds. This is
+    the form `assert_trail_backfill` compares against its baseline (2026-09-18).
+    """
+    out: dict[int, dict[str, int]] = {}
+    with conn.cursor() as cur:
+        cur.execute("SELECT session_id, trail_status, count(*) FROM lap_corner_speeds "
+                    "GROUP BY 1, 2")
+        for sid, status, n in cur.fetchall():
+            out.setdefault(int(sid), {})[status] = int(n)
+    return out
+
+
 def trail_census(conn) -> dict[str, int]:
     """§4.3 -- the Gap B backfill census: one grouped SELECT, no arrays read."""
     out: dict[str, int] = {k: 0 for k in TRAIL_STATUSES}
@@ -1309,11 +1326,69 @@ def assert_trail_backfill(conn) -> dict[str, int]:
         "rows": TRAIL_CORNER_ROWS,
         "laps_at_stale_derive_version": 0,
     }
-    bad = [f"{k}: expected {v}, got {got.get(k)}" for k, v in want.items() if got.get(k) != v]
-    if bad:
+    bad = [f"{k}: expected {v}, got {got.get(k)}" for k, v in want.items()
+           if got.get(k) != v and k != "laps_at_stale_derive_version"]
+    # `laps_at_stale_derive_version` is the one absolute that must hold at ANY corpus size:
+    # it says every stored lap was derived by the current code, which is exactly R1's concern.
+    if got.get("laps_at_stale_derive_version") != 0:
+        raise TelemetryError(
+            f"trail backfill acceptance failed -- laps_at_stale_derive_version: "
+            f"expected 0, got {got.get('laps_at_stale_derive_version')}")
+
+    # The four totals above are a RECORD of a measured corpus, not an invariant, and this is
+    # the distinction that lets the season keep running (2026-09-18). Nine rounds of 2026 are
+    # still to be raced; each one legitimately adds rows, and a grand total cannot tell that
+    # apart from a gate quietly loosening -- both make the number go up. So growth is checked
+    # where it IS unambiguous, per session: every session present in the baseline must have
+    # exactly the counts it had, and a session absent from the baseline may add whatever it
+    # adds. A loosened gate moves an existing session and still fails here; a new race does not.
+    drifted = assert_baseline_sessions_unmoved(conn)
+    if bad and not _baseline_path().exists():
+        # No baseline yet: fall back to the pinned totals, so a fresh checkout still has a gate.
         raise TelemetryError("trail backfill acceptance failed -- " + "; ".join(bad))
-    log.info("trail backfill accepted: %s", json.dumps(got, sort_keys=True))
+    if bad:
+        log.info("trail census differs from the pinned totals by design (corpus grew): %s",
+                 "; ".join(bad))
+    log.info("trail backfill accepted: %s (baseline sessions verified: %d)",
+             json.dumps(got, sort_keys=True), drifted["checked"])
     return got
+
+
+def _baseline_path():
+    from pathlib import Path
+    return Path(__file__).resolve().parents[1] / "db" / "trail_census_baseline.json"
+
+
+def assert_baseline_sessions_unmoved(conn) -> dict:
+    """Every session recorded in the baseline must still have exactly the counts it had.
+
+    This is the half of R1's guard that is a real invariant. The baseline is written by
+    ``scripts/update_season.py`` after it has proved that no pre-existing row changed, so a
+    session enters it only once its numbers are known good. Nothing here forbids growth.
+    """
+    path = _baseline_path()
+    if not path.exists():
+        return {"checked": 0, "note": "no baseline file"}
+    base = json.loads(path.read_text())
+    recorded = {int(k): v for k, v in base.get("sessions", {}).items()}
+    if not recorded:
+        return {"checked": 0, "note": "empty baseline"}
+    live = trail_census_by_session(conn)
+    moved = []
+    for sid, want_counts in recorded.items():
+        got_counts = live.get(sid)
+        if got_counts is None:
+            moved.append(f"session {sid}: present in the baseline, now has no rows")
+            continue
+        for status, n in want_counts.items():
+            if int(got_counts.get(status, 0)) != int(n):
+                moved.append(f"session {sid} {status}: expected {n}, got {got_counts.get(status, 0)}")
+    if moved:
+        raise TelemetryError(
+            "trail census moved on a session that was already measured -- this is a gate change "
+            "or a re-derivation, not growth: " + "; ".join(moved[:6])
+            + (f" (and {len(moved) - 6} more)" if len(moved) > 6 else ""))
+    return {"checked": len(recorded), "new_sessions": len(set(live) - set(recorded))}
 
 
 def _parse_args(argv: list[str] | None) -> argparse.Namespace:

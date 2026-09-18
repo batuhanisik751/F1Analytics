@@ -253,6 +253,13 @@ captured — `warnings.append(f"telemetry: {driver}: {exc}")` — but they land 
 querying a second column that nothing points to. A session that fails wholesale should carry at
 least one representative reason in its own status.
 
+**These three are re-attempted on every unattended run, and that is deliberate.** A missing
+corner reference or a malformed frame can be corrected upstream, so the daily update keeps
+trying rather than blacklisting them. What it does NOT do is report them as a failure every
+day: `scripts/update_season.py` compares the failing set before and after each run, so a
+session that was already failing is a note and a session that *starts* failing is an alert. A
+job that cries wolf daily trains the reader to ignore the one day it matters.
+
 **The remaining 11 of 71** are the 9 rounds of 2026 not yet raced (`warm_telemetry` deliberately
 excludes them: asking the API for a future session costs 4 charged calls and returns
 `DataNotLoadedError`) plus the 2 above. Coverage will reach 69/71 as the season runs.
