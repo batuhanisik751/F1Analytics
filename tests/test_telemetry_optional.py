@@ -472,3 +472,43 @@ def test_every_analytics_status_value_reaching_the_v16_contract_is_a_string(db_c
         "a non-string reached AssumptionsView.analyticsStatus; AssumptionsPanel renders "
         f"these as React children and the whole race page will 500: {bad}"
     )
+
+
+def test_rewrite_after_force_restores_but_never_creates(db_conn):
+    """§2.8 / 2026-09-18 — RESTORE, NEVER CREATE.
+
+    `rewrite_after_force` used to gate on `cache_is_warm` alone, so an `ingest --force` on a
+    session that had never been telemetried CREATED telemetry for it whenever the FastF1
+    artifacts happened to be on disk. They are on disk for far more sessions than have ever
+    been ingested, so a full integration-test run silently widened the corpus -- three
+    sessions and 960 `lap_corner_speeds` rows per run -- under a release whose constants are
+    pinned to an exact row count.
+
+    This asserts the gate directly and touches no FastF1 artifact: with `had_telemetry=False`
+    the function must return without deriving, whatever the cache holds.
+    """
+    from f1lab import telemetry as T
+
+    with db_conn.cursor() as cur:
+        cur.execute("SELECT session_id FROM lap_telemetry LIMIT 1")
+        row = cur.fetchone()
+    assert row is not None, "needs at least one telemetried session"
+    sid = int(row[0])
+    db_conn.rollback()
+
+    # A session that HAS telemetry, told it had none, must still not derive.
+    status: dict = {}
+    payload = T.rewrite_after_force(db_conn, sid, status, had_telemetry=False)
+    db_conn.rollback()
+
+    assert payload["state"] == "absent", payload
+    assert "nothing to restore" in payload["reason"]
+    # Not "dropped": the telemetry tab reads that as "should be here and is missing".
+    assert payload["state"] != "dropped"
+    assert status["telemetry"] == payload
+
+    # And the row count is untouched -- the point of the whole fix.
+    with db_conn.cursor() as cur:
+        cur.execute("SELECT count(*) FROM lap_telemetry")
+        assert int(cur.fetchone()[0]) == 1518, "the pinned corpus moved"
+    db_conn.rollback()

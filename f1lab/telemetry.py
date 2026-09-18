@@ -1127,7 +1127,23 @@ def run_session(conn, session_id: int, *, force: bool = False, cache=None) -> di
     return payload
 
 
-def rewrite_after_force(conn, session_id: int, status: dict | None = None) -> dict:
+def _no_restore(status: dict | None) -> dict:
+    """The session had no telemetry before the force, so it gets none after it.
+
+    Deliberately NOT ``state: "dropped"``: nothing was dropped, and "dropped" is the string
+    the telemetry tab reads as "this should be here and is missing". Absence is the correct
+    and expected state for the ~85 lap-bearing sessions that have never been derived.
+    """
+    payload = {"state": "absent",
+               "reason": "no telemetry stored before this rebuild; nothing to restore. Run "
+                         "`python -m f1lab.telemetry --session <id>` to derive it deliberately."}
+    if status is not None:
+        status["telemetry"] = payload
+    return payload
+
+
+def rewrite_after_force(conn, session_id: int, status: dict | None = None,
+                        had_telemetry: bool | None = None) -> dict:
     """§2.8 — called from the **end of** ``ingest.write_session``, and it can never raise.
 
     An ``ingest --force`` rebuilds ``laps``, and ``lap_telemetry`` cascades from it, so the
@@ -1138,9 +1154,29 @@ def rewrite_after_force(conn, session_id: int, status: dict | None = None) -> di
 
     ``status`` is ``ingest``'s own analytics-status dict, updated in place when given, so
     the caller's single UPDATE carries the telemetry key with everything else.
+
+    ``had_telemetry`` says whether this session HAD stored telemetry immediately before the
+    force dropped it, and the caller must capture it BEFORE ``delete_session_children``,
+    because by the time this runs the rows are already gone inside the transaction.
+
+    RESTORE, NEVER CREATE (2026-09-18). Until now the only gate was ``cache_is_warm``, so an
+    ``ingest --force`` on a session that had never been telemetried CREATED telemetry for it
+    whenever the FastF1 artifacts happened to be on disk — which they are for far more
+    sessions than have ever been ingested. That is not "rewrite after force", it is a silent
+    ingest triggered by an unrelated race rebuild, and it widened the corpus under a release
+    whose constants are pinned to an exact row count: a full integration-test run added three
+    sessions and 960 corner rows every time it ran. A session with no telemetry before the
+    force must have none after it.
     """
     payload: dict
     try:
+        if had_telemetry is None:
+            with conn.cursor() as cur:
+                cur.execute("SELECT EXISTS (SELECT 1 FROM lap_telemetry WHERE session_id = %s)",
+                            (session_id,))
+                had_telemetry = bool(cur.fetchone()[0])
+        if not had_telemetry:
+            return _no_restore(status)
         row = session_row(conn, session_id)
         if not cache_is_warm(row):
             payload = {"state": "dropped", "reason": "FastF1 telemetry artifacts are not "

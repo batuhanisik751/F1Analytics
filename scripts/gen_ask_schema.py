@@ -304,11 +304,30 @@ def describe(entry: dict) -> str:
 
 
 def current_assumption_set(conn) -> int:
+    """The newest assumption set any season was computed under.
+
+    NULLs are excluded, and that is the whole point of the filter (2026-09-18).
+    `season.py` sets a season's `assumption_set_id` to NULL when its races were computed
+    under MORE than one constant set — a legitimate, documented state ("mixed"), reached
+    whenever some rounds have been re-ingested since the constants changed and others have
+    not. Postgres sorts NULL LAST on an ascending order, so the previous `ids[-1]` returned
+    `None` the moment any season went mixed, and `None` was then formatted straight into the
+    worked examples as the SQL literal `None` — `WHERE cd.assumption_set_id = None` — which
+    fails to plan and takes the whole ask-schema generation down with it.
+
+    This is not hypothetical: v1.8 added six MODE2_* constants, so every session re-ingested
+    from then on lands on a new hash while the rest of the corpus keeps the old one. Any
+    partial re-ingest makes a season mixed, and that must not break generation.
+    """
     with conn.cursor() as cur:
-        cur.execute("SELECT DISTINCT assumption_set_id FROM seasons ORDER BY assumption_set_id")
+        cur.execute("SELECT DISTINCT assumption_set_id FROM seasons "
+                    "WHERE assumption_set_id IS NOT NULL ORDER BY assumption_set_id")
         ids = [r[0] for r in cur.fetchall()]
     if not ids:
-        raise SystemExit("no rows in seasons: cannot name the current assumption set")
+        raise SystemExit(
+            "no season carries an assumption_set_id: every season is 'mixed' (its races span "
+            "more than one constant set) or `seasons` is empty. Re-ingest a season under one "
+            "set of constants before generating the ask schema.")
     return ids[-1]
 
 

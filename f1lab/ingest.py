@@ -579,6 +579,14 @@ def write_session(conn, sess: dict, s, fr: Frames, run_id: int, asid: int) -> st
 
     with _committed(conn):
         with conn.cursor() as cur:
+            # Capture this BEFORE delete_session_children: lap_telemetry cascades from laps,
+            # so by the time the telemetry hook runs below the rows are already gone inside
+            # this transaction and it can no longer tell "had telemetry, just dropped it"
+            # from "never had any". Without the distinction a --force on any session with a
+            # warm FastF1 cache silently CREATED telemetry for it (2026-09-18).
+            cur.execute("SELECT EXISTS (SELECT 1 FROM lap_telemetry WHERE session_id = %s)",
+                        (session_id,))
+            had_telemetry = bool(cur.fetchone()[0])
             db.delete_session_children(cur, session_id)
             for table, df in fr.tables.items():
                 db.copy_frame(cur, table, df)
@@ -592,7 +600,8 @@ def write_session(conn, sess: dict, s, fr: Frames, run_id: int, asid: int) -> st
             # session_ingests write below down with it -- which is precisely the demotion R5 forbids
             # -- so it runs inside a SAVEPOINT that is rolled back if it poisoned the transaction.
             cur.execute("SAVEPOINT telemetry_hook")
-            telemetry.rewrite_after_force(conn, session_id, fr.analytics_status)
+            telemetry.rewrite_after_force(conn, session_id, fr.analytics_status,
+                                          had_telemetry=had_telemetry)
             if conn.info.transaction_status == TransactionStatus.INERROR:
                 cur.execute("ROLLBACK TO SAVEPOINT telemetry_hook")
                 fr.analytics_status["telemetry"] = {"state": "dropped",

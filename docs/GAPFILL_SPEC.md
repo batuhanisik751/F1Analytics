@@ -621,11 +621,35 @@ zones). It is kept as the refusal-resistant diagnostic and the audit companion �
 | Lusail | 529 | 89.9 m | 0.9 % |
 | Suzuka | 352 | **123.0 m** | 12.8 % |
 
-Street circuits and slow hairpins sit at the trail-braking end; Suzuka, Lusail and Barcelona sit
-at the other. **Named corners:** Monaco T7 (Grand Hotel hairpin, median apex 67.5 km/h) median
-release-to-apex **−40.5 m**; Monaco T18 (Rascasse, 60 km/h) **−58.3 m**; Monza T2 (Rettifilo
-exit, 71 km/h) **+13.3 m**; Monza T6 (Lesmo 1, 199 km/h) **+28.6 m**. Nothing in the derivation
-knows which circuit it is on.
+**CORRECTED 2026-09-18 — the four named figures below were wrong, and two were wrong in SIGN.**
+The design panel's numbers did not survive the implementation, which re-derived them under §3.1's
+own definition (the release of the **serving** zone, `zones[brake_zone_idx][1]`, which §4.2
+forbids changing and D7 freezes). Measured against the shipped corpus:
+
+| corner | panel said | **measured** | n |
+|---|---|---|---|
+| Monaco T7 (Grand Hotel hairpin, apex 75.5 km/h — not 67.5) | −40.5 m | **+150.8 m** | 16 |
+| Monaco T18 (Rascasse) | −58.3 m | **+188.6 m** | 6 |
+| Monza T2 (Rettifilo exit, 73 km/h) | +13.3 m | **+41.2 m** | 13 |
+| Monza T6 (Lesmo 1, 199 km/h) | +28.6 m | **+31.4 m** | 19 |
+
+**The claim that fell with them.** "Street circuits and slow hairpins sit at the trail-braking
+end" was read off those two negative numbers, and a negative value — brake still on at the apex —
+is what the phrase means. Across the whole corpus, **99.1 % of the 9,409 measured rows are
+positive**: the brake comes off before the apex essentially always. There is no measured
+population of corners at "the trail-braking end", so the sentence is withdrawn rather than
+re-parameterised.
+
+**Why the hairpins come out most positive, which is the opposite of the intuition.** At Grand
+Hotel the serving zone is a long earlier application; the driver releases, coasts ≥ 20 m, and
+brakes **again** into the apex. `brake_release_to_apex_m` measures from the *serving* zone's
+release, so that second application makes the distance large and positive, not negative.
+**17.0 % of measured rows** have `brake = true` somewhere in `(brake_release_m, apex_distance_m]`
+for exactly this reason. The metric is behaving as defined; the expectation was wrong.
+
+`tests/test_telemetry.py::test_monaco_turn_7_does_not_reproduce_the_spec_face_validity_figure`
+asserts the measurement (`median > 100 m`) rather than the expectation, so this disagreement is
+mechanical and cannot be quietly lost. Nothing in the derivation knows which circuit it is on.
 
 **Named laps, cited so they can be re-checked** (detector-anchored cross-check, Monza Q 2026
 `session 16041`, Monaco Q 2026 `session 16023`): Hamilton Monza T2, 313 → 71 km/h over 146.9 m,
@@ -1184,6 +1208,21 @@ No file appears twice. A package may **read** anything; it may **write** only wh
 `f1lab/frames.py` and `scripts/sql/0005_ask_views.sql` are the only files both gaps need. **WP-S1
 holds both and lands once**, after WP-A1 and WP-B1 have specified their column lists and before
 WP-A3/WP-B3 regenerate the ask artefacts. No concurrent edit, ever.
+
+> **CORRECTION 2026-09-18 — this ordering is wrong for WP-B1, and it blocked the release.**
+> `_corner_speeds_frame` builds its DataFrame from `frames.EXPECTED_COLUMNS`, which WP-S1 owns.
+> Sequencing WP-S1 *after* WP-B1 therefore left WP-B1 unable to run its own backfill: a `--force`
+> pass would have COPY'd the 14 pre-v1.8 columns and silently left the five new ones at their DDL
+> default — the exact silent-success failure R1 exists to prevent. WP-B1 correctly **refused to
+> run** and reported `partial`, which is the behaviour the brief asked for and the reason the
+> failure was visible rather than shipped.
+>
+> **The rule this yields, for every future release:** a package that owns a *writer* must land
+> **after** the package that owns the *column list that writer serialises through*, not before.
+> The dependency runs schema → column list → writer, and "shared files land in the middle" is the
+> wrong heuristic whenever one side of the shared file is a write path. Concretely, WP-S1 should
+> have been split: the `frames.EXPECTED_COLUMNS` half belongs immediately after WP-B0, and only
+> the `0005_ask_views.sql` half belongs after the derivation.
 
 ## 6.2 Sequencing
 
