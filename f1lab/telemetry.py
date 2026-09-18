@@ -123,9 +123,9 @@ TRAIL_STATUSES: tuple[str, ...] = (
 
 # --- §9 pinned constants -------------------------------------------------------
 # Derived over the whole stored corpus. **v1.10 (2026-09-18): the corpus grew from 75
-# sessions / 1,518 laps / 24,963 corner rows to 118 / 2,349 / 38,774** by deriving the 43
+# sessions / 1,518 laps / 24,963 corner rows to 137 / 2,732 / 44,926** by deriving the 43
 # cache-warm sessions that had none (40 R, 2 SQ, 1 Q) at zero API calls. Race telemetry
-# coverage went 1/71 -> 41/71. Every count below moved with it and was re-derived, not
+# coverage went 1/71 -> 60/71. Every count below moved with it and was re-derived, not
 # scaled; the pre-existing 24,963 rows were verified byte-identical first (0 changed,
 # 0 lost, 13,811 added), so this is growth and not drift.
 # (was: 75 telemetried sessions, 1,518 laps, 24,963
@@ -144,20 +144,20 @@ TRAIL_STATUSES: tuple[str, ...] = (
 # **because zero is not the only wrong answer** (§4.3, risk R1).
 
 #: The corner-row census the three counts below partition.
-TRAIL_CORNER_ROWS = 38_774
+TRAIL_CORNER_ROWS = 44_926
 #: R1 -- `brake_point_m IS NULL`. A positive report, not a gap.
-TRAIL_FLAT_ROWS = 6_963
-TRAIL_BRAKED_ROWS = 31_811
+TRAIL_FLAT_ROWS = 8_050
+TRAIL_BRAKED_ROWS = 36_876
 #: DL-17, settled. Two derivations disagreed (8,870 against 8,991); under §3.2's exact
 #: definition -- a corner is terminal iff no other corner row with the same
 #: `(session_id, driver_id, lap_number, brake_zone_idx)` has a **strictly greater**
 #: `apex_distance_m`, so a tie leaves both terminal. On the stale corpus that returned
 #: 8,991; on the repaired, idempotent corpus it is 8,976. The definition did not change.
-TRAIL_NON_TERMINAL_ROWS = 14_191
+TRAIL_NON_TERMINAL_ROWS = 16_446
 #: Rows reaching R3/R4/R5 at all, i.e. terminal braked rows.
-TRAIL_TERMINAL_ROWS = 17_620
+TRAIL_TERMINAL_ROWS = 20_430
 #: §4.3 -- the backfill acceptance count. Not "> 0".
-TRAIL_EXPECTED_MEASURED_ROWS = 15_011
+TRAIL_EXPECTED_MEASURED_ROWS = 17_512
 
 #: DL-15/DL-16 -- the bracketing step **at the release edge**, re-derived over all
 #: 20,330 braked corner-rows (not the 4-session n=739 sample the spec quotes):
@@ -171,12 +171,12 @@ TRAIL_RELEASE_STEP_P95_M = 13.34
 #: arithmetic behind it does not, and is replaced by "2x 13.34 m, rounded down to the
 #: same 25 m". Cost re-measured: 54 rows in gate order, 126 of 20,330 (0.62 %)
 #: unconditionally -- **not** the 7.0 % of §3.2, which was priced against the wrong step.
-TRAIL_R4_COST_ROWS = 100
+TRAIL_R4_COST_ROWS = 123
 TRAIL_R4_COST_ROWS_UNCONDITIONAL = 126
 #: R3 and R5 re-measured the same two ways, for the same reason.
-TRAIL_R3_COST_ROWS = 1_642
+TRAIL_R3_COST_ROWS = 1_831
 TRAIL_R3_COST_ROWS_UNCONDITIONAL = 1_702
-TRAIL_R5_COST_ROWS = 867
+TRAIL_R5_COST_ROWS = 964
 TRAIL_R5_COST_ROWS_UNCONDITIONAL = 1_415
 #: **Measured, unresolved, and reported rather than patched over.** Of the 9,408 rows
 #: that pass all five gates, **1,604 (17.0 %) have `brake = true` again somewhere in

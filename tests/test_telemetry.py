@@ -255,7 +255,7 @@ def test_the_pinned_census_partitions_without_remainder():
     assert T.TRAIL_BRAKED_ROWS == T.TRAIL_NON_TERMINAL_ROWS + T.TRAIL_TERMINAL_ROWS
     assert T.TRAIL_TERMINAL_ROWS == (T.TRAIL_EXPECTED_MEASURED_ROWS + T.TRAIL_R3_COST_ROWS
                                      + T.TRAIL_R4_COST_ROWS + T.TRAIL_R5_COST_ROWS)
-    assert T.TRAIL_CORNER_ROWS == 38_774 and T.TRAIL_NON_TERMINAL_ROWS == 14_191
+    assert T.TRAIL_CORNER_ROWS == 44_926 and T.TRAIL_NON_TERMINAL_ROWS == 16_446
     # DL-16: the gate is ~2x the re-derived release-edge p95. If someone re-derives the
     # p95 and leaves the gate alone, or the reverse, this says so.
     assert 1.7 <= T.TRAIL_MAX_RELEASE_STEP_M / T.TRAIL_RELEASE_STEP_P95_M <= 2.3

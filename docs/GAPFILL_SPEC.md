@@ -103,8 +103,10 @@ model, so it is compatible with `TELEMETRY_SPEC §4.3`.
 - **Scope was qualifying. UPDATED 2026-09-18 (v1.10).** When v1.8 shipped, coverage was
   60/71 Q, 14/18 SQ, **1/71 R**, so every brake-shape surface was a qualifying surface and
   said so. Race telemetry has since been derived for the 40 cache-warm race sessions, taking
-  coverage to **60/71 Q, 17/18 SQ, 41/71 R** and the corpus to 118 sessions / 2,349 laps /
-  38,774 corner rows.
+  coverage to **60/71 Q, 17/18 SQ, 60/71 R** and the corpus to 137 sessions / 2,732 laps /
+  44,926 corner rows. Done in two passes: 40 races derived from the warm cache at zero API
+  calls, then 21 more downloaded for 84 charged calls. Two sessions refused and are recorded
+  in `TELEMETRY_SPEC` §1.2; the remaining 9 of 71 are 2026 rounds not yet raced.
 
   **The refusal is unchanged and gets stronger, not weaker, on race laps.** A race lap carries
   traffic, fuel burn across the stint and tyre degradation within it — all of which move a

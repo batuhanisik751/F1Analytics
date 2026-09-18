@@ -229,6 +229,34 @@ and channel stack for races and refuses only the comparison a race lap cannot su
 §6.4). Race sessions get the map, the stack and the corner card — single-driver. They do not
 get a cross-driver delta.
 
+### 1.2.1 Race telemetry, and the two sessions that refused (2026-09-18, v1.10)
+
+§1.2 said races were included "even though qualifying is where a one-lap trace means most".
+Until v1.10 that was aspirational: coverage was **1/71 R**, so the race telemetry tab was empty
+on 70 of 71 race pages. It is now **60/71**, reached in two passes — 40 races derived from the
+already-warm cache at **zero API calls**, then 21 downloaded for **84 charged calls** (~4 per
+session, against the 500/hour limit) and derived.
+
+**Two sessions refused, and both are data rather than process:**
+
+| session | cause | shape |
+|---|---|---|
+| 2026 R14 (**both R and Q**) | `circuit_corners` holds **0 rows** for that circuit, so FastF1 returned no corner reference and `add_marker_distance` had nothing to call | a missing circuit reference — nothing on our side to fix |
+| 2026 R6 R (Monaco) | every one of 21 drivers failed with `"None of ['Date'] are in the columns"` — the merged telemetry frame has no `Date` column | investigated and **not** a truncated download: `car_data` is 58 MB, `position_data` 9.8 MB, and `session_status_data` at 264 bytes is normal (every race is 212-266) |
+
+Both refused rather than storing partial or invented rows, which is the correct behaviour.
+
+**A diagnostic gap this exposed, worth fixing before the next one.** When every driver fails, the
+stored payload records only `"every eligible driver failed (21)"`. The per-driver reasons *are*
+captured — `warnings.append(f"telemetry: {driver}: {exc}")` — but they land in
+`session_ingests.warnings` rather than in the telemetry payload, so diagnosing Monaco meant
+querying a second column that nothing points to. A session that fails wholesale should carry at
+least one representative reason in its own status.
+
+**The remaining 11 of 71** are the 9 rounds of 2026 not yet raced (`warm_telemetry` deliberately
+excludes them: asking the API for a future session costs 4 charged calls and returns
+`DataNotLoadedError`) plus the 2 above. Coverage will reach 69/71 as the season runs.
+
 ## 1.3 T1 — native samples, not a distance grid
 
 The tempting alternative is a uniform distance grid so that two laps align by array index.
