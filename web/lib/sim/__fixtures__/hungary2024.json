@@ -1,0 +1,1648 @@
+{
+ "status": "ok",
+ "model": {
+  "sessionId": 16,
+  "assumptionSetId": 3,
+  "race": {
+   "totalLaps": 70,
+   "refCompound": "HARD",
+   "lapsFit": 1233,
+   "driversFit": 20,
+   "r2": 0.61,
+   "residSdS": 0.756,
+   "residMadS": 0.558,
+   "designCond": 812.0,
+   "evoSPerLap": -0.0043,
+   "evoSe": 0.0013,
+   "paramNames": [
+    "off:MEDIUM",
+    "off:SOFT",
+    "deg:HARD",
+    "deg:MEDIUM",
+    "deg:SOFT",
+    "evo"
+   ],
+   "paramMean": [
+    0.12,
+    0.7,
+    0.084,
+    0.07,
+    0.002,
+    -0.0043
+   ],
+   "paramChol": [
+    0.05,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.11,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.003,
+    0.0,
+    0.0,
+    0.0,
+    -0.002,
+    0.0,
+    0.0,
+    0.005656854,
+    0.0,
+    0.0,
+    0.0,
+    -0.004,
+    0.0,
+    0.0,
+    0.035777088,
+    0.0,
+    0.0,
+    0.0,
+    -0.0006,
+    0.0,
+    0.0,
+    0.001153256
+   ],
+   "fieldDeltaS": [
+    0.0,
+    0.189,
+    -0.243,
+    0.149,
+    -0.253,
+    0.013,
+    0.059,
+    0.135,
+    -0.268,
+    -0.106,
+    -0.269,
+    -0.184,
+    -0.264,
+    -0.2,
+    0.178,
+    -0.276,
+    0.248,
+    -0.275,
+    -0.288,
+    0.115,
+    0.031,
+    -0.148,
+    0.173,
+    0.221,
+    0.207,
+    0.257,
+    0.26,
+    0.145,
+    -0.096,
+    -0.128,
+    -0.122,
+    -0.243,
+    -0.143,
+    -0.133,
+    -0.212,
+    0.211,
+    -0.035,
+    0.004,
+    -0.255,
+    0.275,
+    -0.143,
+    -0.15,
+    -0.295,
+    0.128,
+    -0.048,
+    0.234,
+    -0.235,
+    -0.029,
+    0.117,
+    -0.197,
+    0.208,
+    0.252,
+    0.07,
+    -0.263,
+    -0.002,
+    -0.048,
+    -0.019,
+    -0.169,
+    0.108,
+    0.187,
+    0.192,
+    -0.0,
+    -0.093,
+    -0.262,
+    0.037,
+    -0.215,
+    0.183,
+    -0.291,
+    -0.107,
+    0.155
+   ],
+   "lapStatus": [
+    "G",
+    "G",
+    "G",
+    "G",
+    "G",
+    "G",
+    "G",
+    "G",
+    "G",
+    "G",
+    "G",
+    "G",
+    "G",
+    "G",
+    "G",
+    "G",
+    "G",
+    "G",
+    "G",
+    "G",
+    "G",
+    "G",
+    "G",
+    "G",
+    "G",
+    "G",
+    "G",
+    "G",
+    "G",
+    "G",
+    "G",
+    "G",
+    "G",
+    "G",
+    "G",
+    "G",
+    "G",
+    "G",
+    "G",
+    "G",
+    "G",
+    "G",
+    "G",
+    "G",
+    "G",
+    "G",
+    "G",
+    "G",
+    "G",
+    "G",
+    "G",
+    "G",
+    "G",
+    "G",
+    "G",
+    "G",
+    "G",
+    "G",
+    "G",
+    "G",
+    "G",
+    "G",
+    "G",
+    "G",
+    "G",
+    "G",
+    "G",
+    "G",
+    "G",
+    "G"
+   ],
+   "startPenaltyS": 8.3,
+   "pitLoss": {
+    "medianS": 19.712,
+    "madS": 0.904,
+    "n": 39,
+    "samplesS": [
+     17.755,
+     17.924,
+     17.991,
+     18.223,
+     18.546,
+     18.808,
+     18.82,
+     18.926,
+     18.968,
+     19.017,
+     19.069,
+     19.116,
+     19.238,
+     19.346,
+     19.443,
+     19.452,
+     19.541,
+     19.606,
+     19.702,
+     19.712,
+     19.929,
+     19.955,
+     20.174,
+     20.276,
+     20.561,
+     20.694,
+     20.694,
+     20.893,
+     21.244,
+     21.455,
+     21.665,
+     22.202,
+     22.633,
+     23.026,
+     23.048,
+     23.083,
+     23.705,
+     23.952,
+     24.338
+    ],
+    "source": "race"
+   },
+   "scPitFactor": 0.86,
+   "scPitFactorSource": "pooled",
+   "vscPitFactor": 0.95,
+   "vscPitFactorSource": "pooled",
+   "nScLaps": 0,
+   "nVscLaps": 0,
+   "nRedLaps": 0
+  },
+  "compounds": [
+   {
+    "compound": "HARD",
+    "compoundColour": "#f0f0ec",
+    "laps": 741,
+    "ageMax": 41,
+    "offsetS": 0.0,
+    "offsetSe": 0.0,
+    "degSPerLap": 0.084,
+    "degSe": 0.003,
+    "degRawSPerLap": 0.084,
+    "degNegative": false,
+    "stintTauLevelS": 0.22,
+    "stintTauSlope": 0.045,
+    "stintTauSource": "race",
+    "stintsUsed": 30
+   },
+   {
+    "compound": "MEDIUM",
+    "compoundColour": "#ffd12e",
+    "laps": 458,
+    "ageMax": 27,
+    "offsetS": 0.12,
+    "offsetSe": 0.05,
+    "degSPerLap": 0.07,
+    "degSe": 0.006,
+    "degRawSPerLap": 0.07,
+    "degNegative": false,
+    "stintTauLevelS": 0.25,
+    "stintTauSlope": 0.056,
+    "stintTauSource": "race",
+    "stintsUsed": 18
+   },
+   {
+    "compound": "SOFT",
+    "compoundColour": "#da291c",
+    "laps": 34,
+    "ageMax": 12,
+    "offsetS": 0.7,
+    "offsetSe": 0.11,
+    "degSPerLap": 0.002,
+    "degSe": 0.036,
+    "degRawSPerLap": 0.002,
+    "degNegative": false,
+    "stintTauLevelS": 0.25,
+    "stintTauSlope": 0.04,
+    "stintTauSource": "prior",
+    "stintsUsed": 2
+   }
+  ],
+  "hazard": {
+   "circuitKey": 4,
+   "races": 3,
+   "laps": 204,
+   "scEpisodes": 1,
+   "vscEpisodes": 2,
+   "scHazard": 0.0084,
+   "vscHazard": 0.0109,
+   "scStartP": 0.18,
+   "vscStartP": 0.05,
+   "scDurMean": 5.44,
+   "vscDurMean": 3.62
+  },
+  "drivers": [
+   {
+    "driverId": "piastri",
+    "code": "PIA",
+    "fullName": "Oscar Piastri",
+    "lineStyle": "dashed",
+    "teamId": "mclaren",
+    "teamName": "McLaren",
+    "teamColour": "#ff8000",
+    "position": 1,
+    "lapsFit": 64,
+    "baseS": 80.9939,
+    "baseSe": 0.097,
+    "noiseSdS": 0.436,
+    "lapsCompleted": 70,
+    "dc": {
+     "MEDIUM": {
+      "dcOffsetS": -0.0964,
+      "dcSe": 0.0636,
+      "laps": 37
+     },
+     "HARD": {
+      "dcOffsetS": 0.046,
+      "dcSe": 0.0717,
+      "laps": 27
+     }
+    },
+    "actual": [
+     {
+      "compound": "MEDIUM",
+      "endLap": 18
+     },
+     {
+      "compound": "HARD",
+      "endLap": 47
+     },
+     {
+      "compound": "MEDIUM",
+      "endLap": 70
+     }
+    ],
+    "actualStartAge": 1,
+    "actualPitLaps": [
+     18,
+     47
+    ],
+    "simulable": true,
+    "notSimulableReason": null,
+    "calibration": {
+     "lapsCompleted": 70,
+     "lapsTimed": 70,
+     "lapsModelled": 64,
+     "unmodelledLaps": 1,
+     "stops": 2,
+     "realTotalS": 5881.989,
+     "realTotalFcS": 5776.989,
+     "realFuelS": 105.0,
+     "simTotalFcS": 5769.7721,
+     "misfitRepS": 5.196168,
+     "misfitPitS": 0.577352,
+     "misfitLap1S": 0.866028,
+     "unmodelledS": 0.577352,
+     "badge": "calibrated"
+    }
+   },
+   {
+    "driverId": "norris",
+    "code": "NOR",
+    "fullName": "Lando Norris",
+    "lineStyle": "solid",
+    "teamId": "mclaren",
+    "teamName": "McLaren",
+    "teamColour": "#ff8000",
+    "position": 2,
+    "lapsFit": 64,
+    "baseS": 81.018,
+    "baseSe": 0.114,
+    "noiseSdS": 0.483,
+    "lapsCompleted": 70,
+    "dc": {
+     "MEDIUM": {
+      "dcOffsetS": 0.0007,
+      "dcSe": 0.0697,
+      "laps": 38
+     },
+     "HARD": {
+      "dcOffsetS": 0.0686,
+      "dcSe": 0.0805,
+      "laps": 26
+     }
+    },
+    "actual": [
+     {
+      "compound": "MEDIUM",
+      "endLap": 17
+     },
+     {
+      "compound": "HARD",
+      "endLap": 45
+     },
+     {
+      "compound": "MEDIUM",
+      "endLap": 70
+     }
+    ],
+    "actualStartAge": 1,
+    "actualPitLaps": [
+     17,
+     45
+    ],
+    "simulable": true,
+    "notSimulableReason": null,
+    "calibration": {
+     "lapsCompleted": 70,
+     "lapsTimed": 70,
+     "lapsModelled": 64,
+     "unmodelledLaps": 1,
+     "stops": 2,
+     "realTotalS": 5884.13,
+     "realTotalFcS": 5779.13,
+     "realFuelS": 105.0,
+     "simTotalFcS": 5775.8957,
+     "misfitRepS": 2.328696,
+     "misfitPitS": 0.258744,
+     "misfitLap1S": 0.388116,
+     "unmodelledS": 0.258744,
+     "badge": "calibrated"
+    }
+   },
+   {
+    "driverId": "hamilton",
+    "code": "HAM",
+    "fullName": "Lewis Hamilton",
+    "lineStyle": "solid",
+    "teamId": "mercedes",
+    "teamName": "Mercedes",
+    "teamColour": "#27f4d2",
+    "position": 3,
+    "lapsFit": 64,
+    "baseS": 81.1427,
+    "baseSe": 0.088,
+    "noiseSdS": 0.344,
+    "lapsCompleted": 70,
+    "dc": {
+     "MEDIUM": {
+      "dcOffsetS": -0.0298,
+      "dcSe": 0.0702,
+      "laps": 14
+     },
+     "HARD": {
+      "dcOffsetS": 0.0704,
+      "dcSe": 0.0444,
+      "laps": 50
+     }
+    },
+    "actual": [
+     {
+      "compound": "MEDIUM",
+      "endLap": 16
+     },
+     {
+      "compound": "HARD",
+      "endLap": 40
+     },
+     {
+      "compound": "HARD",
+      "endLap": 70
+     }
+    ],
+    "actualStartAge": 1,
+    "actualPitLaps": [
+     16,
+     40
+    ],
+    "simulable": true,
+    "notSimulableReason": null,
+    "calibration": {
+     "lapsCompleted": 70,
+     "lapsTimed": 70,
+     "lapsModelled": 64,
+     "unmodelledLaps": 1,
+     "stops": 2,
+     "realTotalS": 5896.869,
+     "realTotalFcS": 5791.869,
+     "realFuelS": 105.0,
+     "simTotalFcS": 5788.7313,
+     "misfitRepS": 2.259144,
+     "misfitPitS": 0.251016,
+     "misfitLap1S": 0.376524,
+     "unmodelledS": 0.251016,
+     "badge": "calibrated"
+    }
+   },
+   {
+    "driverId": "leclerc",
+    "code": "LEC",
+    "fullName": "Charles Leclerc",
+    "lineStyle": "solid",
+    "teamId": "ferrari",
+    "teamName": "Ferrari",
+    "teamColour": "#e8002d",
+    "position": 4,
+    "lapsFit": 64,
+    "baseS": 81.208,
+    "baseSe": 0.073,
+    "noiseSdS": 0.428,
+    "lapsCompleted": 70,
+    "dc": {
+     "MEDIUM": {
+      "dcOffsetS": 0.1232,
+      "dcSe": 0.0557,
+      "laps": 49
+     },
+     "HARD": {
+      "dcOffsetS": -0.0386,
+      "dcSe": 0.0856,
+      "laps": 15
+     }
+    },
+    "actual": [
+     {
+      "compound": "MEDIUM",
+      "endLap": 23
+     },
+     {
+      "compound": "HARD",
+      "endLap": 40
+     },
+     {
+      "compound": "MEDIUM",
+      "endLap": 70
+     }
+    ],
+    "actualStartAge": 1,
+    "actualPitLaps": [
+     23,
+     40
+    ],
+    "simulable": true,
+    "notSimulableReason": null,
+    "calibration": {
+     "lapsCompleted": 70,
+     "lapsTimed": 70,
+     "lapsModelled": 64,
+     "unmodelledLaps": 1,
+     "stops": 2,
+     "realTotalS": 5901.675,
+     "realTotalFcS": 5796.675,
+     "realFuelS": 105.0,
+     "simTotalFcS": 5791.7509,
+     "misfitRepS": 3.545352,
+     "misfitPitS": 0.393928,
+     "misfitLap1S": 0.590892,
+     "unmodelledS": 0.393928,
+     "badge": "calibrated"
+    }
+   },
+   {
+    "driverId": "max_verstappen",
+    "code": "VER",
+    "fullName": "Max Verstappen",
+    "lineStyle": "solid",
+    "teamId": "red_bull",
+    "teamName": "Red Bull Racing",
+    "teamColour": "#0600ef",
+    "position": 5,
+    "lapsFit": 64,
+    "baseS": 81.3216,
+    "baseSe": 0.116,
+    "noiseSdS": 0.532,
+    "lapsCompleted": 70,
+    "dc": {
+     "MEDIUM": {
+      "dcOffsetS": -0.029,
+      "dcSe": 0.0768,
+      "laps": 38
+     },
+     "HARD": {
+      "dcOffsetS": 0.0464,
+      "dcSe": 0.0887,
+      "laps": 26
+     }
+    },
+    "actual": [
+     {
+      "compound": "MEDIUM",
+      "endLap": 21
+     },
+     {
+      "compound": "HARD",
+      "endLap": 49
+     },
+     {
+      "compound": "MEDIUM",
+      "endLap": 70
+     }
+    ],
+    "actualStartAge": 1,
+    "actualPitLaps": [
+     21,
+     49
+    ],
+    "simulable": true,
+    "notSimulableReason": null,
+    "calibration": {
+     "lapsCompleted": 70,
+     "lapsTimed": 70,
+     "lapsModelled": 64,
+     "unmodelledLaps": 1,
+     "stops": 2,
+     "realTotalS": 5903.338,
+     "realTotalFcS": 5798.338,
+     "realFuelS": 105.0,
+     "simTotalFcS": 5794.1587,
+     "misfitRepS": 3.009096,
+     "misfitPitS": 0.334344,
+     "misfitLap1S": 0.501516,
+     "unmodelledS": 0.334344,
+     "badge": "calibrated"
+    }
+   },
+   {
+    "driverId": "sainz",
+    "code": "SAI",
+    "fullName": "Carlos Sainz",
+    "lineStyle": "dashed",
+    "teamId": "ferrari",
+    "teamName": "Ferrari",
+    "teamColour": "#e8002d",
+    "position": 6,
+    "lapsFit": 64,
+    "baseS": 81.3085,
+    "baseSe": 0.107,
+    "noiseSdS": 0.467,
+    "lapsCompleted": 70,
+    "dc": {
+     "MEDIUM": {
+      "dcOffsetS": 0.0712,
+      "dcSe": 0.066,
+      "laps": 40
+     },
+     "HARD": {
+      "dcOffsetS": 0.0051,
+      "dcSe": 0.0801,
+      "laps": 24
+     }
+    },
+    "actual": [
+     {
+      "compound": "MEDIUM",
+      "endLap": 21
+     },
+     {
+      "compound": "HARD",
+      "endLap": 47
+     },
+     {
+      "compound": "MEDIUM",
+      "endLap": 70
+     }
+    ],
+    "actualStartAge": 1,
+    "actualPitLaps": [
+     21,
+     47
+    ],
+    "simulable": true,
+    "notSimulableReason": null,
+    "calibration": {
+     "lapsCompleted": 70,
+     "lapsTimed": 70,
+     "lapsModelled": 64,
+     "unmodelledLaps": 1,
+     "stops": 2,
+     "realTotalS": 5905.062,
+     "realTotalFcS": 5800.062,
+     "realFuelS": 105.0,
+     "simTotalFcS": 5795.2239,
+     "misfitRepS": 3.483432,
+     "misfitPitS": 0.387048,
+     "misfitLap1S": 0.580572,
+     "unmodelledS": 0.387048,
+     "badge": "calibrated"
+    }
+   },
+   {
+    "driverId": "perez",
+    "code": "PER",
+    "fullName": "Sergio Perez",
+    "lineStyle": "dashed",
+    "teamId": "red_bull",
+    "teamName": "Red Bull Racing",
+    "teamColour": "#0600ef",
+    "position": 7,
+    "lapsFit": 64,
+    "baseS": 81.6352,
+    "baseSe": 0.098,
+    "noiseSdS": 0.417,
+    "lapsCompleted": 70,
+    "dc": {
+     "HARD": {
+      "dcOffsetS": -0.0398,
+      "dcSe": 0.0695,
+      "laps": 26
+     },
+     "MEDIUM": {
+      "dcOffsetS": -0.0768,
+      "dcSe": 0.0602,
+      "laps": 38
+     }
+    },
+    "actual": [
+     {
+      "compound": "HARD",
+      "endLap": 28
+     },
+     {
+      "compound": "MEDIUM",
+      "endLap": 47
+     },
+     {
+      "compound": "MEDIUM",
+      "endLap": 70
+     }
+    ],
+    "actualStartAge": 1,
+    "actualPitLaps": [
+     28,
+     47
+    ],
+    "simulable": true,
+    "notSimulableReason": null,
+    "calibration": {
+     "lapsCompleted": 70,
+     "lapsTimed": 70,
+     "lapsModelled": 64,
+     "unmodelledLaps": 1,
+     "stops": 2,
+     "realTotalS": 5921.781,
+     "realTotalFcS": 5816.781,
+     "realFuelS": 105.0,
+     "simTotalFcS": 5811.9695,
+     "misfitRepS": 3.46428,
+     "misfitPitS": 0.38492,
+     "misfitLap1S": 0.57738,
+     "unmodelledS": 0.38492,
+     "badge": "calibrated"
+    }
+   },
+   {
+    "driverId": "russell",
+    "code": "RUS",
+    "fullName": "George Russell",
+    "lineStyle": "dashed",
+    "teamId": "mercedes",
+    "teamName": "Mercedes",
+    "teamColour": "#27f4d2",
+    "position": 8,
+    "lapsFit": 64,
+    "baseS": 81.4962,
+    "baseSe": 0.103,
+    "noiseSdS": 0.477,
+    "lapsCompleted": 70,
+    "dc": {
+     "HARD": {
+      "dcOffsetS": 0.0563,
+      "dcSe": 0.0637,
+      "laps": 46
+     },
+     "MEDIUM": {
+      "dcOffsetS": 0.0295,
+      "dcSe": 0.0901,
+      "laps": 18
+     }
+    },
+    "actual": [
+     {
+      "compound": "HARD",
+      "endLap": 33
+     },
+     {
+      "compound": "MEDIUM",
+      "endLap": 53
+     },
+     {
+      "compound": "HARD",
+      "endLap": 70
+     }
+    ],
+    "actualStartAge": 1,
+    "actualPitLaps": [
+     33,
+     53
+    ],
+    "simulable": true,
+    "notSimulableReason": null,
+    "calibration": {
+     "lapsCompleted": 70,
+     "lapsTimed": 70,
+     "lapsModelled": 64,
+     "unmodelledLaps": 1,
+     "stops": 2,
+     "realTotalS": 5924.357,
+     "realTotalFcS": 5819.357,
+     "realFuelS": 105.0,
+     "simTotalFcS": 5814.9885,
+     "misfitRepS": 3.14532,
+     "misfitPitS": 0.34948,
+     "misfitLap1S": 0.52422,
+     "unmodelledS": 0.34948,
+     "badge": "calibrated"
+    }
+   },
+   {
+    "driverId": "tsunoda",
+    "code": "TSU",
+    "fullName": "Yuki Tsunoda",
+    "lineStyle": "solid",
+    "teamId": "rb",
+    "teamName": "RB",
+    "teamColour": "#364aa9",
+    "position": 9,
+    "lapsFit": 66,
+    "baseS": 81.7767,
+    "baseSe": 0.089,
+    "noiseSdS": 0.493,
+    "lapsCompleted": 70,
+    "dc": {
+     "MEDIUM": {
+      "dcOffsetS": -0.0822,
+      "dcSe": 0.081,
+      "laps": 27
+     },
+     "HARD": {
+      "dcOffsetS": -0.0044,
+      "dcSe": 0.0704,
+      "laps": 39
+     }
+    },
+    "actual": [
+     {
+      "compound": "MEDIUM",
+      "endLap": 29
+     },
+     {
+      "compound": "HARD",
+      "endLap": 70
+     }
+    ],
+    "actualStartAge": 1,
+    "actualPitLaps": [
+     29
+    ],
+    "simulable": true,
+    "notSimulableReason": null,
+    "calibration": {
+     "lapsCompleted": 70,
+     "lapsTimed": 70,
+     "lapsModelled": 66,
+     "unmodelledLaps": 1,
+     "stops": 1,
+     "realTotalS": 5959.248,
+     "realTotalFcS": 5854.248,
+     "realFuelS": 105.0,
+     "simTotalFcS": 5838.2463,
+     "misfitRepS": 11.521224,
+     "misfitPitS": 1.280136,
+     "misfitLap1S": 1.920204,
+     "unmodelledS": 1.280136,
+     "badge": "rough"
+    }
+   },
+   {
+    "driverId": "stroll",
+    "code": "STR",
+    "fullName": "Lance Stroll",
+    "lineStyle": "dashed",
+    "teamId": "aston_martin",
+    "teamName": "Aston Martin",
+    "teamColour": "#00665f",
+    "position": 10,
+    "lapsFit": 64,
+    "baseS": 82.0924,
+    "baseSe": 0.071,
+    "noiseSdS": 0.343,
+    "lapsCompleted": 70,
+    "dc": {
+     "SOFT": {
+      "dcOffsetS": -0.0344,
+      "dcSe": 0.0731,
+      "laps": 12
+     },
+     "MEDIUM": {
+      "dcOffsetS": -0.1003,
+      "dcSe": 0.0549,
+      "laps": 29
+     },
+     "HARD": {
+      "dcOffsetS": 0.0227,
+      "dcSe": 0.0597,
+      "laps": 23
+     }
+    },
+    "actual": [
+     {
+      "compound": "SOFT",
+      "endLap": 14
+     },
+     {
+      "compound": "MEDIUM",
+      "endLap": 45
+     },
+     {
+      "compound": "HARD",
+      "endLap": 70
+     }
+    ],
+    "actualStartAge": 4,
+    "actualPitLaps": [
+     14,
+     45
+    ],
+    "simulable": true,
+    "notSimulableReason": null,
+    "calibration": {
+     "lapsCompleted": 70,
+     "lapsTimed": 70,
+     "lapsModelled": 64,
+     "unmodelledLaps": 1,
+     "stops": 2,
+     "realTotalS": 5959.965,
+     "realTotalFcS": 5854.965,
+     "realFuelS": 105.0,
+     "simTotalFcS": 5850.3541,
+     "misfitRepS": 3.319848,
+     "misfitPitS": 0.368872,
+     "misfitLap1S": 0.553308,
+     "unmodelledS": 0.368872,
+     "badge": "calibrated"
+    }
+   },
+   {
+    "driverId": "alonso",
+    "code": "ALO",
+    "fullName": "Fernando Alonso",
+    "lineStyle": "solid",
+    "teamId": "aston_martin",
+    "teamName": "Aston Martin",
+    "teamColour": "#00665f",
+    "position": 11,
+    "lapsFit": 64,
+    "baseS": 81.8538,
+    "baseSe": 0.102,
+    "noiseSdS": 0.451,
+    "lapsCompleted": 70,
+    "dc": {
+     "SOFT": {
+      "dcOffsetS": 0.0324,
+      "dcSe": 0.1164,
+      "laps": 5
+     },
+     "MEDIUM": {
+      "dcOffsetS": 0.0861,
+      "dcSe": 0.0732,
+      "laps": 28
+     },
+     "HARD": {
+      "dcOffsetS": 0.03,
+      "dcSe": 0.0704,
+      "laps": 31
+     }
+    },
+    "actual": [
+     {
+      "compound": "SOFT",
+      "endLap": 7
+     },
+     {
+      "compound": "MEDIUM",
+      "endLap": 37
+     },
+     {
+      "compound": "HARD",
+      "endLap": 70
+     }
+    ],
+    "actualStartAge": 3,
+    "actualPitLaps": [
+     7,
+     37
+    ],
+    "simulable": true,
+    "notSimulableReason": null,
+    "calibration": {
+     "lapsCompleted": 70,
+     "lapsTimed": 70,
+     "lapsModelled": 64,
+     "unmodelledLaps": 1,
+     "stops": 2,
+     "realTotalS": 5964.449,
+     "realTotalFcS": 5859.449,
+     "realFuelS": 105.0,
+     "simTotalFcS": 5852.3113,
+     "misfitRepS": 5.139144,
+     "misfitPitS": 0.571016,
+     "misfitLap1S": 0.856524,
+     "unmodelledS": 0.571016,
+     "badge": "calibrated"
+    }
+   },
+   {
+    "driverId": "ricciardo",
+    "code": "RIC",
+    "fullName": "Daniel Ricciardo",
+    "lineStyle": "dashed",
+    "teamId": "rb",
+    "teamName": "RB",
+    "teamColour": "#364aa9",
+    "position": 12,
+    "lapsFit": 63,
+    "baseS": 82.0843,
+    "baseSe": 0.11,
+    "noiseSdS": 0.561,
+    "lapsCompleted": 69,
+    "dc": {
+     "MEDIUM": {
+      "dcOffsetS": 0.0138,
+      "dcSe": 0.1448,
+      "laps": 5
+     },
+     "HARD": {
+      "dcOffsetS": 0.0726,
+      "dcSe": 0.068,
+      "laps": 58
+     }
+    },
+    "actual": [
+     {
+      "compound": "MEDIUM",
+      "endLap": 7
+     },
+     {
+      "compound": "HARD",
+      "endLap": 28
+     },
+     {
+      "compound": "HARD",
+      "endLap": 69
+     }
+    ],
+    "actualStartAge": 1,
+    "actualPitLaps": [
+     7,
+     28
+    ],
+    "simulable": true,
+    "notSimulableReason": null,
+    "calibration": {
+     "lapsCompleted": 69,
+     "lapsTimed": 69,
+     "lapsModelled": 63,
+     "unmodelledLaps": 1,
+     "stops": 2,
+     "realTotalS": 5899.913,
+     "realTotalFcS": 5794.934429,
+     "realFuelS": 104.978571,
+     "simTotalFcS": 5792.7597,
+     "misfitRepS": 1.565805,
+     "misfitPitS": 0.173978,
+     "misfitLap1S": 0.260967,
+     "unmodelledS": 0.173979,
+     "badge": "calibrated"
+    }
+   },
+   {
+    "driverId": "hulkenberg",
+    "code": "HUL",
+    "fullName": "Nico Hulkenberg",
+    "lineStyle": "dashed",
+    "teamId": "haas",
+    "teamName": "Haas F1 Team",
+    "teamColour": "#b6babd",
+    "position": 13,
+    "lapsFit": 63,
+    "baseS": 82.3003,
+    "baseSe": 0.071,
+    "noiseSdS": 0.326,
+    "lapsCompleted": 69,
+    "dc": {
+     "MEDIUM": {
+      "dcOffsetS": 0.0,
+      "dcSe": 0.1031,
+      "laps": 0
+     },
+     "HARD": {
+      "dcOffsetS": -0.0825,
+      "dcSe": 0.0382,
+      "laps": 63
+     }
+    },
+    "actual": [
+     {
+      "compound": "MEDIUM",
+      "endLap": 2
+     },
+     {
+      "compound": "HARD",
+      "endLap": 29
+     },
+     {
+      "compound": "HARD",
+      "endLap": 69
+     }
+    ],
+    "actualStartAge": 1,
+    "actualPitLaps": [
+     2,
+     29
+    ],
+    "simulable": true,
+    "notSimulableReason": null,
+    "calibration": {
+     "lapsCompleted": 69,
+     "lapsTimed": 69,
+     "lapsModelled": 63,
+     "unmodelledLaps": 1,
+     "stops": 2,
+     "realTotalS": 5915.173,
+     "realTotalFcS": 5810.194429,
+     "realFuelS": 104.978571,
+     "simTotalFcS": 5804.0224,
+     "misfitRepS": 4.443861,
+     "misfitPitS": 0.493762,
+     "misfitLap1S": 0.740643,
+     "unmodelledS": 0.493763,
+     "badge": "calibrated"
+    }
+   },
+   {
+    "driverId": "albon",
+    "code": "ALB",
+    "fullName": "Alexander Albon",
+    "lineStyle": "dashed",
+    "teamId": "williams",
+    "teamName": "Williams",
+    "teamColour": "#00a0dd",
+    "position": 14,
+    "lapsFit": 63,
+    "baseS": 82.4483,
+    "baseSe": 0.106,
+    "noiseSdS": 0.494,
+    "lapsCompleted": 69,
+    "dc": {
+     "SOFT": {
+      "dcOffsetS": -0.0339,
+      "dcSe": 0.132,
+      "laps": 4
+     },
+     "HARD": {
+      "dcOffsetS": -0.1139,
+      "dcSe": 0.0595,
+      "laps": 59
+     }
+    },
+    "actual": [
+     {
+      "compound": "SOFT",
+      "endLap": 6
+     },
+     {
+      "compound": "HARD",
+      "endLap": 29
+     },
+     {
+      "compound": "HARD",
+      "endLap": 69
+     }
+    ],
+    "actualStartAge": 1,
+    "actualPitLaps": [
+     6,
+     29
+    ],
+    "simulable": true,
+    "notSimulableReason": null,
+    "calibration": {
+     "lapsCompleted": 69,
+     "lapsTimed": 69,
+     "lapsModelled": 63,
+     "unmodelledLaps": 1,
+     "stops": 2,
+     "realTotalS": 5918.758,
+     "realTotalFcS": 5813.779429,
+     "realFuelS": 104.978571,
+     "simTotalFcS": 5808.0708,
+     "misfitRepS": 4.110213,
+     "misfitPitS": 0.45669,
+     "misfitLap1S": 0.685035,
+     "unmodelledS": 0.456691,
+     "badge": "calibrated"
+    }
+   },
+   {
+    "driverId": "kevin_magnussen",
+    "code": "MAG",
+    "fullName": "Kevin Magnussen",
+    "lineStyle": "solid",
+    "teamId": "haas",
+    "teamName": "Haas F1 Team",
+    "teamColour": "#b6babd",
+    "position": 15,
+    "lapsFit": 63,
+    "baseS": 82.5926,
+    "baseSe": 0.079,
+    "noiseSdS": 0.448,
+    "lapsCompleted": 69,
+    "dc": {
+     "SOFT": {
+      "dcOffsetS": 0.028,
+      "dcSe": 0.1197,
+      "laps": 4
+     },
+     "HARD": {
+      "dcOffsetS": -0.0291,
+      "dcSe": 0.0539,
+      "laps": 59
+     }
+    },
+    "actual": [
+     {
+      "compound": "SOFT",
+      "endLap": 6
+     },
+     {
+      "compound": "HARD",
+      "endLap": 34
+     },
+     {
+      "compound": "HARD",
+      "endLap": 69
+     }
+    ],
+    "actualStartAge": 1,
+    "actualPitLaps": [
+     6,
+     34
+    ],
+    "simulable": true,
+    "notSimulableReason": null,
+    "calibration": {
+     "lapsCompleted": 69,
+     "lapsTimed": 69,
+     "lapsModelled": 63,
+     "unmodelledLaps": 1,
+     "stops": 2,
+     "realTotalS": 5927.291,
+     "realTotalFcS": 5822.312429,
+     "realFuelS": 104.978571,
+     "simTotalFcS": 5818.7013,
+     "misfitRepS": 2.600013,
+     "misfitPitS": 0.28889,
+     "misfitLap1S": 0.433335,
+     "unmodelledS": 0.288891,
+     "badge": "calibrated"
+    }
+   },
+   {
+    "driverId": "bottas",
+    "code": "BOT",
+    "fullName": "Valtteri Bottas",
+    "lineStyle": "dashed",
+    "teamId": "sauber",
+    "teamName": "Kick Sauber",
+    "teamColour": "#00e700",
+    "position": 16,
+    "lapsFit": 62,
+    "baseS": 82.731,
+    "baseSe": 0.082,
+    "noiseSdS": 0.364,
+    "lapsCompleted": 69,
+    "dc": {
+     "MEDIUM": {
+      "dcOffsetS": -0.078,
+      "dcSe": 0.0743,
+      "laps": 14
+     },
+     "HARD": {
+      "dcOffsetS": 0.1148,
+      "dcSe": 0.0474,
+      "laps": 49
+     }
+    },
+    "actual": [
+     {
+      "compound": "MEDIUM",
+      "endLap": 16
+     },
+     {
+      "compound": "HARD",
+      "endLap": 45
+     },
+     {
+      "compound": "HARD",
+      "endLap": 69
+     }
+    ],
+    "actualStartAge": 2,
+    "actualPitLaps": [
+     16,
+     45
+    ],
+    "simulable": true,
+    "notSimulableReason": null,
+    "calibration": {
+     "lapsCompleted": 69,
+     "lapsTimed": 69,
+     "lapsModelled": 62,
+     "unmodelledLaps": 2,
+     "stops": 2,
+     "realTotalS": 5927.398,
+     "realTotalFcS": 5822.419429,
+     "realFuelS": 104.978571,
+     "simTotalFcS": 5817.5186,
+     "misfitRepS": 3.528597,
+     "misfitPitS": 0.392066,
+     "misfitLap1S": 0.588099,
+     "unmodelledS": 0.392067,
+     "badge": "calibrated"
+    }
+   },
+   {
+    "driverId": "sargeant",
+    "code": "SAR",
+    "fullName": "Logan Sargeant",
+    "lineStyle": "solid",
+    "teamId": "williams",
+    "teamName": "Williams",
+    "teamColour": "#00a0dd",
+    "position": 17,
+    "lapsFit": 61,
+    "baseS": 82.6356,
+    "baseSe": 0.081,
+    "noiseSdS": 0.413,
+    "lapsCompleted": 69,
+    "dc": {
+     "MEDIUM": {
+      "dcOffsetS": -0.0128,
+      "dcSe": 0.1032,
+      "laps": 6
+     },
+     "HARD": {
+      "dcOffsetS": -0.0535,
+      "dcSe": 0.0529,
+      "laps": 51
+     },
+     "SOFT": {
+      "dcOffsetS": 0.0424,
+      "dcSe": 0.1104,
+      "laps": 4
+     }
+    },
+    "actual": [
+     {
+      "compound": "MEDIUM",
+      "endLap": 8
+     },
+     {
+      "compound": "HARD",
+      "endLap": 33
+     },
+     {
+      "compound": "HARD",
+      "endLap": 63
+     },
+     {
+      "compound": "SOFT",
+      "endLap": 69
+     }
+    ],
+    "actualStartAge": 1,
+    "actualPitLaps": [
+     8,
+     33,
+     63
+    ],
+    "simulable": true,
+    "notSimulableReason": null,
+    "calibration": {
+     "lapsCompleted": 69,
+     "lapsTimed": 69,
+     "lapsModelled": 61,
+     "unmodelledLaps": 1,
+     "stops": 3,
+     "realTotalS": 5934.58,
+     "realTotalFcS": 5829.601429,
+     "realFuelS": 104.978571,
+     "simTotalFcS": 5823.1831,
+     "misfitRepS": 4.621197,
+     "misfitPitS": 0.513466,
+     "misfitLap1S": 0.770199,
+     "unmodelledS": 0.513467,
+     "badge": "calibrated"
+    }
+   },
+   {
+    "driverId": "ocon",
+    "code": "OCO",
+    "fullName": "Esteban Ocon",
+    "lineStyle": "dashed",
+    "teamId": "alpine",
+    "teamName": "Alpine",
+    "teamColour": "#ff87bc",
+    "position": 18,
+    "lapsFit": 60,
+    "baseS": 82.6545,
+    "baseSe": 0.093,
+    "noiseSdS": 0.324,
+    "lapsCompleted": 69,
+    "dc": {
+     "MEDIUM": {
+      "dcOffsetS": 0.0138,
+      "dcSe": 0.0866,
+      "laps": 4
+     },
+     "HARD": {
+      "dcOffsetS": -0.0051,
+      "dcSe": 0.0405,
+      "laps": 54
+     },
+     "SOFT": {
+      "dcOffsetS": -0.005,
+      "dcSe": 0.0899,
+      "laps": 3
+     }
+    },
+    "actual": [
+     {
+      "compound": "MEDIUM",
+      "endLap": 6
+     },
+     {
+      "compound": "HARD",
+      "endLap": 30
+     },
+     {
+      "compound": "HARD",
+      "endLap": 64
+     },
+     {
+      "compound": "SOFT",
+      "endLap": 69
+     }
+    ],
+    "actualStartAge": 1,
+    "actualPitLaps": [
+     6,
+     30,
+     64
+    ],
+    "simulable": true,
+    "notSimulableReason": null,
+    "calibration": {
+     "lapsCompleted": 69,
+     "lapsTimed": 69,
+     "lapsModelled": 60,
+     "unmodelledLaps": 2,
+     "stops": 3,
+     "realTotalS": 5942.918,
+     "realTotalFcS": 5837.939429,
+     "realFuelS": 104.978571,
+     "simTotalFcS": 5833.7477,
+     "misfitRepS": 3.018045,
+     "misfitPitS": 0.335338,
+     "misfitLap1S": 0.503007,
+     "unmodelledS": 0.335339,
+     "badge": "calibrated"
+    }
+   },
+   {
+    "driverId": "zhou",
+    "code": "ZHO",
+    "fullName": "Guanyu Zhou",
+    "lineStyle": "solid",
+    "teamId": "sauber",
+    "teamName": "Kick Sauber",
+    "teamColour": "#00e700",
+    "position": 19,
+    "lapsFit": 63,
+    "baseS": 82.9137,
+    "baseSe": 0.106,
+    "noiseSdS": 0.4,
+    "lapsCompleted": 69,
+    "dc": {
+     "MEDIUM": {
+      "dcOffsetS": -0.0158,
+      "dcSe": 0.1033,
+      "laps": 5
+     },
+     "HARD": {
+      "dcOffsetS": -0.0732,
+      "dcSe": 0.0485,
+      "laps": 58
+     }
+    },
+    "actual": [
+     {
+      "compound": "MEDIUM",
+      "endLap": 7
+     },
+     {
+      "compound": "HARD",
+      "endLap": 36
+     },
+     {
+      "compound": "HARD",
+      "endLap": 69
+     }
+    ],
+    "actualStartAge": 2,
+    "actualPitLaps": [
+     7,
+     36
+    ],
+    "simulable": true,
+    "notSimulableReason": null,
+    "calibration": {
+     "lapsCompleted": 69,
+     "lapsTimed": 69,
+     "lapsModelled": 63,
+     "unmodelledLaps": 1,
+     "stops": 2,
+     "realTotalS": 5945.587,
+     "realTotalFcS": 5840.608429,
+     "realFuelS": 104.978571,
+     "simTotalFcS": 5833.1675,
+     "misfitRepS": 5.357469,
+     "misfitPitS": 0.595274,
+     "misfitLap1S": 0.892911,
+     "unmodelledS": 0.595275,
+     "badge": "calibrated"
+    }
+   },
+   {
+    "driverId": "gasly",
+    "code": "GAS",
+    "fullName": "Pierre Gasly",
+    "lineStyle": "solid",
+    "teamId": "alpine",
+    "teamName": "Alpine",
+    "teamColour": "#ff87bc",
+    "position": 20,
+    "lapsFit": 29,
+    "baseS": 82.3691,
+    "baseSe": 0.082,
+    "noiseSdS": 0.57,
+    "lapsCompleted": 33,
+    "dc": {
+     "HARD": {
+      "dcOffsetS": 0.0499,
+      "dcSe": 0.095,
+      "laps": 26
+     },
+     "MEDIUM": {
+      "dcOffsetS": -0.0053,
+      "dcSe": 0.1581,
+      "laps": 3
+     }
+    },
+    "actual": [
+     {
+      "compound": "HARD",
+      "endLap": 28
+     },
+     {
+      "compound": "MEDIUM",
+      "endLap": 33
+     }
+    ],
+    "actualStartAge": 1,
+    "actualPitLaps": [
+     28
+    ],
+    "simulable": true,
+    "notSimulableReason": null,
+    "calibration": {
+     "lapsCompleted": 33,
+     "lapsTimed": 33,
+     "lapsModelled": 29,
+     "unmodelledLaps": 1,
+     "stops": 1,
+     "realTotalS": 2859.255,
+     "realTotalFcS": 2783.590714,
+     "realFuelS": 75.664286,
+     "simTotalFcS": 2777.2186,
+     "misfitRepS": 4.587922,
+     "misfitPitS": 0.509769,
+     "misfitLap1S": 0.764654,
+     "unmodelledS": 0.509769,
+     "badge": "rough"
+    }
+   }
+  ],
+  "unavailable": [],
+  "constants": {
+   "draws": 4000,
+   "seed": 20240101,
+   "kDc": 10,
+   "degFloor": 0.0,
+   "extrapolationLaps": 5,
+   "noiseTDf": 4,
+   "minStintLaps": 2,
+   "maxStops": 4
+  }
+ }
+}

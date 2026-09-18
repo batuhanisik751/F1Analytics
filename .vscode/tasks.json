@@ -1,0 +1,133 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "1. Start Postgres",
+      "type": "shell",
+      "command": "docker compose up -d && docker exec f1-postgres pg_isready -U f1 -d f1",
+      "problemMatcher": [],
+      "presentation": {
+        "reveal": "always",
+        "panel": "dedicated"
+      }
+    },
+    {
+      "label": "2. Start web (http://localhost:3000)",
+      "type": "shell",
+      "command": "npm run dev",
+      "options": {
+        "cwd": "${workspaceFolder}/web"
+      },
+      "isBackground": true,
+      "problemMatcher": [],
+      "presentation": {
+        "reveal": "always",
+        "panel": "dedicated"
+      }
+    },
+    {
+      "label": "Start everything (Postgres + web)",
+      "dependsOrder": "sequence",
+      "dependsOn": [
+        "1. Start Postgres",
+        "2. Start web (http://localhost:3000)"
+      ],
+      "problemMatcher": [],
+      "group": {
+        "kind": "build",
+        "isDefault": true
+      }
+    },
+    {
+      "label": "Stop Postgres",
+      "type": "shell",
+      "command": "docker compose down",
+      "problemMatcher": []
+    },
+    {
+      "label": "psql (open a SQL shell)",
+      "type": "shell",
+      "command": "docker exec -it f1-postgres psql -U f1 -d f1",
+      "problemMatcher": [],
+      "presentation": {
+        "reveal": "always",
+        "panel": "dedicated"
+      }
+    },
+    {
+      "label": "Tests: Python (fast, ~80s)",
+      "type": "shell",
+      "command": "./.venv/bin/pytest -q -m 'not db'",
+      "problemMatcher": []
+    },
+    {
+      "label": "Tests: web",
+      "type": "shell",
+      "command": "npm test",
+      "options": {
+        "cwd": "${workspaceFolder}/web"
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "Check schema contract",
+      "type": "shell",
+      "command": "./.venv/bin/python -m f1lab.ingest --check-schema",
+      "problemMatcher": []
+    },
+    {
+      "label": "Ingest a season (asks which)",
+      "type": "shell",
+      "command": "./.venv/bin/python -m f1lab.ingest --season ${input:season}",
+      "problemMatcher": [],
+      "presentation": {
+        "reveal": "always",
+        "panel": "dedicated"
+      }
+    },
+    {
+      "label": "Verify ask security (32 assertions)",
+      "type": "shell",
+      "command": "printf '%s\\n' \"$ASK_VERIFY_SH\" | bash || ./.venv/bin/python scripts/gen_ask_schema.py --check",
+      "problemMatcher": []
+    },
+    {
+      "label": "Regenerate ask schema doc",
+      "type": "shell",
+      "command": "./.venv/bin/python scripts/gen_ask_schema.py && ./.venv/bin/python scripts/gen_ask_schema.py --check",
+      "problemMatcher": []
+    },
+    {
+      "label": "Tests: Python FULL (~43 min, db included)",
+      "type": "shell",
+      "command": "./.venv/bin/pytest -q",
+      "problemMatcher": [],
+      "presentation": {
+        "reveal": "always",
+        "panel": "dedicated"
+      }
+    },
+    {
+      "label": "Build web (production)",
+      "type": "shell",
+      "command": "npm run build",
+      "options": {
+        "cwd": "${workspaceFolder}/web"
+      },
+      "problemMatcher": []
+    }
+  ],
+  "inputs": [
+    {
+      "id": "season",
+      "type": "pickString",
+      "description": "Season to ingest",
+      "options": [
+        "2024",
+        "2025",
+        "2026"
+      ],
+      "default": "2026"
+    }
+  ]
+}

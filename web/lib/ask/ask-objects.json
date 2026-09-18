@@ -1,0 +1,3372 @@
+{
+  "ask.assumption_sets": [
+    {
+      "col": "assumption_set_id",
+      "type": "int"
+    },
+    {
+      "col": "hash",
+      "type": "text"
+    },
+    {
+      "col": "created_at",
+      "type": "timestamptz"
+    }
+  ],
+  "ask.circuit_corners": [
+    {
+      "col": "circuit_key",
+      "type": "int"
+    },
+    {
+      "col": "year",
+      "type": "int"
+    },
+    {
+      "col": "corner_number",
+      "type": "int"
+    },
+    {
+      "col": "corner_letter",
+      "type": "text"
+    },
+    {
+      "col": "angle_deg",
+      "type": "real"
+    },
+    {
+      "col": "distance_m",
+      "type": "real"
+    }
+  ],
+  "ask.circuit_odi": [
+    {
+      "col": "circuit_key",
+      "type": "int"
+    },
+    {
+      "col": "assumption_set_id",
+      "type": "int"
+    },
+    {
+      "col": "races",
+      "type": "int"
+    },
+    {
+      "col": "passes",
+      "type": "int"
+    },
+    {
+      "col": "opportunities",
+      "type": "int"
+    },
+    {
+      "col": "raw_pass_rate",
+      "type": "float"
+    },
+    {
+      "col": "resid_mean",
+      "type": "float"
+    },
+    {
+      "col": "resid_shrunk",
+      "type": "float"
+    },
+    {
+      "col": "adj_pass_rate",
+      "type": "float"
+    },
+    {
+      "col": "odi",
+      "type": "float"
+    },
+    {
+      "col": "odi_lo",
+      "type": "float"
+    },
+    {
+      "col": "odi_hi",
+      "type": "float"
+    }
+  ],
+  "ask.circuits": [
+    {
+      "col": "circuit_key",
+      "type": "int"
+    },
+    {
+      "col": "short_name",
+      "type": "text"
+    },
+    {
+      "col": "location",
+      "type": "text"
+    },
+    {
+      "col": "country",
+      "type": "text"
+    },
+    {
+      "col": "lap_km",
+      "type": "float"
+    }
+  ],
+  "ask.compound_colours": [
+    {
+      "col": "session_id",
+      "type": "int"
+    },
+    {
+      "col": "compound",
+      "type": "text"
+    },
+    {
+      "col": "colour",
+      "type": "text"
+    }
+  ],
+  "ask.compound_degradation": [
+    {
+      "col": "session_id",
+      "type": "int"
+    },
+    {
+      "col": "assumption_set_id",
+      "type": "int"
+    },
+    {
+      "col": "compound",
+      "type": "text"
+    },
+    {
+      "col": "laps",
+      "type": "int"
+    },
+    {
+      "col": "slope_s_per_lap",
+      "type": "float"
+    },
+    {
+      "col": "intercept_s",
+      "type": "float"
+    },
+    {
+      "col": "x_min",
+      "type": "int"
+    },
+    {
+      "col": "x_max",
+      "type": "int"
+    }
+  ],
+  "ask.constructor_standings": [
+    {
+      "col": "year",
+      "type": "int"
+    },
+    {
+      "col": "after_round",
+      "type": "int"
+    },
+    {
+      "col": "team_id",
+      "type": "text"
+    },
+    {
+      "col": "team_name",
+      "type": "text"
+    },
+    {
+      "col": "team_colour",
+      "type": "text"
+    },
+    {
+      "col": "position",
+      "type": "int"
+    },
+    {
+      "col": "points",
+      "type": "float"
+    },
+    {
+      "col": "wins",
+      "type": "int"
+    },
+    {
+      "col": "podiums",
+      "type": "int"
+    }
+  ],
+  "ask.data_coverage": [
+    {
+      "col": "year",
+      "type": "int"
+    },
+    {
+      "col": "sessions_ok",
+      "type": "bigint"
+    },
+    {
+      "col": "sessions_partial",
+      "type": "bigint"
+    },
+    {
+      "col": "first_round",
+      "type": "int"
+    },
+    {
+      "col": "last_round",
+      "type": "int"
+    }
+  ],
+  "ask.degradation_fits": [
+    {
+      "col": "session_id",
+      "type": "int"
+    },
+    {
+      "col": "assumption_set_id",
+      "type": "int"
+    },
+    {
+      "col": "driver_id",
+      "type": "text"
+    },
+    {
+      "col": "stint",
+      "type": "int"
+    },
+    {
+      "col": "team_id",
+      "type": "text"
+    },
+    {
+      "col": "compound",
+      "type": "text"
+    },
+    {
+      "col": "laps",
+      "type": "int"
+    },
+    {
+      "col": "deg_s_per_lap",
+      "type": "float"
+    },
+    {
+      "col": "deg_std_err",
+      "type": "float"
+    },
+    {
+      "col": "r2",
+      "type": "float"
+    },
+    {
+      "col": "fresh_pace_s",
+      "type": "float"
+    }
+  ],
+  "ask.driver_index": [
+    {
+      "col": "driver_id",
+      "type": "text"
+    },
+    {
+      "col": "latest_code",
+      "type": "text"
+    },
+    {
+      "col": "full_name",
+      "type": "text"
+    },
+    {
+      "col": "first_name",
+      "type": "text"
+    },
+    {
+      "col": "last_name",
+      "type": "text"
+    },
+    {
+      "col": "country_code",
+      "type": "text"
+    }
+  ],
+  "ask.driver_season_summary": [
+    {
+      "col": "year",
+      "type": "int"
+    },
+    {
+      "col": "driver_id",
+      "type": "text"
+    },
+    {
+      "col": "assumption_set_id",
+      "type": "int"
+    },
+    {
+      "col": "team_id",
+      "type": "text"
+    },
+    {
+      "col": "team_name",
+      "type": "text"
+    },
+    {
+      "col": "team_colour",
+      "type": "text"
+    },
+    {
+      "col": "races",
+      "type": "int"
+    },
+    {
+      "col": "points",
+      "type": "float"
+    },
+    {
+      "col": "wins",
+      "type": "int"
+    },
+    {
+      "col": "podiums",
+      "type": "int"
+    },
+    {
+      "col": "dnfs",
+      "type": "int"
+    },
+    {
+      "col": "championship_position",
+      "type": "int"
+    },
+    {
+      "col": "best_finish",
+      "type": "int"
+    },
+    {
+      "col": "avg_finish",
+      "type": "float"
+    },
+    {
+      "col": "avg_grid",
+      "type": "float"
+    },
+    {
+      "col": "mean_pace_rank",
+      "type": "float"
+    },
+    {
+      "col": "races_ranked",
+      "type": "int"
+    }
+  ],
+  "ask.driver_standings": [
+    {
+      "col": "year",
+      "type": "int"
+    },
+    {
+      "col": "after_round",
+      "type": "int"
+    },
+    {
+      "col": "driver_id",
+      "type": "text"
+    },
+    {
+      "col": "team_id",
+      "type": "text"
+    },
+    {
+      "col": "team_name",
+      "type": "text"
+    },
+    {
+      "col": "team_colour",
+      "type": "text"
+    },
+    {
+      "col": "position",
+      "type": "int"
+    },
+    {
+      "col": "points",
+      "type": "float"
+    },
+    {
+      "col": "sprint_points",
+      "type": "float"
+    },
+    {
+      "col": "wins",
+      "type": "int"
+    },
+    {
+      "col": "podiums",
+      "type": "int"
+    },
+    {
+      "col": "races",
+      "type": "int"
+    }
+  ],
+  "ask.drivers": [
+    {
+      "col": "driver_id",
+      "type": "text"
+    },
+    {
+      "col": "latest_code",
+      "type": "text"
+    },
+    {
+      "col": "latest_number",
+      "type": "text"
+    },
+    {
+      "col": "first_name",
+      "type": "text"
+    },
+    {
+      "col": "last_name",
+      "type": "text"
+    },
+    {
+      "col": "full_name",
+      "type": "text"
+    },
+    {
+      "col": "country_code",
+      "type": "text"
+    },
+    {
+      "col": "headshot_url",
+      "type": "text"
+    }
+  ],
+  "ask.events": [
+    {
+      "col": "year",
+      "type": "int"
+    },
+    {
+      "col": "round",
+      "type": "int"
+    },
+    {
+      "col": "event_name",
+      "type": "text"
+    },
+    {
+      "col": "official_name",
+      "type": "text"
+    },
+    {
+      "col": "location",
+      "type": "text"
+    },
+    {
+      "col": "country",
+      "type": "text"
+    },
+    {
+      "col": "event_format",
+      "type": "text"
+    },
+    {
+      "col": "event_date",
+      "type": "date"
+    },
+    {
+      "col": "circuit_key",
+      "type": "int"
+    }
+  ],
+  "ask.fuel_sensitivity": [
+    {
+      "col": "session_id",
+      "type": "int"
+    },
+    {
+      "col": "assumption_set_id",
+      "type": "int"
+    },
+    {
+      "col": "driver_id",
+      "type": "text"
+    },
+    {
+      "col": "fuel_effect_s_per_kg",
+      "type": "float"
+    },
+    {
+      "col": "rank",
+      "type": "int"
+    },
+    {
+      "col": "gap_s",
+      "type": "float"
+    }
+  ],
+  "ask.lap_corner_speeds": [
+    {
+      "col": "session_id",
+      "type": "int"
+    },
+    {
+      "col": "driver_id",
+      "type": "text"
+    },
+    {
+      "col": "lap_number",
+      "type": "int"
+    },
+    {
+      "col": "corner_number",
+      "type": "int"
+    },
+    {
+      "col": "corner_letter",
+      "type": "text"
+    },
+    {
+      "col": "apex_speed_kph",
+      "type": "int"
+    },
+    {
+      "col": "apex_distance_m",
+      "type": "real"
+    },
+    {
+      "col": "entry_speed_kph",
+      "type": "int"
+    },
+    {
+      "col": "exit_speed_kph",
+      "type": "int"
+    },
+    {
+      "col": "brake_zone_idx",
+      "type": "int"
+    },
+    {
+      "col": "brake_point_m",
+      "type": "real"
+    },
+    {
+      "col": "brake_distance_m",
+      "type": "real"
+    },
+    {
+      "col": "throttle_point_m",
+      "type": "real"
+    },
+    {
+      "col": "time_in_corner_s",
+      "type": "real"
+    },
+    {
+      "col": "brake_release_m",
+      "type": "real"
+    },
+    {
+      "col": "brake_release_to_apex_m",
+      "type": "real"
+    },
+    {
+      "col": "brake_on_distance_m",
+      "type": "real"
+    },
+    {
+      "col": "trail_status",
+      "type": "text"
+    }
+  ],
+  "ask.lap_status": [
+    {
+      "col": "session_id",
+      "type": "int"
+    },
+    {
+      "col": "lap_number",
+      "type": "int"
+    },
+    {
+      "col": "is_green",
+      "type": "bool"
+    },
+    {
+      "col": "worst_status",
+      "type": "text"
+    },
+    {
+      "col": "drivers_affected",
+      "type": "int"
+    },
+    {
+      "col": "drivers_on_lap",
+      "type": "int"
+    }
+  ],
+  "ask.lap_telemetry_summary": [
+    {
+      "col": "session_id",
+      "type": "int"
+    },
+    {
+      "col": "driver_id",
+      "type": "text"
+    },
+    {
+      "col": "lap_number",
+      "type": "int"
+    },
+    {
+      "col": "top_speed_kph",
+      "type": "int"
+    },
+    {
+      "col": "min_speed_kph",
+      "type": "int"
+    },
+    {
+      "col": "full_throttle_pct",
+      "type": "real"
+    },
+    {
+      "col": "brake_pct",
+      "type": "real"
+    },
+    {
+      "col": "lift_pct",
+      "type": "real"
+    },
+    {
+      "col": "overlap_pct",
+      "type": "real"
+    },
+    {
+      "col": "n_brake_zones",
+      "type": "int"
+    },
+    {
+      "col": "n_gear_changes",
+      "type": "int"
+    },
+    {
+      "col": "drs_distance_m",
+      "type": "real"
+    },
+    {
+      "col": "track_length_m",
+      "type": "real"
+    },
+    {
+      "col": "n_samples",
+      "type": "int"
+    },
+    {
+      "col": "max_sample_gap_m",
+      "type": "real"
+    }
+  ],
+  "ask.laps": [
+    {
+      "col": "session_id",
+      "type": "int"
+    },
+    {
+      "col": "driver_id",
+      "type": "text"
+    },
+    {
+      "col": "lap_number",
+      "type": "int"
+    },
+    {
+      "col": "stint",
+      "type": "int"
+    },
+    {
+      "col": "compound",
+      "type": "text"
+    },
+    {
+      "col": "tyre_life",
+      "type": "int"
+    },
+    {
+      "col": "fresh_tyre",
+      "type": "bool"
+    },
+    {
+      "col": "position",
+      "type": "int"
+    },
+    {
+      "col": "track_status",
+      "type": "text"
+    },
+    {
+      "col": "lap_time_s",
+      "type": "float"
+    },
+    {
+      "col": "session_time_s",
+      "type": "float"
+    },
+    {
+      "col": "lap_start_time_s",
+      "type": "float"
+    },
+    {
+      "col": "sector1_s",
+      "type": "float"
+    },
+    {
+      "col": "sector2_s",
+      "type": "float"
+    },
+    {
+      "col": "sector3_s",
+      "type": "float"
+    },
+    {
+      "col": "speed_i1",
+      "type": "real"
+    },
+    {
+      "col": "speed_i2",
+      "type": "real"
+    },
+    {
+      "col": "speed_fl",
+      "type": "real"
+    },
+    {
+      "col": "speed_st",
+      "type": "real"
+    },
+    {
+      "col": "pit_in_time_s",
+      "type": "float"
+    },
+    {
+      "col": "pit_out_time_s",
+      "type": "float"
+    },
+    {
+      "col": "is_accurate",
+      "type": "bool"
+    },
+    {
+      "col": "deleted",
+      "type": "bool"
+    },
+    {
+      "col": "deleted_reason",
+      "type": "text"
+    },
+    {
+      "col": "fastf1_generated",
+      "type": "bool"
+    },
+    {
+      "col": "is_personal_best",
+      "type": "bool"
+    },
+    {
+      "col": "excl_no_time",
+      "type": "bool"
+    },
+    {
+      "col": "excl_in_lap",
+      "type": "bool"
+    },
+    {
+      "col": "excl_out_lap",
+      "type": "bool"
+    },
+    {
+      "col": "excl_not_green",
+      "type": "bool"
+    },
+    {
+      "col": "excl_inaccurate",
+      "type": "bool"
+    },
+    {
+      "col": "excl_deleted",
+      "type": "bool"
+    },
+    {
+      "col": "passes_rules",
+      "type": "bool"
+    },
+    {
+      "col": "is_outlier",
+      "type": "bool"
+    },
+    {
+      "col": "is_representative",
+      "type": "bool"
+    },
+    {
+      "col": "fuel_kg",
+      "type": "float"
+    },
+    {
+      "col": "fuel_penalty_s",
+      "type": "float"
+    },
+    {
+      "col": "lap_time_fc_s",
+      "type": "float"
+    },
+    {
+      "col": "gap_to_leader_s",
+      "type": "float"
+    },
+    {
+      "col": "interval_s",
+      "type": "float"
+    },
+    {
+      "col": "leader_driver_id",
+      "type": "text"
+    },
+    {
+      "col": "quali_segment",
+      "type": "int"
+    },
+    {
+      "col": "segment_source",
+      "type": "text"
+    },
+    {
+      "col": "is_push_lap",
+      "type": "bool"
+    },
+    {
+      "col": "excl_disallowed",
+      "type": "bool"
+    },
+    {
+      "col": "deleted_inferred",
+      "type": "bool"
+    }
+  ],
+  "ask.mode2_car_hazard": [
+    {
+      "col": "fit_id",
+      "type": "int"
+    },
+    {
+      "col": "assumption_set_id",
+      "type": "int"
+    },
+    {
+      "col": "team_id",
+      "type": "text"
+    },
+    {
+      "col": "year",
+      "type": "int"
+    },
+    {
+      "col": "retirements",
+      "type": "int"
+    },
+    {
+      "col": "racing_laps",
+      "type": "int"
+    },
+    {
+      "col": "hazard_per_1000",
+      "type": "float"
+    },
+    {
+      "col": "hazard_lo",
+      "type": "float"
+    },
+    {
+      "col": "hazard_hi",
+      "type": "float"
+    },
+    {
+      "col": "hazard_car_only",
+      "type": "float"
+    },
+    {
+      "col": "hazard_car_lo",
+      "type": "float"
+    },
+    {
+      "col": "hazard_car_hi",
+      "type": "float"
+    },
+    {
+      "col": "rank_in_season",
+      "type": "int"
+    },
+    {
+      "col": "sufficient",
+      "type": "bool"
+    }
+  ],
+  "ask.mode2_car_rating": [
+    {
+      "col": "fit_id",
+      "type": "int"
+    },
+    {
+      "col": "assumption_set_id",
+      "type": "int"
+    },
+    {
+      "col": "team_id",
+      "type": "text"
+    },
+    {
+      "col": "year",
+      "type": "int"
+    },
+    {
+      "col": "gamma_pp",
+      "type": "float"
+    },
+    {
+      "col": "gamma_lo",
+      "type": "float"
+    },
+    {
+      "col": "gamma_hi",
+      "type": "float"
+    },
+    {
+      "col": "slope_pp",
+      "type": "float"
+    },
+    {
+      "col": "slope_lo",
+      "type": "float"
+    },
+    {
+      "col": "slope_hi",
+      "type": "float"
+    },
+    {
+      "col": "start_pp",
+      "type": "float"
+    },
+    {
+      "col": "end_pp",
+      "type": "float"
+    },
+    {
+      "col": "slope_significant",
+      "type": "bool"
+    },
+    {
+      "col": "rank_in_season",
+      "type": "int"
+    },
+    {
+      "col": "component_id",
+      "type": "text"
+    },
+    {
+      "col": "basis",
+      "type": "text"
+    },
+    {
+      "col": "n_races",
+      "type": "int"
+    }
+  ],
+  "ask.mode2_career_season": [
+    {
+      "col": "fit_id",
+      "type": "int"
+    },
+    {
+      "col": "assumption_set_id",
+      "type": "int"
+    },
+    {
+      "col": "driver_id",
+      "type": "text"
+    },
+    {
+      "col": "year",
+      "type": "int"
+    },
+    {
+      "col": "team_id",
+      "type": "text"
+    },
+    {
+      "col": "actual_points",
+      "type": "float"
+    },
+    {
+      "col": "replay_points",
+      "type": "float"
+    },
+    {
+      "col": "replay_lo",
+      "type": "float"
+    },
+    {
+      "col": "replay_hi",
+      "type": "float"
+    },
+    {
+      "col": "avg_driver_points",
+      "type": "float"
+    },
+    {
+      "col": "avg_driver_p10",
+      "type": "float"
+    },
+    {
+      "col": "avg_driver_p90",
+      "type": "float"
+    },
+    {
+      "col": "contribution",
+      "type": "float"
+    },
+    {
+      "col": "contribution_lo",
+      "type": "float"
+    },
+    {
+      "col": "contribution_hi",
+      "type": "float"
+    },
+    {
+      "col": "mc_stderr",
+      "type": "float"
+    },
+    {
+      "col": "param_stderr",
+      "type": "float"
+    },
+    {
+      "col": "calibration_mae",
+      "type": "float"
+    },
+    {
+      "col": "basis",
+      "type": "text"
+    },
+    {
+      "col": "anchor_class",
+      "type": "text"
+    },
+    {
+      "col": "rounds_in_season",
+      "type": "int"
+    },
+    {
+      "col": "starts",
+      "type": "int"
+    },
+    {
+      "col": "teams",
+      "type": "text"
+    }
+  ],
+  "ask.mode2_component": [
+    {
+      "col": "fit_id",
+      "type": "int"
+    },
+    {
+      "col": "assumption_set_id",
+      "type": "int"
+    },
+    {
+      "col": "component_id",
+      "type": "text"
+    },
+    {
+      "col": "label",
+      "type": "text"
+    },
+    {
+      "col": "n_drivers",
+      "type": "int"
+    },
+    {
+      "col": "n_cells",
+      "type": "int"
+    },
+    {
+      "col": "is_floating",
+      "type": "bool"
+    },
+    {
+      "col": "driver_ids",
+      "type": "text[]"
+    },
+    {
+      "col": "cell_ids",
+      "type": "text[]"
+    }
+  ],
+  "ask.mode2_counterfactual": [
+    {
+      "col": "fit_id",
+      "type": "int"
+    },
+    {
+      "col": "assumption_set_id",
+      "type": "int"
+    },
+    {
+      "col": "year",
+      "type": "int"
+    },
+    {
+      "col": "driver_id",
+      "type": "text"
+    },
+    {
+      "col": "team_id",
+      "type": "text"
+    },
+    {
+      "col": "replaced_driver_id",
+      "type": "text"
+    },
+    {
+      "col": "observed",
+      "type": "bool"
+    },
+    {
+      "col": "points_p10",
+      "type": "float"
+    },
+    {
+      "col": "points_p50",
+      "type": "float"
+    },
+    {
+      "col": "points_p90",
+      "type": "float"
+    },
+    {
+      "col": "incumbent_actual",
+      "type": "float"
+    },
+    {
+      "col": "delta_p10",
+      "type": "float"
+    },
+    {
+      "col": "delta_p50",
+      "type": "float"
+    },
+    {
+      "col": "delta_p90",
+      "type": "float"
+    },
+    {
+      "col": "basis",
+      "type": "text"
+    },
+    {
+      "col": "cross_component",
+      "type": "bool"
+    },
+    {
+      "col": "interaction_pp",
+      "type": "float"
+    },
+    {
+      "col": "calibration_mae",
+      "type": "float"
+    }
+  ],
+  "ask.mode2_driver_contrast": [
+    {
+      "col": "fit_id",
+      "type": "int"
+    },
+    {
+      "col": "assumption_set_id",
+      "type": "int"
+    },
+    {
+      "col": "driver_a",
+      "type": "text"
+    },
+    {
+      "col": "driver_b",
+      "type": "text"
+    },
+    {
+      "col": "kind",
+      "type": "text"
+    },
+    {
+      "col": "delta_pp",
+      "type": "float"
+    },
+    {
+      "col": "delta_se",
+      "type": "float"
+    },
+    {
+      "col": "delta_lo",
+      "type": "float"
+    },
+    {
+      "col": "delta_hi",
+      "type": "float"
+    },
+    {
+      "col": "same_component",
+      "type": "bool"
+    },
+    {
+      "col": "shared_cells",
+      "type": "text[]"
+    },
+    {
+      "col": "n_shared_races",
+      "type": "int"
+    },
+    {
+      "col": "n_races_a",
+      "type": "int"
+    },
+    {
+      "col": "n_races_b",
+      "type": "int"
+    }
+  ],
+  "ask.mode2_driver_rating": [
+    {
+      "col": "fit_id",
+      "type": "int"
+    },
+    {
+      "col": "assumption_set_id",
+      "type": "int"
+    },
+    {
+      "col": "driver_id",
+      "type": "text"
+    },
+    {
+      "col": "rating_pp",
+      "type": "float"
+    },
+    {
+      "col": "rating_lo",
+      "type": "float"
+    },
+    {
+      "col": "rating_hi",
+      "type": "float"
+    },
+    {
+      "col": "sd_within",
+      "type": "float"
+    },
+    {
+      "col": "sd_island",
+      "type": "float"
+    },
+    {
+      "col": "sd_total",
+      "type": "float"
+    },
+    {
+      "col": "frac_floating",
+      "type": "float"
+    },
+    {
+      "col": "evidence_share",
+      "type": "float"
+    },
+    {
+      "col": "anchor_class",
+      "type": "text"
+    },
+    {
+      "col": "basis",
+      "type": "text"
+    },
+    {
+      "col": "component_id",
+      "type": "text"
+    },
+    {
+      "col": "rank_in_component",
+      "type": "int"
+    },
+    {
+      "col": "n_races",
+      "type": "int"
+    },
+    {
+      "col": "n_cells",
+      "type": "int"
+    },
+    {
+      "col": "n_races_excluded",
+      "type": "int"
+    }
+  ],
+  "ask.mode2_driver_rating_history": [
+    {
+      "col": "fit_id",
+      "type": "int"
+    },
+    {
+      "col": "assumption_set_id",
+      "type": "int"
+    },
+    {
+      "col": "driver_id",
+      "type": "text"
+    },
+    {
+      "col": "through_year",
+      "type": "int"
+    },
+    {
+      "col": "rating_pp",
+      "type": "float"
+    },
+    {
+      "col": "rating_lo",
+      "type": "float"
+    },
+    {
+      "col": "rating_hi",
+      "type": "float"
+    },
+    {
+      "col": "sd_total",
+      "type": "float"
+    },
+    {
+      "col": "anchor_class",
+      "type": "text"
+    },
+    {
+      "col": "n_races_cumulative",
+      "type": "int"
+    },
+    {
+      "col": "switched_this_year",
+      "type": "bool"
+    }
+  ],
+  "ask.mode2_driver_skill": [
+    {
+      "col": "fit_id",
+      "type": "int"
+    },
+    {
+      "col": "assumption_set_id",
+      "type": "int"
+    },
+    {
+      "col": "driver_id",
+      "type": "text"
+    },
+    {
+      "col": "skill",
+      "type": "text"
+    },
+    {
+      "col": "measured",
+      "type": "bool"
+    },
+    {
+      "col": "value",
+      "type": "float"
+    },
+    {
+      "col": "value_lo",
+      "type": "float"
+    },
+    {
+      "col": "value_hi",
+      "type": "float"
+    },
+    {
+      "col": "unit",
+      "type": "text"
+    },
+    {
+      "col": "evidence_share",
+      "type": "float"
+    },
+    {
+      "col": "anchor_class",
+      "type": "text"
+    },
+    {
+      "col": "pct_field_below",
+      "type": "float"
+    },
+    {
+      "col": "not_measured_reason",
+      "type": "text"
+    },
+    {
+      "col": "n_obs",
+      "type": "int"
+    }
+  ],
+  "ask.mode2_points_calib": [
+    {
+      "col": "fit_id",
+      "type": "int"
+    },
+    {
+      "col": "assumption_set_id",
+      "type": "int"
+    },
+    {
+      "col": "year",
+      "type": "int"
+    },
+    {
+      "col": "slope_theta_per_pp",
+      "type": "float"
+    },
+    {
+      "col": "intercept",
+      "type": "float"
+    },
+    {
+      "col": "r2",
+      "type": "float"
+    },
+    {
+      "col": "resid_sd",
+      "type": "float"
+    },
+    {
+      "col": "temperature",
+      "type": "float"
+    },
+    {
+      "col": "sd_ratio_sim_actual",
+      "type": "float"
+    },
+    {
+      "col": "replay_mae_points",
+      "type": "float"
+    },
+    {
+      "col": "replay_corr",
+      "type": "float"
+    },
+    {
+      "col": "n_entries",
+      "type": "int"
+    }
+  ],
+  "ask.mode2_quali_row_audit": [
+    {
+      "col": "fit_id",
+      "type": "int"
+    },
+    {
+      "col": "assumption_set_id",
+      "type": "int"
+    },
+    {
+      "col": "session_id",
+      "type": "int"
+    },
+    {
+      "col": "driver_id",
+      "type": "text"
+    },
+    {
+      "col": "team_id",
+      "type": "text"
+    },
+    {
+      "col": "year",
+      "type": "int"
+    },
+    {
+      "col": "round",
+      "type": "int"
+    },
+    {
+      "col": "kind",
+      "type": "text"
+    },
+    {
+      "col": "included",
+      "type": "bool"
+    },
+    {
+      "col": "exclude_reason",
+      "type": "text"
+    },
+    {
+      "col": "y_pp",
+      "type": "float"
+    },
+    {
+      "col": "best_s",
+      "type": "float"
+    }
+  ],
+  "ask.optimal_stint": [
+    {
+      "col": "session_id",
+      "type": "int"
+    },
+    {
+      "col": "assumption_set_id",
+      "type": "int"
+    },
+    {
+      "col": "compound",
+      "type": "text"
+    },
+    {
+      "col": "n_fits",
+      "type": "int"
+    },
+    {
+      "col": "slope_s_per_lap",
+      "type": "float"
+    },
+    {
+      "col": "slope_q1",
+      "type": "float"
+    },
+    {
+      "col": "slope_q3",
+      "type": "float"
+    },
+    {
+      "col": "pit_loss_s",
+      "type": "float"
+    },
+    {
+      "col": "pit_loss_source",
+      "type": "text"
+    },
+    {
+      "col": "optimal_laps",
+      "type": "float"
+    },
+    {
+      "col": "optimal_laps_lo",
+      "type": "float"
+    },
+    {
+      "col": "optimal_laps_hi",
+      "type": "float"
+    },
+    {
+      "col": "actual_median_laps",
+      "type": "float"
+    },
+    {
+      "col": "slope_source",
+      "type": "text"
+    }
+  ],
+  "ask.pace_ranking": [
+    {
+      "col": "session_id",
+      "type": "int"
+    },
+    {
+      "col": "assumption_set_id",
+      "type": "int"
+    },
+    {
+      "col": "driver_id",
+      "type": "text"
+    },
+    {
+      "col": "rank",
+      "type": "int"
+    },
+    {
+      "col": "team_id",
+      "type": "text"
+    },
+    {
+      "col": "clean_laps",
+      "type": "int"
+    },
+    {
+      "col": "median_pace_s",
+      "type": "float"
+    },
+    {
+      "col": "best_pace_s",
+      "type": "float"
+    },
+    {
+      "col": "iqr_s",
+      "type": "float"
+    },
+    {
+      "col": "gap_s",
+      "type": "float"
+    },
+    {
+      "col": "gap_pct",
+      "type": "float"
+    },
+    {
+      "col": "box_whisker_lo_s",
+      "type": "float"
+    },
+    {
+      "col": "box_q1_s",
+      "type": "float"
+    },
+    {
+      "col": "box_q3_s",
+      "type": "float"
+    },
+    {
+      "col": "box_whisker_hi_s",
+      "type": "float"
+    },
+    {
+      "col": "box_mean_s",
+      "type": "float"
+    },
+    {
+      "col": "sens_rank_lo",
+      "type": "int"
+    },
+    {
+      "col": "sens_rank_hi",
+      "type": "int"
+    }
+  ],
+  "ask.pit_stops": [
+    {
+      "col": "session_id",
+      "type": "int"
+    },
+    {
+      "col": "driver_id",
+      "type": "text"
+    },
+    {
+      "col": "stop_number",
+      "type": "int"
+    },
+    {
+      "col": "lap_in",
+      "type": "int"
+    },
+    {
+      "col": "lap_out",
+      "type": "int"
+    },
+    {
+      "col": "pit_in_time_s",
+      "type": "float"
+    },
+    {
+      "col": "pit_out_time_s",
+      "type": "float"
+    },
+    {
+      "col": "pit_lane_s",
+      "type": "float"
+    },
+    {
+      "col": "compound_in",
+      "type": "text"
+    },
+    {
+      "col": "compound_out",
+      "type": "text"
+    }
+  ],
+  "ask.preview_backtest": [
+    {
+      "col": "year",
+      "type": "int"
+    },
+    {
+      "col": "round",
+      "type": "int"
+    },
+    {
+      "col": "assumption_set_id",
+      "type": "int"
+    },
+    {
+      "col": "driver_id",
+      "type": "text"
+    },
+    {
+      "col": "pred_kind",
+      "type": "text"
+    },
+    {
+      "col": "expected_position",
+      "type": "float"
+    },
+    {
+      "col": "pos_p10",
+      "type": "int"
+    },
+    {
+      "col": "pos_p90",
+      "type": "int"
+    },
+    {
+      "col": "actual_position",
+      "type": "int"
+    },
+    {
+      "col": "inside_interval",
+      "type": "bool"
+    }
+  ],
+  "ask.preview_finish_order": [
+    {
+      "col": "year",
+      "type": "int"
+    },
+    {
+      "col": "round",
+      "type": "int"
+    },
+    {
+      "col": "assumption_set_id",
+      "type": "int"
+    },
+    {
+      "col": "driver_id",
+      "type": "text"
+    },
+    {
+      "col": "expected_position",
+      "type": "float"
+    },
+    {
+      "col": "pos_p10",
+      "type": "int"
+    },
+    {
+      "col": "pos_p90",
+      "type": "int"
+    },
+    {
+      "col": "p_win",
+      "type": "float"
+    },
+    {
+      "col": "p_podium",
+      "type": "float"
+    },
+    {
+      "col": "p_points",
+      "type": "float"
+    },
+    {
+      "col": "theta",
+      "type": "float"
+    },
+    {
+      "col": "dnf_rate",
+      "type": "float"
+    },
+    {
+      "col": "draws",
+      "type": "int"
+    }
+  ],
+  "ask.preview_round": [
+    {
+      "col": "year",
+      "type": "int"
+    },
+    {
+      "col": "round",
+      "type": "int"
+    },
+    {
+      "col": "assumption_set_id",
+      "type": "int"
+    },
+    {
+      "col": "circuit_key",
+      "type": "int"
+    },
+    {
+      "col": "circuit_match",
+      "type": "text"
+    },
+    {
+      "col": "circuit_races",
+      "type": "int"
+    },
+    {
+      "col": "expected_total_laps",
+      "type": "int"
+    },
+    {
+      "col": "p_safety_car",
+      "type": "float"
+    },
+    {
+      "col": "sc_hazard_shrunk",
+      "type": "float"
+    },
+    {
+      "col": "p_vsc",
+      "type": "float"
+    },
+    {
+      "col": "expected_pit_loss_s",
+      "type": "float"
+    },
+    {
+      "col": "pit_loss_band_s",
+      "type": "float"
+    },
+    {
+      "col": "odi",
+      "type": "float"
+    },
+    {
+      "col": "odi_lo",
+      "type": "float"
+    },
+    {
+      "col": "odi_hi",
+      "type": "float"
+    },
+    {
+      "col": "backtest_spearman",
+      "type": "float"
+    },
+    {
+      "col": "backtest_grid_spearman",
+      "type": "float"
+    },
+    {
+      "col": "backtest_coverage",
+      "type": "float"
+    },
+    {
+      "col": "backtest_races",
+      "type": "int"
+    },
+    {
+      "col": "loco_brier",
+      "type": "float"
+    },
+    {
+      "col": "computed_at",
+      "type": "timestamptz"
+    }
+  ],
+  "ask.quali_results": [
+    {
+      "col": "session_id",
+      "type": "int"
+    },
+    {
+      "col": "driver_id",
+      "type": "text"
+    },
+    {
+      "col": "team_id",
+      "type": "text"
+    },
+    {
+      "col": "position",
+      "type": "int"
+    },
+    {
+      "col": "q1_s",
+      "type": "float"
+    },
+    {
+      "col": "q2_s",
+      "type": "float"
+    },
+    {
+      "col": "q3_s",
+      "type": "float"
+    },
+    {
+      "col": "best_s",
+      "type": "float"
+    },
+    {
+      "col": "best_segment",
+      "type": "int"
+    },
+    {
+      "col": "best_lap_number",
+      "type": "int"
+    },
+    {
+      "col": "segments_entered",
+      "type": "int"
+    },
+    {
+      "col": "knocked_out_in",
+      "type": "int"
+    },
+    {
+      "col": "set_a_time",
+      "type": "bool"
+    },
+    {
+      "col": "gap_to_pole_s",
+      "type": "float"
+    },
+    {
+      "col": "gap_to_pole_pct",
+      "type": "float"
+    },
+    {
+      "col": "gap_to_pole_common_s",
+      "type": "float"
+    },
+    {
+      "col": "gap_to_pole_common_pct",
+      "type": "float"
+    },
+    {
+      "col": "gap_to_pole_segment",
+      "type": "int"
+    },
+    {
+      "col": "n_repr_laps",
+      "type": "int"
+    },
+    {
+      "col": "push_laps",
+      "type": "int"
+    },
+    {
+      "col": "times_source",
+      "type": "text"
+    }
+  ],
+  "ask.quali_segment_times": [
+    {
+      "col": "session_id",
+      "type": "int"
+    },
+    {
+      "col": "driver_id",
+      "type": "text"
+    },
+    {
+      "col": "segment",
+      "type": "int"
+    },
+    {
+      "col": "laps_run",
+      "type": "int"
+    },
+    {
+      "col": "repr_laps",
+      "type": "int"
+    },
+    {
+      "col": "push_laps",
+      "type": "int"
+    },
+    {
+      "col": "best_s",
+      "type": "float"
+    },
+    {
+      "col": "best_lap_number",
+      "type": "int"
+    },
+    {
+      "col": "gap_to_best_s",
+      "type": "float"
+    },
+    {
+      "col": "gap_to_best_pct",
+      "type": "float"
+    },
+    {
+      "col": "spread_s",
+      "type": "float"
+    },
+    {
+      "col": "sd_s",
+      "type": "float"
+    },
+    {
+      "col": "compound",
+      "type": "text"
+    },
+    {
+      "col": "tyre_life",
+      "type": "int"
+    },
+    {
+      "col": "wet_compound",
+      "type": "bool"
+    },
+    {
+      "col": "verified",
+      "type": "bool"
+    }
+  ],
+  "ask.quali_teammate_h2h": [
+    {
+      "col": "session_id",
+      "type": "int"
+    },
+    {
+      "col": "team_id",
+      "type": "text"
+    },
+    {
+      "col": "driver_a",
+      "type": "text"
+    },
+    {
+      "col": "driver_b",
+      "type": "text"
+    },
+    {
+      "col": "segment",
+      "type": "int"
+    },
+    {
+      "col": "a_best_s",
+      "type": "float"
+    },
+    {
+      "col": "b_best_s",
+      "type": "float"
+    },
+    {
+      "col": "delta_s",
+      "type": "float"
+    },
+    {
+      "col": "delta_pct",
+      "type": "float"
+    },
+    {
+      "col": "comparable",
+      "type": "bool"
+    },
+    {
+      "col": "classified_ahead",
+      "type": "text"
+    },
+    {
+      "col": "divergent",
+      "type": "bool"
+    },
+    {
+      "col": "session_sd_s",
+      "type": "float"
+    },
+    {
+      "col": "below_noise",
+      "type": "bool"
+    }
+  ],
+  "ask.race_index": [
+    {
+      "col": "session_id",
+      "type": "int"
+    },
+    {
+      "col": "year",
+      "type": "int"
+    },
+    {
+      "col": "round",
+      "type": "int"
+    },
+    {
+      "col": "kind",
+      "type": "text"
+    },
+    {
+      "col": "session_name",
+      "type": "text"
+    },
+    {
+      "col": "event_name",
+      "type": "text"
+    },
+    {
+      "col": "location",
+      "type": "text"
+    },
+    {
+      "col": "country",
+      "type": "text"
+    },
+    {
+      "col": "circuit_short_name",
+      "type": "text"
+    },
+    {
+      "col": "circuit_key",
+      "type": "int"
+    }
+  ],
+  "ask.race_moment": [
+    {
+      "col": "session_id",
+      "type": "int"
+    },
+    {
+      "col": "assumption_set_id",
+      "type": "int"
+    },
+    {
+      "col": "moment_idx",
+      "type": "int"
+    },
+    {
+      "col": "moment_type",
+      "type": "text"
+    },
+    {
+      "col": "lap_number",
+      "type": "int"
+    },
+    {
+      "col": "driver_id",
+      "type": "text"
+    },
+    {
+      "col": "other_driver_id",
+      "type": "text"
+    },
+    {
+      "col": "magnitude",
+      "type": "float"
+    },
+    {
+      "col": "magnitude_unit",
+      "type": "text"
+    },
+    {
+      "col": "severity",
+      "type": "float"
+    },
+    {
+      "col": "confidence",
+      "type": "text"
+    },
+    {
+      "col": "detail",
+      "type": "text"
+    }
+  ],
+  "ask.results": [
+    {
+      "col": "session_id",
+      "type": "int"
+    },
+    {
+      "col": "driver_id",
+      "type": "text"
+    },
+    {
+      "col": "position",
+      "type": "int"
+    },
+    {
+      "col": "classified_position",
+      "type": "text"
+    },
+    {
+      "col": "grid_position",
+      "type": "int"
+    },
+    {
+      "col": "points",
+      "type": "float"
+    },
+    {
+      "col": "status",
+      "type": "text"
+    },
+    {
+      "col": "laps_completed",
+      "type": "int"
+    },
+    {
+      "col": "result_time_s",
+      "type": "float"
+    }
+  ],
+  "ask.season_quali_h2h": [
+    {
+      "col": "year",
+      "type": "int"
+    },
+    {
+      "col": "kind",
+      "type": "text"
+    },
+    {
+      "col": "team_id",
+      "type": "text"
+    },
+    {
+      "col": "driver_a",
+      "type": "text"
+    },
+    {
+      "col": "driver_b",
+      "type": "text"
+    },
+    {
+      "col": "sessions_counted",
+      "type": "int"
+    },
+    {
+      "col": "a_wins",
+      "type": "int"
+    },
+    {
+      "col": "b_wins",
+      "type": "int"
+    },
+    {
+      "col": "deltas_counted",
+      "type": "int"
+    },
+    {
+      "col": "median_delta_s",
+      "type": "float"
+    },
+    {
+      "col": "median_delta_pct",
+      "type": "float"
+    },
+    {
+      "col": "mad_delta_pct",
+      "type": "float"
+    },
+    {
+      "col": "sessions_caveated",
+      "type": "int"
+    }
+  ],
+  "ask.seasons": [
+    {
+      "col": "year",
+      "type": "int"
+    },
+    {
+      "col": "scheduled_rounds",
+      "type": "int"
+    },
+    {
+      "col": "ingested_rounds",
+      "type": "int"
+    },
+    {
+      "col": "standings_after_round",
+      "type": "int"
+    },
+    {
+      "col": "assumption_set_id",
+      "type": "int"
+    },
+    {
+      "col": "mixed_assumption_sets",
+      "type": "bool"
+    },
+    {
+      "col": "has_sprint_results",
+      "type": "bool"
+    },
+    {
+      "col": "recomputed_at",
+      "type": "timestamptz"
+    }
+  ],
+  "ask.session_entries": [
+    {
+      "col": "session_id",
+      "type": "int"
+    },
+    {
+      "col": "driver_id",
+      "type": "text"
+    },
+    {
+      "col": "team_id",
+      "type": "text"
+    },
+    {
+      "col": "code",
+      "type": "text"
+    },
+    {
+      "col": "driver_number",
+      "type": "text"
+    },
+    {
+      "col": "line_style",
+      "type": "text"
+    },
+    {
+      "col": "line_style_source",
+      "type": "text"
+    }
+  ],
+  "ask.session_health": [
+    {
+      "col": "session_id",
+      "type": "int"
+    },
+    {
+      "col": "year",
+      "type": "int"
+    },
+    {
+      "col": "round",
+      "type": "int"
+    },
+    {
+      "col": "kind",
+      "type": "text"
+    },
+    {
+      "col": "name",
+      "type": "text"
+    },
+    {
+      "col": "status",
+      "type": "text"
+    },
+    {
+      "col": "analytics_status",
+      "type": "jsonb"
+    },
+    {
+      "col": "raw_laps",
+      "type": "int"
+    },
+    {
+      "col": "clean_laps",
+      "type": "int"
+    },
+    {
+      "col": "total_laps",
+      "type": "int"
+    },
+    {
+      "col": "warning_count",
+      "type": "int"
+    }
+  ],
+  "ask.session_teams": [
+    {
+      "col": "session_id",
+      "type": "int"
+    },
+    {
+      "col": "team_id",
+      "type": "text"
+    },
+    {
+      "col": "team_name",
+      "type": "text"
+    },
+    {
+      "col": "colour",
+      "type": "text"
+    },
+    {
+      "col": "colour_source",
+      "type": "text"
+    }
+  ],
+  "ask.sessions": [
+    {
+      "col": "session_id",
+      "type": "int"
+    },
+    {
+      "col": "year",
+      "type": "int"
+    },
+    {
+      "col": "round",
+      "type": "int"
+    },
+    {
+      "col": "kind",
+      "type": "text"
+    },
+    {
+      "col": "name",
+      "type": "text"
+    },
+    {
+      "col": "start_utc",
+      "type": "timestamptz"
+    },
+    {
+      "col": "total_laps",
+      "type": "int"
+    },
+    {
+      "col": "winner_driver_id",
+      "type": "text"
+    },
+    {
+      "col": "fastest_pace_driver_id",
+      "type": "text"
+    }
+  ],
+  "ask.sim_circuit_hazard": [
+    {
+      "col": "circuit_key",
+      "type": "int"
+    },
+    {
+      "col": "assumption_set_id",
+      "type": "int"
+    },
+    {
+      "col": "recomputed_at",
+      "type": "timestamptz"
+    },
+    {
+      "col": "races",
+      "type": "int"
+    },
+    {
+      "col": "laps",
+      "type": "int"
+    },
+    {
+      "col": "sc_episodes",
+      "type": "int"
+    },
+    {
+      "col": "vsc_episodes",
+      "type": "int"
+    },
+    {
+      "col": "sc_hazard",
+      "type": "float"
+    },
+    {
+      "col": "vsc_hazard",
+      "type": "float"
+    },
+    {
+      "col": "pit_loss_circuit_s",
+      "type": "float"
+    },
+    {
+      "col": "pooled_races",
+      "type": "int"
+    },
+    {
+      "col": "sc_hazard_pooled",
+      "type": "float"
+    },
+    {
+      "col": "vsc_hazard_pooled",
+      "type": "float"
+    },
+    {
+      "col": "sc_start_p",
+      "type": "float"
+    },
+    {
+      "col": "vsc_start_p",
+      "type": "float"
+    },
+    {
+      "col": "sc_dur_mean",
+      "type": "float"
+    },
+    {
+      "col": "vsc_dur_mean",
+      "type": "float"
+    },
+    {
+      "col": "pit_loss_pooled_s",
+      "type": "float"
+    },
+    {
+      "col": "pit_loss_pooled_mad_s",
+      "type": "float"
+    },
+    {
+      "col": "sc_pit_factor_pooled",
+      "type": "float"
+    },
+    {
+      "col": "vsc_pit_factor_pooled",
+      "type": "float"
+    }
+  ],
+  "ask.sim_compound_params": [
+    {
+      "col": "session_id",
+      "type": "int"
+    },
+    {
+      "col": "assumption_set_id",
+      "type": "int"
+    },
+    {
+      "col": "compound",
+      "type": "text"
+    },
+    {
+      "col": "laps",
+      "type": "int"
+    },
+    {
+      "col": "age_max",
+      "type": "int"
+    },
+    {
+      "col": "offset_s",
+      "type": "float"
+    },
+    {
+      "col": "offset_se",
+      "type": "float"
+    },
+    {
+      "col": "deg_raw_s_per_lap",
+      "type": "float"
+    },
+    {
+      "col": "deg_s_per_lap",
+      "type": "float"
+    },
+    {
+      "col": "deg_se",
+      "type": "float"
+    },
+    {
+      "col": "deg_negative",
+      "type": "bool"
+    },
+    {
+      "col": "stint_tau_level_s",
+      "type": "float"
+    },
+    {
+      "col": "stint_tau_slope",
+      "type": "float"
+    },
+    {
+      "col": "stint_tau_source",
+      "type": "text"
+    },
+    {
+      "col": "stints_used",
+      "type": "int"
+    }
+  ],
+  "ask.sim_driver_compound": [
+    {
+      "col": "session_id",
+      "type": "int"
+    },
+    {
+      "col": "assumption_set_id",
+      "type": "int"
+    },
+    {
+      "col": "driver_id",
+      "type": "text"
+    },
+    {
+      "col": "compound",
+      "type": "text"
+    },
+    {
+      "col": "laps",
+      "type": "int"
+    },
+    {
+      "col": "dc_offset_s",
+      "type": "float"
+    },
+    {
+      "col": "dc_se",
+      "type": "float"
+    }
+  ],
+  "ask.sim_driver_params": [
+    {
+      "col": "session_id",
+      "type": "int"
+    },
+    {
+      "col": "assumption_set_id",
+      "type": "int"
+    },
+    {
+      "col": "driver_id",
+      "type": "text"
+    },
+    {
+      "col": "laps_fit",
+      "type": "int"
+    },
+    {
+      "col": "base_s",
+      "type": "float"
+    },
+    {
+      "col": "base_se",
+      "type": "float"
+    },
+    {
+      "col": "noise_sd_s",
+      "type": "float"
+    },
+    {
+      "col": "laps_completed",
+      "type": "int"
+    },
+    {
+      "col": "laps_timed",
+      "type": "int"
+    },
+    {
+      "col": "laps_modelled",
+      "type": "int"
+    },
+    {
+      "col": "unmodelled_laps",
+      "type": "int"
+    },
+    {
+      "col": "stops",
+      "type": "int"
+    },
+    {
+      "col": "simulable",
+      "type": "bool"
+    },
+    {
+      "col": "not_simulable_reason",
+      "type": "text"
+    },
+    {
+      "col": "real_total_s",
+      "type": "float"
+    },
+    {
+      "col": "real_total_fc_s",
+      "type": "float"
+    },
+    {
+      "col": "real_fuel_s",
+      "type": "float"
+    },
+    {
+      "col": "sim_total_fc_s",
+      "type": "float"
+    },
+    {
+      "col": "misfit_rep_s",
+      "type": "float"
+    },
+    {
+      "col": "misfit_pit_s",
+      "type": "float"
+    },
+    {
+      "col": "misfit_lap1_s",
+      "type": "float"
+    },
+    {
+      "col": "unmodelled_s",
+      "type": "float"
+    },
+    {
+      "col": "badge",
+      "type": "text"
+    }
+  ],
+  "ask.sim_race_params": [
+    {
+      "col": "session_id",
+      "type": "int"
+    },
+    {
+      "col": "assumption_set_id",
+      "type": "int"
+    },
+    {
+      "col": "total_laps",
+      "type": "int"
+    },
+    {
+      "col": "ref_compound",
+      "type": "text"
+    },
+    {
+      "col": "laps_fit",
+      "type": "int"
+    },
+    {
+      "col": "drivers_fit",
+      "type": "int"
+    },
+    {
+      "col": "r2",
+      "type": "float"
+    },
+    {
+      "col": "resid_sd_s",
+      "type": "float"
+    },
+    {
+      "col": "resid_mad_s",
+      "type": "float"
+    },
+    {
+      "col": "design_cond",
+      "type": "float"
+    },
+    {
+      "col": "evo_s_per_lap",
+      "type": "float"
+    },
+    {
+      "col": "evo_se",
+      "type": "float"
+    },
+    {
+      "col": "param_names",
+      "type": "text[]"
+    },
+    {
+      "col": "param_mean",
+      "type": "float[]"
+    },
+    {
+      "col": "param_chol",
+      "type": "float[]"
+    },
+    {
+      "col": "field_delta_s",
+      "type": "float[]"
+    },
+    {
+      "col": "field_delta_cars",
+      "type": "int[]"
+    },
+    {
+      "col": "start_penalty_s",
+      "type": "float"
+    },
+    {
+      "col": "pit_loss_s",
+      "type": "float"
+    },
+    {
+      "col": "pit_loss_mad_s",
+      "type": "float"
+    },
+    {
+      "col": "pit_loss_n",
+      "type": "int"
+    },
+    {
+      "col": "pit_loss_samples_s",
+      "type": "float[]"
+    },
+    {
+      "col": "sc_pit_samples_s",
+      "type": "float[]"
+    },
+    {
+      "col": "vsc_pit_samples_s",
+      "type": "float[]"
+    },
+    {
+      "col": "sc_pit_factor_race",
+      "type": "float"
+    },
+    {
+      "col": "vsc_pit_factor_race",
+      "type": "float"
+    },
+    {
+      "col": "stint_coverage_80",
+      "type": "float"
+    },
+    {
+      "col": "n_sc_laps",
+      "type": "int"
+    },
+    {
+      "col": "n_vsc_laps",
+      "type": "int"
+    },
+    {
+      "col": "n_red_laps",
+      "type": "int"
+    }
+  ],
+  "ask.stints": [
+    {
+      "col": "session_id",
+      "type": "int"
+    },
+    {
+      "col": "driver_id",
+      "type": "text"
+    },
+    {
+      "col": "stint",
+      "type": "int"
+    },
+    {
+      "col": "compound",
+      "type": "text"
+    },
+    {
+      "col": "start_lap",
+      "type": "int"
+    },
+    {
+      "col": "end_lap",
+      "type": "int"
+    },
+    {
+      "col": "laps",
+      "type": "int"
+    }
+  ],
+  "ask.teammate_deltas": [
+    {
+      "col": "session_id",
+      "type": "int"
+    },
+    {
+      "col": "assumption_set_id",
+      "type": "int"
+    },
+    {
+      "col": "team_id",
+      "type": "text"
+    },
+    {
+      "col": "faster_driver_id",
+      "type": "text"
+    },
+    {
+      "col": "slower_driver_id",
+      "type": "text"
+    },
+    {
+      "col": "gap_s",
+      "type": "float"
+    },
+    {
+      "col": "gap_pct",
+      "type": "float"
+    },
+    {
+      "col": "laps_compared",
+      "type": "int"
+    }
+  ],
+  "ask.teammate_h2h": [
+    {
+      "col": "year",
+      "type": "int"
+    },
+    {
+      "col": "driver_id",
+      "type": "text"
+    },
+    {
+      "col": "teammate_driver_id",
+      "type": "text"
+    },
+    {
+      "col": "assumption_set_id",
+      "type": "int"
+    },
+    {
+      "col": "team_id",
+      "type": "text"
+    },
+    {
+      "col": "races_paired",
+      "type": "int"
+    },
+    {
+      "col": "pace_wins",
+      "type": "int"
+    },
+    {
+      "col": "pace_losses",
+      "type": "int"
+    },
+    {
+      "col": "mean_signed_gap_pct",
+      "type": "float"
+    },
+    {
+      "col": "median_signed_gap_pct",
+      "type": "float"
+    },
+    {
+      "col": "finish_wins",
+      "type": "int"
+    },
+    {
+      "col": "finish_losses",
+      "type": "int"
+    },
+    {
+      "col": "grid_wins",
+      "type": "int"
+    },
+    {
+      "col": "grid_losses",
+      "type": "int"
+    },
+    {
+      "col": "points_for",
+      "type": "float"
+    },
+    {
+      "col": "points_against",
+      "type": "float"
+    }
+  ],
+  "ask.teams": [
+    {
+      "col": "team_id",
+      "type": "text"
+    },
+    {
+      "col": "latest_name",
+      "type": "text"
+    }
+  ],
+  "ask.title_clinch": [
+    {
+      "col": "year",
+      "type": "int"
+    },
+    {
+      "col": "after_round",
+      "type": "int"
+    },
+    {
+      "col": "assumption_set_id",
+      "type": "int"
+    },
+    {
+      "col": "driver_id",
+      "type": "text"
+    },
+    {
+      "col": "points_now",
+      "type": "int"
+    },
+    {
+      "col": "max_available",
+      "type": "int"
+    },
+    {
+      "col": "max_possible_total",
+      "type": "int"
+    },
+    {
+      "col": "leader_points",
+      "type": "int"
+    },
+    {
+      "col": "is_eliminated",
+      "type": "bool"
+    },
+    {
+      "col": "eliminated_at_round",
+      "type": "int"
+    },
+    {
+      "col": "has_clinched",
+      "type": "bool"
+    },
+    {
+      "col": "clinch_margin_needed",
+      "type": "int"
+    },
+    {
+      "col": "swing_needed",
+      "type": "int"
+    },
+    {
+      "col": "clinch_position",
+      "type": "int"
+    },
+    {
+      "col": "earliest_clinch_round",
+      "type": "int"
+    },
+    {
+      "col": "next_round_has_sprint",
+      "type": "bool"
+    },
+    {
+      "col": "race_points_max",
+      "type": "int"
+    },
+    {
+      "col": "sprint_points_max",
+      "type": "int"
+    },
+    {
+      "col": "has_fastest_lap_bonus",
+      "type": "bool"
+    }
+  ],
+  "ask.title_odds": [
+    {
+      "col": "year",
+      "type": "int"
+    },
+    {
+      "col": "after_round",
+      "type": "int"
+    },
+    {
+      "col": "assumption_set_id",
+      "type": "int"
+    },
+    {
+      "col": "driver_id",
+      "type": "text"
+    },
+    {
+      "col": "p_title",
+      "type": "float"
+    },
+    {
+      "col": "p_title_lo",
+      "type": "float"
+    },
+    {
+      "col": "p_title_hi",
+      "type": "float"
+    },
+    {
+      "col": "mc_stderr",
+      "type": "float"
+    },
+    {
+      "col": "p_top3",
+      "type": "float"
+    },
+    {
+      "col": "expected_points",
+      "type": "float"
+    },
+    {
+      "col": "points_p10",
+      "type": "float"
+    },
+    {
+      "col": "points_p90",
+      "type": "float"
+    },
+    {
+      "col": "theta",
+      "type": "float"
+    },
+    {
+      "col": "dnf_rate",
+      "type": "float"
+    },
+    {
+      "col": "is_shrunk_to_prior",
+      "type": "bool"
+    },
+    {
+      "col": "draws",
+      "type": "int"
+    }
+  ],
+  "ask.track_status_events": [
+    {
+      "col": "session_id",
+      "type": "int"
+    },
+    {
+      "col": "event_idx",
+      "type": "int"
+    },
+    {
+      "col": "session_time_s",
+      "type": "float"
+    },
+    {
+      "col": "status",
+      "type": "text"
+    },
+    {
+      "col": "message",
+      "type": "text"
+    }
+  ],
+  "ask.weather_samples": [
+    {
+      "col": "session_id",
+      "type": "int"
+    },
+    {
+      "col": "sample_idx",
+      "type": "int"
+    },
+    {
+      "col": "session_time_s",
+      "type": "float"
+    },
+    {
+      "col": "air_temp",
+      "type": "real"
+    },
+    {
+      "col": "humidity",
+      "type": "real"
+    },
+    {
+      "col": "pressure",
+      "type": "real"
+    },
+    {
+      "col": "rainfall",
+      "type": "bool"
+    },
+    {
+      "col": "track_temp",
+      "type": "real"
+    },
+    {
+      "col": "wind_direction",
+      "type": "int"
+    },
+    {
+      "col": "wind_speed",
+      "type": "real"
+    }
+  ],
+  "ask.wp_lap_probability": [
+    {
+      "col": "session_id",
+      "type": "int"
+    },
+    {
+      "col": "assumption_set_id",
+      "type": "int"
+    },
+    {
+      "col": "driver_id",
+      "type": "text"
+    },
+    {
+      "col": "lap_number",
+      "type": "int"
+    },
+    {
+      "col": "pred_kind",
+      "type": "text"
+    },
+    {
+      "col": "fold_index",
+      "type": "int"
+    },
+    {
+      "col": "p_win_raw",
+      "type": "float"
+    },
+    {
+      "col": "p_win",
+      "type": "float"
+    },
+    {
+      "col": "degraded",
+      "type": "bool"
+    }
+  ],
+  "ask.wp_metrics": [
+    {
+      "col": "assumption_set_id",
+      "type": "int"
+    },
+    {
+      "col": "scope",
+      "type": "text"
+    },
+    {
+      "col": "variant",
+      "type": "text"
+    },
+    {
+      "col": "n_rows",
+      "type": "int"
+    },
+    {
+      "col": "n_races",
+      "type": "int"
+    },
+    {
+      "col": "brier",
+      "type": "float"
+    },
+    {
+      "col": "log_loss",
+      "type": "float"
+    },
+    {
+      "col": "brier_baseline_pos",
+      "type": "float"
+    },
+    {
+      "col": "brier_baseline_lead",
+      "type": "float"
+    },
+    {
+      "col": "brier_fold_min",
+      "type": "float"
+    },
+    {
+      "col": "brier_fold_median",
+      "type": "float"
+    },
+    {
+      "col": "brier_fold_max",
+      "type": "float"
+    },
+    {
+      "col": "note",
+      "type": "text"
+    }
+  ],
+  "ask.wp_reliability_bin": [
+    {
+      "col": "assumption_set_id",
+      "type": "int"
+    },
+    {
+      "col": "scope",
+      "type": "text"
+    },
+    {
+      "col": "variant",
+      "type": "text"
+    },
+    {
+      "col": "bin_index",
+      "type": "int"
+    },
+    {
+      "col": "bin_lo",
+      "type": "float"
+    },
+    {
+      "col": "bin_hi",
+      "type": "float"
+    },
+    {
+      "col": "n_rows",
+      "type": "int"
+    },
+    {
+      "col": "n_wins",
+      "type": "int"
+    },
+    {
+      "col": "mean_predicted",
+      "type": "float"
+    },
+    {
+      "col": "observed_rate",
+      "type": "float"
+    },
+    {
+      "col": "observed_lo",
+      "type": "float"
+    },
+    {
+      "col": "observed_hi",
+      "type": "float"
+    }
+  ],
+  "ask.wp_swing": [
+    {
+      "col": "session_id",
+      "type": "int"
+    },
+    {
+      "col": "assumption_set_id",
+      "type": "int"
+    },
+    {
+      "col": "lap_number",
+      "type": "int"
+    },
+    {
+      "col": "swing_mass",
+      "type": "float"
+    },
+    {
+      "col": "cause",
+      "type": "text"
+    },
+    {
+      "col": "mover_driver_id",
+      "type": "text"
+    },
+    {
+      "col": "mover_p_before",
+      "type": "float"
+    },
+    {
+      "col": "mover_p_after",
+      "type": "float"
+    },
+    {
+      "col": "rank_in_race",
+      "type": "int"
+    }
+  ]
+}

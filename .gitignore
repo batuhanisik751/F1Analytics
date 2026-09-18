@@ -1,0 +1,17 @@
+.venv/
+cache/
+output/
+__pycache__/
+*.pyc
+.ipynb_checkpoints/
+
+# web
+web/node_modules/
+web/.next*/
+.env
+.env.local
+
+# tool caches
+.pytest_cache/
+.ruff_cache/
+.DS_Store

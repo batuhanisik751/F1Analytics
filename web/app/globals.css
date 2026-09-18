@@ -1,0 +1,165 @@
+@import "tailwindcss";
+
+/* SPEC §3.4 — site tokens. Dark-only; team/compound colours are inline styles.
+   v1.5: repalette to the broadcast timing-tower look. The old warm amber set
+   (#12100e / #e8a33d) read as a generic dashboard; this one is the near-black,
+   cool-grey, F1-red language of a timing screen. Team and compound colours still
+   come from the database and are never named here. */
+@theme {
+  /* Near-black, very slightly cool — a timing screen is not warm. */
+  --color-bg: #08080a;
+  --color-surface: #121216;
+  /* One step above surface, for header rows and inset panels. */
+  --color-raised: #1a1a20;
+  --color-grid: #26262e;
+  --color-fg: #f4f4f7;
+  --color-muted: #8b8b97;
+  /* F1 red. Used for identity and emphasis, never to encode data.
+     v1.9 / UX_SPEC §4.4 — was #e10600, which measured 4.03:1 on --color-bg, 3.76:1 on
+     --color-surface and 3.49:1 on --color-raised. `text-accent` appears at 76 call sites,
+     most of them small copy, so every one of those failed the 4.5:1 body-text floor.
+     #ff2010 measures 5.21:1 / 4.86:1 / 4.51:1 against the same three backgrounds and keeps
+     the hue (~4° vs ~2°). It is never a background behind text — `bg-accent` is only the
+     decorative flash — so brightening it cannot make anything else worse. */
+  --color-accent: #ff2010;
+
+  /* The focus ring. White, not accent: at 20.4:1 on --color-bg it is the only value that
+     stays visible on every token background AND on a team colour set from the database. */
+  --color-focus: #ffffff;
+
+  /* Delta colours, straight off the timing tower. These DO encode meaning and are
+     used wherever a value is "best", "personal best" or "slower". */
+  --color-fastest: #b45af2;
+  --color-personal: #00d26a;
+  --color-slower: #ffd500;
+
+  /* v1.7 — sequential channel ramp. Dark = low, bright = high. MAGNITUDE, NOT MEANING.
+     Hues deliberately clear of --color-fastest/personal/slower and of --color-accent.
+     TELEMETRY_SPEC §5.0 / T11: the semantic trio above says "fastest lap", "personal
+     best", "off the pace". Nothing in the telemetry layer is any of those — a ramp
+     step means 340 km/h, not "quickest" — so the trio appears nowhere in the feature. */
+  --ramp-0: #0a2540;
+  --ramp-1: #17527d;
+  --ramp-2: #2e8fb8;
+  --ramp-3: #6fd3e8;
+  --ramp-4: #dff6ff;
+
+  --font-sans: var(--font-titillium);
+  --font-mono: var(--font-geist-mono);
+}
+
+html {
+  color-scheme: dark;
+}
+
+body {
+  @apply bg-bg text-fg font-sans antialiased;
+  /* Faint diagonal rule, like the hatch on a broadcast lower-third. Sits behind
+     everything at very low contrast; invisible unless you look for it. */
+  background-image: repeating-linear-gradient(
+    115deg,
+    transparent 0 38px,
+    rgb(255 255 255 / 0.014) 38px 39px
+  );
+}
+
+/* Tabular figures everywhere numbers line up in columns. */
+.tnum {
+  font-variant-numeric: tabular-nums;
+}
+
+/* A timing tower is a stack of rows each flagged with its team's colour. Callers set
+   --team on the row and this paints the left edge; no per-row class generation. */
+.team-edge {
+  box-shadow: inset 3px 0 0 0 var(--team, transparent);
+}
+
+/* Section headings and table headers: the clipped, tracked-out caps of a broadcast
+   graphic. Kept as a class so every surface gets it from one place. */
+.tower-label {
+  @apply font-semibold uppercase;
+  letter-spacing: 0.09em;
+}
+
+/* The skewed accent flash used beside a section title and in the wordmark. */
+.tower-flash {
+  transform: skewX(-14deg);
+}
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   UX_SPEC §4 — the accessibility floor. One place, every surface.
+   ───────────────────────────────────────────────────────────────────────────── */
+
+/* §4.1 — before v1.9 the palette styled no focus state at all, so a keyboard reader
+   moving through the nav, the tables and the ask box saw the browser default ring on
+   a near-black page, or nothing.
+
+   Two rings, deliberately:
+   - `outline` is the primary ring. It respects `outline-offset`, so it never sits on
+     top of the control's own border.
+   - `box-shadow` repeats it. A component that opts out with Tailwind's `outline-none`
+     (`components/sim/StintEditor.tsx` still does) kills only the outline; the shadow
+     ring survives, so no control can end up with no focus indicator at all.
+   The inner 2px band is --color-bg, so the white ring always has a dark backing even
+   when the control sits on a team colour pulled from the database. */
+:focus-visible {
+  outline: 2px solid var(--color-focus);
+  outline-offset: 2px;
+  box-shadow:
+    0 0 0 2px var(--color-bg),
+    0 0 0 4px var(--color-focus);
+}
+
+/* Windows high-contrast: system colours only, and `Highlight` is the one the user chose. */
+@media (forced-colors: active) {
+  :focus-visible {
+    outline: 3px solid Highlight;
+    outline-offset: 2px;
+    box-shadow: none;
+  }
+}
+
+/* §4.2 — the skip link. First focusable element in the document (see app/layout.tsx).
+   Off-screen until focused rather than `display:none`, which would take it out of the
+   tab order and defeat the point. */
+.skip-link {
+  position: absolute;
+  left: 0.75rem;
+  top: 0.75rem;
+  z-index: 100;
+  transform: translateY(-200%);
+  border: 2px solid var(--color-accent);
+  border-radius: 0.375rem;
+  background-color: var(--color-bg);
+  color: var(--color-fg);
+  padding: 0.625rem 1rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+}
+
+.skip-link:focus-visible,
+.skip-link:focus {
+  transform: translateY(0);
+}
+
+/* §4.6 — honour a reader who has asked the operating system for less movement. This
+   covers chart animation too: components/charts/EChart.tsx animates on mount, and an
+   ECharts canvas is driven by JS timers that CSS cannot reach — so the chart layer also
+   reads the media query itself. This block handles everything in the DOM. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+
+  html {
+    scroll-behavior: auto !important;
+  }
+}

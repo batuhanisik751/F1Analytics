@@ -1,0 +1,19 @@
+fastf1==3.8.3
+pandas==2.3.3
+numpy==2.5.3
+matplotlib==3.11.1
+statsmodels==0.15.0
+jupyter==1.1.1
+ipykernel==7.3.0
+psycopg[binary]==3.3.5
+pytest==9.1.1
+scikit-learn==1.7.2
+joblib==1.5.2
+
+# MODE3_SPEC §4 (v1.4) — race reports.
+# `anthropic` is the ONLY network dependency beyond FastF1 and it is used by f1lab/report.py
+# alone. An ingest with no ANTHROPIC_API_KEY must still exit 0 (§4.6), and report.py imports
+# the SDK lazily so a venv without it degrades to "report: skipped" rather than crashing.
+anthropic>=1.0,<2
+# tests/ask/run_acceptance.py reads tests/ask/questions.yaml.
+PyYAML==6.0.3

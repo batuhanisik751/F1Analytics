@@ -1,0 +1,257 @@
+{
+ "actual": [
+  {
+   "compound": "MEDIUM",
+   "endLap": 4
+  },
+  {
+   "compound": "HARD",
+   "endLap": 10
+  }
+ ],
+ "delta": 21.549999999999955,
+ "edited": [
+  {
+   "compound": "MEDIUM",
+   "endLap": 3
+  },
+  {
+   "compound": "HARD",
+   "endLap": 7
+  },
+  {
+   "compound": "MEDIUM",
+   "endLap": 10
+  }
+ ],
+ "model": {
+  "assumptionSetId": 0,
+  "compounds": [
+   {
+    "ageMax": 6,
+    "compound": "MEDIUM",
+    "compoundColour": "#ffd200",
+    "degNegative": false,
+    "degRawSPerLap": 0.1,
+    "degSPerLap": 0.1,
+    "degSe": 0.003,
+    "laps": 4,
+    "offsetS": 0.0,
+    "offsetSe": 0.0,
+    "stintTauLevelS": 0.25,
+    "stintTauSlope": 0.04,
+    "stintTauSource": "prior",
+    "stintsUsed": 1
+   },
+   {
+    "ageMax": 6,
+    "compound": "HARD",
+    "compoundColour": "#f0f0ec",
+    "degNegative": false,
+    "degRawSPerLap": 0.05,
+    "degSPerLap": 0.05,
+    "degSe": 0.002,
+    "laps": 6,
+    "offsetS": 0.5,
+    "offsetSe": 0.05,
+    "stintTauLevelS": 0.25,
+    "stintTauSlope": 0.04,
+    "stintTauSource": "prior",
+    "stintsUsed": 1
+   }
+  ],
+  "constants": {
+   "degFloor": 0.0,
+   "draws": 4000,
+   "extrapolationLaps": 5,
+   "kDc": 10,
+   "maxStops": 4,
+   "minStintLaps": 2,
+   "noiseTDf": 4,
+   "seed": 20240101
+  },
+  "drivers": [
+   {
+    "actual": [
+     {
+      "compound": "MEDIUM",
+      "endLap": 4
+     },
+     {
+      "compound": "HARD",
+      "endLap": 10
+     }
+    ],
+    "actualPitLaps": [
+     4
+    ],
+    "actualStartAge": 1,
+    "baseS": 90.0,
+    "baseSe": 0.1,
+    "calibration": {
+     "badge": "calibrated",
+     "lapsCompleted": 10,
+     "lapsModelled": 7,
+     "lapsTimed": 10,
+     "misfitLap1S": 0.0,
+     "misfitPitS": 0.0,
+     "misfitRepS": 0.0,
+     "realFuelS": 10.0,
+     "realTotalFcS": 988.5,
+     "realTotalS": 998.5,
+     "simTotalFcS": 988.5,
+     "stops": 1,
+     "unmodelledLaps": 0,
+     "unmodelledS": 0.0
+    },
+    "code": "D1",
+    "dc": {
+     "HARD": {
+      "dcOffsetS": 0.0,
+      "dcSe": 0.05,
+      "laps": 6
+     },
+     "MEDIUM": {
+      "dcOffsetS": 0.1,
+      "dcSe": 0.05,
+      "laps": 4
+     }
+    },
+    "driverId": "d1",
+    "fullName": "Driver One",
+    "lapsCompleted": 10,
+    "lapsFit": 10,
+    "lineStyle": "solid",
+    "noiseSdS": 0.3,
+    "notSimulableReason": null,
+    "position": 1,
+    "simulable": true,
+    "teamColour": "#3671c6",
+    "teamId": "t1",
+    "teamName": "Team One"
+   }
+  ],
+  "hazard": null,
+  "race": {
+   "designCond": 10.0,
+   "driversFit": 1,
+   "evoSPerLap": -0.01,
+   "evoSe": 0.001,
+   "fieldDeltaS": [
+    0.0,
+    0.0,
+    0.0,
+    30.0,
+    30.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "lapStatus": [
+    "G",
+    "G",
+    "G",
+    "S",
+    "S",
+    "G",
+    "G",
+    "G",
+    "G",
+    "G"
+   ],
+   "lapsFit": 10,
+   "nRedLaps": 0,
+   "nScLaps": 2,
+   "nVscLaps": 0,
+   "paramChol": [
+    0.05,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.003,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.002,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.001
+   ],
+   "paramMean": [
+    0.5,
+    0.1,
+    0.05,
+    -0.01
+   ],
+   "paramNames": [
+    "off:HARD",
+    "deg:MEDIUM",
+    "deg:HARD",
+    "evo"
+   ],
+   "pitLoss": {
+    "madS": 1.0,
+    "medianS": 20.0,
+    "n": 5,
+    "samplesS": [
+     19.0,
+     19.5,
+     20.0,
+     20.5,
+     21.0
+    ],
+    "source": "race"
+   },
+   "r2": 0.9,
+   "refCompound": "MEDIUM",
+   "residMadS": 0.4,
+   "residSdS": 0.5,
+   "scPitFactor": 0.86,
+   "scPitFactorSource": "pooled",
+   "startPenaltyS": 7.0,
+   "totalLaps": 10,
+   "vscPitFactor": 0.95,
+   "vscPitFactorSource": "pooled"
+  },
+  "sessionId": 0,
+  "unavailable": []
+ },
+ "replay": {
+  "actual": {
+   "per_lap": [
+    97.1,
+    90.18999999999998,
+    90.28,
+    137.57,
+    120.46,
+    90.5,
+    90.53999999999999,
+    90.58000000000001,
+    90.62,
+    90.66
+   ],
+   "total": 988.5
+  },
+  "edited": {
+   "per_lap": [
+    97.1,
+    90.18999999999998,
+    110.28,
+    120.47,
+    120.50999999999999,
+    90.55,
+    110.59,
+    90.03,
+    90.11999999999999,
+    90.21
+   ],
+   "total": 1010.05
+  }
+ }
+}

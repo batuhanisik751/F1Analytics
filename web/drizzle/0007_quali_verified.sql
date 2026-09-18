@@ -1,0 +1,1 @@
+ALTER TABLE "quali_segment_times" ADD COLUMN "verified" boolean DEFAULT true NOT NULL;

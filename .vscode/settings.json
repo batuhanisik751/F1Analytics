@@ -1,0 +1,19 @@
+{
+  "python.defaultInterpreterPath": "${workspaceFolder}/.venv/bin/python",
+  "python.testing.pytestEnabled": true,
+  "python.testing.pytestArgs": ["tests", "-m", "not db"],
+  "python.terminal.activateEnvironment": true,
+  "files.exclude": {
+    "**/__pycache__": true,
+    "**/.pytest_cache": true
+  },
+  "search.exclude": {
+    "cache/**": true,
+    "output/**": true,
+    "web/.next/**": true,
+    "web/node_modules/**": true,
+    ".venv/**": true
+  },
+  "eslint.workingDirectories": ["web"],
+  "typescript.tsdk": "web/node_modules/typescript/lib"
+}

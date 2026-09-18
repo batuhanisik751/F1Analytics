@@ -1,0 +1,83 @@
+[
+  {
+    "startsWith": "Total SD 0.120 pp, of which",
+    "record": {
+      "spec": "§1.2",
+      "owner": "WP-4",
+      "verdict": "rewritten in place, not deleted",
+      "why": "§1.2 lists this exact string as jargon to explain or remove. WP-4 rewrote it with the terms named in words, TermTip definitions into /glossary for 'total SD' and 'pooling prior', and the seconds equivalent of the 0.120 pp added."
+    }
+  },
+  {
+    "startsWith": "Each point re-fits the whole model",
+    "record": {
+      "spec": "§0",
+      "owner": "WP-4",
+      "verdict": "tail rewritten and lengthened",
+      "why": "The first two sentences are byte-intact. The pre-release tail 'the band stays the same width no matter how many races he runs — more racing, no more knowledge' now reads 'more racing brings no more knowledge: his band never narrows, and it widens as each extra season teaches the model how far apart drivers really are.' That is a correction (the band widens, it does not hold), not a tidy-up, and it says more than the original. Flagged to WP-4 to confirm it was intended."
+    }
+  },
+  {
+    "startsWith": "Four latent skills were fitted.",
+    "record": {
+      "spec": "§1.3.1",
+      "owner": "WP-4",
+      "verdict": "deleted on the spec's orders",
+      "why": "§1.3.1 records this as a confirmed bug: it said 'four … two … two' while the panel underneath said 'seven … three … four'. Collapsing a statement that is false on screen only hides the contradiction, so it was replaced by a sentence derived from the same rows the panel counts."
+    }
+  },
+  {
+    "startsWith": "We tried to measure four things.",
+    "record": {
+      "spec": "§1.3.1 / §1.3.2",
+      "owner": "WP-4",
+      "verdict": "counts now derived, sentence-case fixed",
+      "why": "Same contradiction as above plus the §1.3.2 lowercase-after-full-stop bug. Now reads 'We tried to measure seven things. Three of them we can show you. Four of them we cannot, and the reasons are below — they are part of the answer, not a disclaimer.' The clause that matters, that the refusals are part of the answer, is intact."
+    }
+  },
+  {
+    "startsWith": "This is fitted from where the car started, because there are no qualifying lap times",
+    "record": {
+      "spec": "n/a — data, not copy",
+      "owner": "none",
+      "verdict": "different branch of conditional copy",
+      "why": "The 2026 corpus had no qualifying lap times when this page was captured on 14 Sept; the pinned corpus has them, so the caption renders its other branch. The surviving branch still opens 'This is fitted from where the car started.' and still carries the grid-penalty caveat verbatim. No copy was removed."
+    }
+  },
+  {
+    "startsWith": "2.4× to 5.0× (90 %, 5th–95th percentile) · spreads",
+    "record": {
+      "spec": "§3.1 / §3.3",
+      "owner": "WP-6",
+      "verdict": "numbers refit; prose expanded",
+      "why": "The interval moved into <Metric>, which labels it rather than running it into the gloss, and the model has been refit since the 14 Sept capture so the bounds differ. The gloss itself is longer than it was: 'Spreads, compared as standard deviations: how far apart the cars are, divided by how far apart the drivers are. Above 1× means the car matters more than the driver.'"
+    }
+  },
+  {
+    "startsWith": "−2.126 % to −1.414 %",
+    "record": {
+      "spec": "§3.1",
+      "owner": "WP-6",
+      "verdict": "moved to /constructor/[slug]; numbers refit",
+      "why": "The constructor index no longer carries one focus team's rating tiles; the interval is shown on that team's own page, labelled '90 % range (5th–95th percentile)'. The bounds differ from the 14 Sept capture because the model has been refit. HAND-OFF to WP-6: confirm the index was meant to lose the focus-team block."
+    }
+  },
+  {
+    "startsWith": "within that season's field only",
+    "record": {
+      "spec": "§0 / §3.1",
+      "owner": "WP-6",
+      "verdict": "reworded on both constructor routes",
+      "why": "Now on /constructor/[slug] as the hint on the rank Metric: “Within that season's field only — never against another season. A 2026 car and a 2024 car are ranked on different grids.” Longer and more specific than the original, but the closing words changed from ‘never across seasons’ to ‘never against another season’, and the constructor index no longer carries it at all. HAND-OFF to WP-6: the index is where a reader first meets a cross-season comparison, so that is where the caveat is most needed."
+    }
+  },
+  {
+    "startsWith": "−1.679 % to −0.877 %",
+    "record": {
+      "spec": "n/a — data, not copy",
+      "owner": "none",
+      "verdict": "numbers refit",
+      "why": "Same interval, refit since the 14 Sept capture: it now reads −1.712 % to −0.845 % under the label '90 % range (5th–95th percentile)'. The label and the caveat around it are intact."
+    }
+  }
+]

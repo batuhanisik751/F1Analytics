@@ -1,0 +1,48 @@
+{
+  "name": "web",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "eslint",
+    "typecheck": "next typegen && tsc --noEmit --incremental false",
+    "db:generate": "drizzle-kit generate",
+    "db:migrate": "drizzle-kit migrate",
+    "db:check": "drizzle-kit check",
+    "db:studio": "drizzle-kit studio",
+    "db:smoke": "tsx scripts/db-smoke.ts",
+    "test": "tsx --test lib/queries/*.test.ts lib/sim/*.test.ts components/sim/*.test.ts components/race/*.test.ts lib/ask/*.test.ts app/api/ask/*.test.ts components/ask/*.test.ts lib/telemetry/*.test.ts lib/ui/*.test.ts components/ui/*.test.ts components/ui/*.test.tsx lib/driver/*.test.ts components/quali/*.test.ts",
+    "test:a11y": "tsx --test tests/a11y/*.test.ts",
+    "verify:ask-ui": "tsx components/ask/render-states.tsx",
+    "check:invariants": "node scripts/check-invariants.mjs"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "0.125.0",
+    "drizzle-orm": "0.45.2",
+    "echarts": "5.6.0",
+    "libpg-query": "17.7.4",
+    "next": "16.3.5",
+    "pg": "8.23.0",
+    "react": "19.2.8",
+    "react-dom": "19.2.8",
+    "zod": "4.6.5"
+  },
+  "devDependencies": {
+    "@tailwindcss/postcss": "^4",
+    "@types/jsdom": "^30.0.0",
+    "@types/node": "^20",
+    "@types/pg": "8.23.1",
+    "@types/react": "^19",
+    "@types/react-dom": "^19",
+    "axe-core": "^4.13.0",
+    "drizzle-kit": "0.31.10",
+    "eslint": "^9",
+    "eslint-config-next": "16.3.5",
+    "jsdom": "^26.1.0",
+    "tailwindcss": "^4",
+    "tsx": "4.23.13",
+    "typescript": "^5"
+  }
+}
