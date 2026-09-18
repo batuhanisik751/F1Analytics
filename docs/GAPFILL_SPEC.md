@@ -100,8 +100,22 @@ model, so it is compatible with `TELEMETRY_SPEC §4.3`.
   storing 2–3 representative laps per driver per session — a `TELEMETRY_SPEC` change, named
   here as the pre-condition for any future trail-braking skill and **explicitly not proposed
   for v1.8**.
-- **Scope is qualifying.** Telemetry coverage is 60/71 Q, 14/18 SQ, **1/71 R**. Every
-  brake-shape surface is a qualifying surface and says so.
+- **Scope was qualifying. UPDATED 2026-09-18 (v1.10).** When v1.8 shipped, coverage was
+  60/71 Q, 14/18 SQ, **1/71 R**, so every brake-shape surface was a qualifying surface and
+  said so. Race telemetry has since been derived for the 40 cache-warm race sessions, taking
+  coverage to **60/71 Q, 17/18 SQ, 41/71 R** and the corpus to 118 sessions / 2,349 laps /
+  38,774 corner rows.
+
+  **The refusal is unchanged and gets stronger, not weaker, on race laps.** A race lap carries
+  traffic, fuel burn across the stint and tyre degradation within it — all of which move a
+  brake trace for reasons that are not the driver. The v1.8 finding (repeat correlation 0.286,
+  ceiling 0.32–0.47, §3.4) was measured on qualifying laps, which are the *cleanest* laps in
+  the corpus; race laps cannot beat it. Race sessions therefore get the map, the channel stack
+  and the corner card, and **no cross-driver delta at all** — `TELEMETRY_SPEC` T10 built that
+  as an absent feature before there was race telemetry to absent it from.
+
+  Any brake-shape statement made on a race lap must say it is one lap in traffic on a given
+  fuel load, and must not be compared with another driver's.
 
 ---
 

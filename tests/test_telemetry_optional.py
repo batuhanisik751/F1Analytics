@@ -497,6 +497,11 @@ def test_rewrite_after_force_restores_but_never_creates(db_conn):
     db_conn.rollback()
 
     # A session that HAS telemetry, told it had none, must still not derive.
+    with db_conn.cursor() as cur:
+        cur.execute("SELECT count(*) FROM lap_telemetry")
+        before = int(cur.fetchone()[0])
+    db_conn.rollback()
+
     status: dict = {}
     payload = T.rewrite_after_force(db_conn, sid, status, had_telemetry=False)
     db_conn.rollback()
@@ -507,8 +512,13 @@ def test_rewrite_after_force_restores_but_never_creates(db_conn):
     assert payload["state"] != "dropped"
     assert status["telemetry"] == payload
 
-    # And the row count is untouched -- the point of the whole fix.
+    # And the row count is untouched -- the point of the whole fix. Compared against a
+    # reading taken in this test rather than a pinned literal: the corpus is allowed to
+    # GROW deliberately (v1.10 took it 1,518 -> 2,349 by deriving race telemetry), and a
+    # hardcoded count would fail on every such release while saying nothing about the
+    # property under test, which is that THIS call creates nothing.
     with db_conn.cursor() as cur:
         cur.execute("SELECT count(*) FROM lap_telemetry")
-        assert int(cur.fetchone()[0]) == 1518, "the pinned corpus moved"
+        after = int(cur.fetchone()[0])
     db_conn.rollback()
+    assert after == before, f"rewrite_after_force created rows: {before} -> {after}"

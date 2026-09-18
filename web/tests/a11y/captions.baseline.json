@@ -1469,7 +1469,13 @@
     {
       "route": "/race/2026/13",
       "capturedAt": "2026-09-17",
-      "text": "117 constants every number on this page depends on, recorded 14 Sept 2026"
+      "text": "123 constants every number on this page depends on, recorded 18 Sept 2026",
+      "changed": {
+        "spec": "UX_SPEC §0 / §3.3",
+        "owner": "v1.10 re-ingest",
+        "verdict": "template slots moved; caption text intact",
+        "why": "Both numbers in this line are live slots, not copy. The count went 117 -> 123 because v1.8 added six MODE2_QUALI_* constants and the corpus was re-ingested onto assumption set 844 on 18 Sept, so the assumptions panel now renders all of them; the date is the recording date of that set. The sentence itself is byte-identical. Pinning a rendered instance of a template is what made this look like a deletion -- a future baseline regeneration should store the template, not its render."
+      }
     },
     {
       "route": "/race/2026/13",
