@@ -13,16 +13,21 @@ const SCROLLER = "[class*='overflow-x-auto'],[class*='overflow-x-scroll']";
 //
 // A RATCHET, not a snooze: the count may fall, never rise. When DataTable is fixed these all go
 // to 0 and the test asks you to update the numbers.
+// All zero as of 2026-09-18. They were 3/1/3/5/10 across five pages until
+// DataTable's own scroll wrapper gained tabindex and a name from its caption --
+// every table in the app goes through that component, so one fix cleared 22 of
+// them. Ratcheted to 0 so they cannot come back.
 const UNLABELLED_SCROLLERS: Record<string, number> = {
-  "/": 3,
+  "/": 0,
+  "/accuracy": 0,
   "/ask": 0,
   "/glossary": 0,
   "/constructor": 0,
-  "/constructor/mclaren": 1,
-  "/driver/VER": 3,
-  "/season/2026": 5,
+  "/constructor/mclaren": 0,
+  "/driver/VER": 0,
+  "/season/2026": 0,
   "/season/2026/was-it-the-car": 0,
-  "/race/2026/13": 10,
+  "/race/2026/13": 0,
   "/race/2026/13/telemetry": 0,
 };
 

@@ -43,6 +43,11 @@ export default async function Nav(): Promise<React.JSX.Element> {
           <Link href="/glossary" className="text-fg hover:text-accent">
             Glossary
           </Link>
+          {/* The app's own prediction record. In the nav rather than buried, because a page
+              that scores the model is worth nothing if only the author ever opens it. */}
+          <Link href="/accuracy" className="text-fg hover:text-accent">
+            Accuracy
+          </Link>
           <span className="flex items-center gap-2">
             <span className="text-muted">Seasons</span>
             {seasons.length === 0 ? (

@@ -375,3 +375,25 @@ def test_the_rederivation_reproduces_every_stored_brake_point(db_conn):
         for r in rows:
             if r["brake_zone_idx"] is None:
                 assert r["trail_status"] == "taken_flat"
+
+
+@pytest.mark.db
+def test_a_wholesale_failure_reports_why_not_just_how_many(db_conn):
+    """2026-09-18 — the payload carries the actual reasons, not only a count.
+
+    Monaco 2026 R6 (session 429) fails on every one of 21 drivers. Before this, the stored
+    payload said only "every eligible driver failed (21)" and the real message lived in
+    `session_ingests.warnings`, a column nothing points to, so diagnosing it took three
+    queries. `distinct_reasons` is the useful part: ONE reason across every driver means the
+    session is broken, several would mean the drivers are.
+
+    Rolled back, so this asserts the payload without writing.
+    """
+    payload = T.derive_session(db_conn, 429, force=True)
+    db_conn.rollback()
+    assert payload["state"] == "failed"
+    assert payload["drivers"] == 0
+    assert payload["distinct_reasons"] == 1, payload
+    assert payload["reasons"], "a failed session must say why"
+    assert "Date" in payload["reasons"][0], payload["reasons"]
+    assert "(x21)" in payload["reasons"][0], "repeated reasons carry their count"

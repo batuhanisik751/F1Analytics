@@ -37,6 +37,7 @@ from __future__ import annotations
 
 import argparse
 import hashlib
+import collections
 import json
 import logging
 import sys
@@ -1059,8 +1060,23 @@ def _write_session(conn, row: dict, stored: list[StoredLap], picks: list[LapPick
     if not stored:
         with conn.cursor() as cur:
             _add_warnings(cur, session_id, warnings)
+        # Carry the ACTUAL reasons, not just the count (2026-09-18). The per-driver messages
+        # were already being captured into `warnings`, but they landed in
+        # `session_ingests.warnings` -- a column nothing points to -- while the payload the
+        # telemetry tab and every operator reads said only "every eligible driver failed (21)".
+        # Diagnosing Monaco 2026 R6 took three queries to discover that all 21 drivers died on
+        # the same line ("None of ['Date'] are in the columns"); with the reason here it would
+        # have taken none. Distinct reasons are counted because a whole-session fault shows up
+        # as one message repeated per driver, and that shape is itself the diagnosis: one
+        # distinct reason across every driver means the session is broken, several means the
+        # drivers are.
+        why = collections.Counter(
+            w.split(": ", 2)[-1] for w in warnings if w.startswith("telemetry: "))
+        top = [f"{msg} (x{n})" if n > 1 else msg for msg, n in why.most_common(3)]
         return {"state": "failed", "drivers": 0, "eligible": len(picks),
-                "reason": f"every eligible driver failed ({len(failed)})"}
+                "reason": f"every eligible driver failed ({len(failed)})",
+                "distinct_reasons": len(why),
+                "reasons": top}
 
     stored.sort(key=lambda s: s.pick.lap_time_s)
     ref = stored[0]

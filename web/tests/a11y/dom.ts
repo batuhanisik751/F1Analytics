@@ -8,9 +8,11 @@ import { JSDOM } from "jsdom";
 
 export const BASE = process.env.A11Y_BASE_URL ?? "http://localhost:3000";
 
-/** The nine routes UX_SPEC §6 names. Keep this list and nothing else as the source of truth. */
+/** Every route, and the only source of truth for what the a11y suite covers. A page added
+    without a line here ships unchecked, which is how /accuracy nearly shipped unchecked. */
 export const ROUTES = [
   "/",
+  "/accuracy",
   "/ask",
   "/glossary",
   "/constructor",

@@ -55,8 +55,20 @@ export default function DataTable<T>({
     return <EmptyState reason={emptyReason} title={emptyTitle} />;
   }
   const pad = dense ? "px-2.5 py-1" : "px-3 py-2";
+  // UX_SPEC §4.5 — a horizontal scroll container must be reachable and operable by keyboard,
+  // and must say what it holds. Without `tabindex` a keyboard user cannot scroll it at all,
+  // and without a name a screen reader announces an anonymous scrollable region. Fixing it
+  // here rather than per call site is why the app-wide count of unlabelled scrollers drops:
+  // every table in the app goes through this component. `role="region"` is only applied when
+  // there is a caption to name it with, because an unnamed region is worse than no region.
+  const scroller = caption
+    ? { tabIndex: 0, role: "region", "aria-label": String(caption) }
+    : { tabIndex: 0, "aria-label": "Scrollable table" };
   return (
-    <div className={`overflow-x-auto border border-grid bg-surface/30 ${className ?? ""}`}>
+    <div
+      {...scroller}
+      className={`overflow-x-auto border border-grid bg-surface/30 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent ${className ?? ""}`}
+    >
       <table className="tnum w-full min-w-max border-collapse text-sm">
         {caption ? <caption className="p-2 text-left text-xs text-muted">{caption}</caption> : null}
         {/* Header row of a timing tower: raised, caps, tracked out, and underlined in
