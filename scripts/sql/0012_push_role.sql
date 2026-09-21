@@ -58,8 +58,8 @@ BEGIN
 END
 $push_role$;
 
-GRANT CONNECT ON DATABASE f1 TO f1_push;
-REVOKE TEMPORARY ON DATABASE f1 FROM f1_push;
+SELECT format('GRANT CONNECT ON DATABASE %I TO f1_push', current_database()) \gexec
+SELECT format('REVOKE TEMPORARY ON DATABASE %I FROM f1_push', current_database()) \gexec
 GRANT USAGE ON SCHEMA public TO f1_push;
 
 -- ---------------------------------------------------------------------------

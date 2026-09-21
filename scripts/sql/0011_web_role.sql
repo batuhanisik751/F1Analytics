@@ -53,8 +53,8 @@ BEGIN
 END
 $web_role$;
 
-GRANT CONNECT ON DATABASE f1 TO f1_web;
-REVOKE TEMPORARY ON DATABASE f1 FROM f1_web;
+SELECT format('GRANT CONNECT ON DATABASE %I TO f1_web', current_database()) \gexec
+SELECT format('REVOKE TEMPORARY ON DATABASE %I FROM f1_web', current_database()) \gexec
 
 -- ---------------------------------------------------------------------------
 -- 2. What it can read: every table in public, now and in the future. The default

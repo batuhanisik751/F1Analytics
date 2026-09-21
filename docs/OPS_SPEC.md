@@ -765,11 +765,25 @@ re-syncs the Vercel-managed env var) rather than by tooling. Rule recorded in `R
 `grep`, never sourced; values are single-quoted; DSNs are one argv element. No data was loaded
 and no role existed at the time, so the blast radius is the empty owner database.
 
-### 10.2 CI, first runs
+### 10.2 What the first deployment corrected in this document
+- **§4.2 role SQL assumed the database is named `f1`.** Nine `ON DATABASE f1` statements; Neon's
+  is `neondb`. All now use `current_database()` via `\gexec`. The one guarded revoke was guarded
+  on the wrong condition (a database *named* `f1`), so on Neon it skipped; now unconditional.
+- **`temp_file_limit` is superuser-only**; attempted and skipped with a NOTICE on a managed host.
+- **The gate is 35 checks, not 34**, and on a managed host 3 skip on the record (the provider-owned
+  `postgres` database). `ask.laps is readable` was data-dependent and could never pass before the
+  first load; it now asserts the privilege, not a row.
+- **F9 was half right.** `sslmode=verify-full&sslrootcert=system` is correct for libpq and
+  **fatal for node-postgres**, which opens `sslrootcert` as a file. The rail caught it. §6.2's env
+  table is therefore: node shape (`verify-full` only) for every Vercel value.
+- **The `f1-postgres` container has no CA bundle**; `verify-full` needs `ca-certificates`
+  installed (done by hand; durable compose fix is a follow-up).
+
+### 10.2b CI, first runs
 Run 1 (`faf9358`): `web` failed at `npm run lint` — a step never run locally — on the reduced-
 motion hook setting state inside an effect; `py-pure` passed; `py-db` skipped, `py-db-slow`
 cancelled, `coverage` failed for want of reports. Fixed with `useSyncExternalStore` (`2566031`).
-Run 2: pending at the time of writing; the measured coverage line is recorded below when it lands.
+Run 2 (`2566031`): `web` and `py-pure` green; `py-db` ran 369 tests on the restored fixture, 367 passed, 1 skipped, and failed one: gate G1's `max|diff| == 0.0 ± 1e-9` measures 3.1e-8 on the Linux x86 runner (BLAS/FMA rounding) against 0.0 on Apple Silicon — tolerance widened to 1e-6, which still gates a wrong construction (`e0cfcf5`). Run 3: recorded below when it lands.
 (empty — filled in by each work package as it lands, with the measured numbers that replace
 every EST above: CI wall and billed minutes, `py-db-slow` on the runner, the initial load
 time to Neon, the first fortnight's CU-hours and egress, first-hit latency for `/` and the

@@ -152,6 +152,33 @@ those weekends silently. Daily is self-healing: six days a week it finds nothing
 seconds, and a session recorded `failed` with *no timing data available* is retried on the next
 run. Watch it with `tail -f output/update_season.log`; stop it with `launchctl unload`.
 
+### Two connection-string shapes — never confuse them
+
+| path | library | DSN must carry |
+|---|---|---|
+| laptop → Neon: `neon_migrate.sh`, `push_remote.py`, `db_ask_verify.sh` (psql parts) | libpq, inside the `f1-postgres` container | `sslmode=verify-full&sslrootcert=system` |
+| the site on Vercel, and the gate's protocol rail | node-postgres | `sslmode=verify-full` and **nothing else about certificates** |
+
+node-postgres reads `sslrootcert=` as a **file path** and crashes with `ENOENT: open 'system'`.
+The gate's rail caught this before a deploy existed; had the libpq shape reached Vercel every
+page would have failed on its first query. node verifies against its bundled roots.
+
+**The container needs a CA bundle for `verify-full`.** `postgres:16` ships without
+`ca-certificates`; `docker exec f1-postgres apt-get install -y ca-certificates` fixes it until
+the container is recreated. A durable fix (a one-line Dockerfile layer in compose) is a
+follow-up; until then the first `verify-full` connection after `docker compose down` fails
+with `certificate verify failed`, which is the symptom to recognise.
+
+**Managed hosts and the gate.** `db_ask_verify.sh` runs 35 checks. On Neon three are skipped
+and say so — the `postgres` database is owned by the provider (`cloud_admin`), so the owner
+role cannot revoke PUBLIC's CONNECT on it, and asserting that closure would fail forever for
+a reason nothing here can change. Our own database and schema `public` remain hard checks
+and pass (`0|0`). `temp_file_limit` is superuser-only and is attempted, then skipped with a
+NOTICE. All role SQL uses `current_database()`; nothing assumes the database is called `f1`.
+
+**First load, 2026-09-21:** gate 32 passed / 0 failed / 3 skipped; `push_remote.py --full`
+moved 178 sessions, 274,435 rows in 14 s; `--verify-only`: remote == local.
+
 > **Never `source` a file that holds a connection string.** Neon DSNs carry `&` between query
 > parameters (`sslmode=…&channel_binding=…`). `source`d unquoted, the shell reads each `&` as a
 > job separator: the value is split, the fragments run as background commands, and bash prints

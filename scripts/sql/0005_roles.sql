@@ -10,7 +10,8 @@
 -- every table in schema `ask`, and that schema must already hold the generated views.
 --
 -- Idempotent: every statement is either IF EXISTS / IF NOT EXISTS guarded or a CREATE-or-ALTER
--- pair chosen by a \gexec. Re-running it rotates both passwords and re-asserts every setting.
+-- pair chosen by a \gexec. Database-level statements use current_database() so the same
+-- file applies to the local `f1` and to a managed database with another name (Neon: `neondb`). Re-running it rotates both passwords and re-asserts every setting.
 --
 -- SECURITY NOTE — what is and is not a control (§1.0):
 --   the GRANT is the boundary. `default_transaction_read_only`, `statement_timeout` and
@@ -60,10 +61,8 @@ $guard$;
 -- host the `postgres` database is not visible and the bare statement would abort the whole
 -- file under ON_ERROR_STOP, leaving every PUBLIC grant below in place. When the database is
 -- absent the guard raises a NOTICE so the skip is on the record, never silent.
-SELECT CASE WHEN EXISTS (SELECT 1 FROM pg_database WHERE datname = 'f1')
-  THEN 'REVOKE ALL ON DATABASE f1 FROM PUBLIC'
-  ELSE $n$DO $b$ BEGIN RAISE NOTICE '0005_roles: database "f1" not visible here; its PUBLIC REVOKE was skipped'; END $b$$n$
-END
+-- The current database always exists, whatever it is called, so this one needs no guard.
+SELECT format('REVOKE ALL ON DATABASE %I FROM PUBLIC', current_database())
 \gexec
 SELECT CASE WHEN EXISTS (SELECT 1 FROM pg_database WHERE datname = 'postgres')
   THEN 'REVOKE ALL ON DATABASE postgres FROM PUBLIC'   -- closes cross-database CONNECT
@@ -107,7 +106,7 @@ BEGIN
 END
 $ask_role$;
 
-GRANT CONNECT ON DATABASE f1 TO f1_ask;
+SELECT format('GRANT CONNECT ON DATABASE %I TO f1_ask', current_database()) \gexec
 
 -- 2. It can see EXACTLY ONE schema, and that schema contains only views (§1.2).
 --    It is never granted USAGE on public, so no base table is reachable by name.
@@ -125,9 +124,16 @@ ALTER ROLE f1_ask SET statement_timeout = '4s';
 ALTER ROLE f1_ask SET lock_timeout = '1s';
 ALTER ROLE f1_ask SET idle_in_transaction_session_timeout = '8s';
 ALTER ROLE f1_ask SET work_mem = '16MB';
-ALTER ROLE f1_ask SET temp_file_limit = 0;
+-- temp_file_limit is superuser-only (a managed host's owner role is not one). Attempted, and
+-- skipped with a NOTICE rather than aborting the file under ON_ERROR_STOP.
+DO $tfl$ BEGIN
+  EXECUTE 'ALTER ROLE f1_ask SET temp_file_limit = 0';
+EXCEPTION WHEN insufficient_privilege THEN
+  RAISE NOTICE '0005_roles: temp_file_limit is superuser-only here and was not set for f1_ask';
+END $tfl$;
 ALTER ROLE f1_ask SET jit = off;
-REVOKE TEMPORARY ON DATABASE f1 FROM f1_ask;      -- redundant after step 0; harmless
+-- redundant after step 0; harmless
+SELECT format('REVOKE TEMPORARY ON DATABASE %I FROM f1_ask', current_database()) \gexec
 
 -- ---------------------------------------------------------------------------
 -- 4. The log-writer role. The web app must not write attacker-supplied question text
@@ -148,7 +154,7 @@ BEGIN
 END
 $log_role$;
 
-GRANT CONNECT ON DATABASE f1 TO f1_ask_log;
+SELECT format('GRANT CONNECT ON DATABASE %I TO f1_ask_log', current_database()) \gexec
 GRANT USAGE  ON SCHEMA public TO f1_ask_log;      -- needs the base tables by name
 GRANT INSERT ON ask_query_log TO f1_ask_log;
 GRANT SELECT (asked_at, session_cookie, ip_hash, estimated_cost_usd) ON ask_query_log TO f1_ask_log;
@@ -167,7 +173,7 @@ ALTER ROLE f1_ask_log SET lock_timeout = '1s';
 ALTER ROLE f1_ask_log SET idle_in_transaction_session_timeout = '8s';
 ALTER ROLE f1_ask_log SET search_path = 'public';
 ALTER ROLE f1_ask_log SET jit = off;
-REVOKE TEMPORARY ON DATABASE f1 FROM f1_ask_log;
+SELECT format('REVOKE TEMPORARY ON DATABASE %I FROM f1_ask_log', current_database()) \gexec
 
 COMMIT;
 
