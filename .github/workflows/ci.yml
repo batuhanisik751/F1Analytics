@@ -168,7 +168,9 @@ jobs:
 
   py-db-slow:
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    # 20 was too tight: the job took 20:18 on one runner (cancelled) and 16:54 on another (green).
+    # test_mode2_model bootstraps with 8 workers; on a 2-vCPU runner they oversubscribe the cores.
+    timeout-minutes: 40
     services:
       postgres:
         image: postgres:16
@@ -183,6 +185,11 @@ jobs:
           --health-timeout 5s
           --health-retries 20
     env:
+      # One BLAS thread per bootstrap worker. Eight workers x several BLAS threads on two cores is
+      # why 217 s locally became 17-20 min here. Results are unchanged; only the clock moves.
+      OMP_NUM_THREADS: "1"
+      OPENBLAS_NUM_THREADS: "1"
+      MKL_NUM_THREADS: "1"
       DATABASE_URL: postgres://f1:f1@localhost:5432/f1
       F1_REQUIRE_DB: "1"
     steps:
