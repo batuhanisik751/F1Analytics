@@ -1,0 +1,10 @@
+# OPS_SPEC §4.3 — belt and braces under Root Directory = web. Vercel already sees only what
+# git tracks; this keeps the parts of web/ that never run in production out of the upload too.
+# The one migration runner is scripts/neon_migrate.sh on the laptop, never a deploy.
+tests/
+scripts/
+drizzle/
+drizzle.config.ts
+.env*
+!.env.example
+*.tsbuildinfo

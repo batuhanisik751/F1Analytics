@@ -14,7 +14,7 @@
     "db:studio": "drizzle-kit studio",
     "db:smoke": "tsx scripts/db-smoke.ts",
     "test": "tsx --test lib/queries/*.test.ts lib/sim/*.test.ts components/sim/*.test.ts components/race/*.test.ts lib/ask/*.test.ts app/api/ask/*.test.ts components/ask/*.test.ts lib/telemetry/*.test.ts lib/ui/*.test.ts components/ui/*.test.ts components/ui/*.test.tsx lib/driver/*.test.ts components/quali/*.test.ts",
-    "test:a11y": "tsx --test tests/a11y/*.test.ts",
+    "test:a11y": "tsx --test ${A11Y_TEST_FLAGS:-} tests/a11y/*.test.ts",
     "verify:ask-ui": "tsx components/ask/render-states.tsx",
     "check:invariants": "node scripts/check-invariants.mjs"
   },

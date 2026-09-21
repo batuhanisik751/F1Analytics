@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Titillium_Web, Geist_Mono } from "next/font/google";
 import Nav from "@/components/ui/Nav";
+import { formatPushedAt, getLatestRelease } from "@/lib/queries/release";
 import "./globals.css";
 
 // Titillium Web was Formula 1's own typeface from 2014–2017 and is the closest free
@@ -56,10 +57,32 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
           {children}
         </main>
         <footer className="mt-12 border-t-2 border-accent/70 bg-surface/40 px-4 py-5 text-center text-xs text-muted">
-          Computed by f1lab from FastF1 timing data. Every number depends on stated assumptions;
-          each race page lists them.
+          <p>
+            Computed by f1lab from FastF1 timing data. Every number depends on stated assumptions;
+            each race page lists them.
+          </p>
+          <Freshness />
         </footer>
       </body>
     </html>
+  );
+}
+
+// OPS_SPEC §3.4 — the freshness line. An async server component rendered beside <Nav>, which
+// already awaits two queries, so this one costs no extra round trip on the shell. Short and
+// number-heavy on purpose: the caption baseline (tests/a11y) freezes wordy sentences, and a
+// line that changes every night must never be one of them. With no `data_release` row yet
+// (local dev, a fresh Neon project) it says so in one neutral clause and never throws.
+async function Freshness(): Promise<React.JSX.Element> {
+  const rel = await getLatestRelease();
+  if (rel === null) {
+    return <p className="mt-1 tnum">Data as of: no push recorded yet.</p>;
+  }
+  const rows = rel.rowsPushed.toLocaleString("en-GB");
+  return (
+    <p className="mt-1 tnum">
+      Data as of {formatPushedAt(rel.pushedAt)} · last push {rel.sessionsPushed} session
+      {rel.sessionsPushed === 1 ? "" : "s"}, {rows} rows
+    </p>
   );
 }

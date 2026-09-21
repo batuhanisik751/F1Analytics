@@ -187,13 +187,49 @@ if (probe.status !== 0) {
   );
 }
 
+// --- 8. no tracked .env file other than .env.example -------------------------------------
+//
+// OPS_SPEC §4.3 — `.gitignore` says `.env*` + `!.env.example`, and a gitignore is advice:
+// `git add -f`, a rename, or an ignore rule edited in a hurry all get past it. The index is
+// the fact. Checked across the WHOLE repository (root `.env.remote` counts), not only web/.
+// Intent-to-add entries (`git add -N`) are listed too, which is the point: the file is on
+// its way in. No git at all is a failure, not a pass; a rule that cannot look must not say ok.
+const REPO = join(WEB, "..");
+const ls = spawnSync("git", ["-C", REPO, "ls-files", "--full-name"], { encoding: "utf8" });
+if (ls.status !== 0) {
+  fail("tracked-env", ".", `git ls-files failed, so the rule could not run: ${(ls.stderr ?? "").trim()}`);
+} else {
+  for (const path of ls.stdout.split("\n").filter(Boolean)) {
+    const base = path.split("/").pop();
+    if (/^\.env(\..*)?$/.test(base) && base !== ".env.example") {
+      fail("tracked-env", path, "a .env file is in the git index; only .env.example may be");
+    }
+  }
+}
+
+// --- 9. nothing is public ----------------------------------------------------------------
+//
+// OPS_SPEC §4.3 — the `NEXT_PUBLIC_` prefix inlines a variable into the client bundle at
+// build time. Every variable this app has is a DSN, a key, a salt or a budget; none of them
+// is safe in a browser, and the day one is introduced "because it is only the site name" is
+// the day the prefix stops meaning anything. Zero exist (MEASURED); this keeps it at zero.
+// The prefix is spelled in two halves here so the checker does not trip itself.
+const PUBLIC_PREFIX = "NEXT_" + "PUBLIC_";
+for (const f of files) {
+  if (!(SOURCE_EXT.test(f.path) || /(^|\/)\.env[^/]*$/.test(f.path) || f.path.endsWith(".md"))) continue;
+  if (f.path === "scripts/check-invariants.mjs") continue;
+  if (read(f).includes(PUBLIC_PREFIX)) {
+    fail("public-env", f.path, `references a ${PUBLIC_PREFIX}* variable; nothing in this app is public-safe`);
+  }
+}
+
 // --- report -----------------------------------------------------------------------------
-const RULES = 7;
+const RULES = 9;
 if (violations.length === 0) {
   console.log(`invariants ok — ${RULES} rules, ${sources.length} source files under web/`);
   process.exit(0);
 }
-console.error(`MODE3_SPEC §0.2 boundary violated — ${violations.length} problem(s):\n`);
+console.error(`MODE3_SPEC §0.2 / OPS_SPEC §4.3 boundary violated — ${violations.length} problem(s):\n`);
 for (const v of violations) console.error(`  [${v.rule}] ${v.path}\n      ${v.detail}`);
 console.error("\nThe boundary is the feature. Fix the code, not this file.");
 process.exit(1);
