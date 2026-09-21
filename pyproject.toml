@@ -2,6 +2,7 @@
 testpaths = ["tests"]
 markers = [
     "db: needs a reachable Postgres (DATABASE_URL) with the Drizzle migration applied",
+    "cache: calls the FastF1 loaders directly and needs the on-disk cache at <root>/cache; CI deselects with -m 'not cache'",
 ]
 filterwarnings = [
     "ignore::FutureWarning",

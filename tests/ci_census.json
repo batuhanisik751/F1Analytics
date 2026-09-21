@@ -1,0 +1,70 @@
+{
+  "measured_on": "2026-09-20",
+  "measured_with": "pytest --collect-only over tests/ with a fixture-list plugin, then F1_CI=1 pytest tests -m 'not db and not cache' -rs",
+  "fixture_tag": null,
+  "total_items": 961,
+  "files": 34,
+  "ran_floor": 681,
+  "expected": {
+    "ran": 681,
+    "fixture_cache": 83,
+    "direct_cache": 197
+  },
+  "classes": {
+    "nodb_nocache": 462,
+    "db_nocache": 404,
+    "nodb_cache": 84,
+    "db_cache": 2
+  },
+  "cache_marked_items": {
+    "tests/test_quali_clean.py": 133,
+    "tests/test_quali_frames.py": 39,
+    "tests/test_ingest_cli.py": 9,
+    "tests/test_ingest_hungary.py": 6,
+    "tests/test_quali_ingest.py": 4,
+    "tests/test_derive.py": 2,
+    "tests/test_sim.py": 1,
+    "tests/test_telemetry.py": 1,
+    "tests/test_moments.py": 1,
+    "tests/test_sim_db.py": 1
+  },
+  "tiers": {
+    "py-pure": {
+      "selector": "not db and not cache",
+      "passed": 294,
+      "skipped": 82,
+      "deselected": 585,
+      "measured": true
+    },
+    "py-db": {
+      "selector": "db and not cache",
+      "ignore": [
+        "tests/test_mode2_model.py"
+      ],
+      "passed": 368,
+      "skipped": 1,
+      "measured": false
+    },
+    "py-db-slow": {
+      "paths": [
+        "tests/test_mode2_model.py"
+      ],
+      "passed": 19,
+      "skipped": 0,
+      "measured": false
+    }
+  },
+  "skip_reasons": {
+    "fixture_cache": "FastF1 cache absent (F1_CI=1)",
+    "cache_marker": "cache marker: needs the FastF1 cache"
+  },
+  "spec_pinned": {
+    "ran": 681,
+    "fixture_cache": 86,
+    "direct_cache": 185,
+    "py_pure_passed": 462,
+    "py_pure_skipped": 84,
+    "why_different": "OPS_SPEC 1.2 counts direct-cache per test (test_quali_clean 128, test_quali_frames 30) while OPS_SPEC 7 orders whole-file marks for those files (133 and 39 items); the whole-file marks are what is committed, so 9 more items are deselected. Stub measurement found 0 direct loader calls in test_guards (spec: 2) and 4 in test_quali_ingest (spec: 5)."
+  },
+  "note_2026_09_21": "Re-measured after tests/test_push_remote.py (9 pure tests) landed: 961 items, 681 ran on a runner with the fixture and no FastF1 cache; py-pure 294/82/585 measured. fixture_tag is written by the first publish."
+}

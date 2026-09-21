@@ -25,7 +25,7 @@ import pytest
 
 from f1lab import db, ingest
 
-pytestmark = pytest.mark.db
+pytestmark = [pytest.mark.db, pytest.mark.cache]
 
 YEAR, ROUND = 2024, 13
 

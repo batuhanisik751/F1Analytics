@@ -367,6 +367,7 @@ def test_a_race_with_no_laps_yields_no_moments(db_conn):
 
 
 @pytest.mark.db
+@pytest.mark.cache
 def test_pit_flags_survive_the_fastf1_timedelta_columns(hungary_2024, db_conn):
     """The FastF1 path and the stored-table path must produce the same moments.
 

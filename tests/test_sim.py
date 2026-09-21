@@ -544,6 +544,7 @@ def test_miami_soft_dropped(miami_2025, hungary_2024, monkeypatch):
     assert dp.simulable.sum() >= 6 and "SOFT" not in set(f.driver_compound["compound"])
 
 
+@pytest.mark.cache
 def test_r1_2025_rain():
     """§3.5 names this test_r1_2026_rain, but the rain race of §1.12 is 2025 R1 (Australia); r1_2026 fits (see
     test_fit_race_r1_2026_floor_and_not_simulable). The cached 2025 R1 is loaded here directly."""

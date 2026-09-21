@@ -89,6 +89,7 @@ def test_gap_to_leader_exact_tie_resolves_to_the_classified_leader():
     assert (g["GapToLeaderS"] == 0).all()
 
 
+@pytest.mark.cache
 @pytest.mark.parametrize("year, rnd, n_generated", [(2024, 24, 2), (2025, 1, 6)])
 def test_gap_to_leader_lap_one_retirements_from_cache(year, rnd, n_generated):
     """The real cases behind the rule: 2024 Abu Dhabi (Perez's generated lap-1 row is listed before

@@ -378,6 +378,7 @@ def test_the_rederivation_reproduces_every_stored_brake_point(db_conn):
 
 
 @pytest.mark.db
+@pytest.mark.cache
 def test_a_wholesale_failure_reports_why_not_just_how_many(db_conn):
     """2026-09-18 — the payload carries the actual reasons, not only a count.
 

@@ -7,7 +7,7 @@ import pytest
 
 from f1lab import config, db, frames, ingest
 
-pytestmark = pytest.mark.db
+pytestmark = [pytest.mark.db, pytest.mark.cache]
 
 YEAR, ROUND = 2024, 13
 PER_SESSION_TABLES = [t for t in frames.EXPECTED_COLUMNS

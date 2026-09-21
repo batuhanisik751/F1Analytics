@@ -1,0 +1,27 @@
+# Runtime dependencies for the CI test tiers (OPS_SPEC §1.5): requirements.txt minus the
+# notebook stack. Pins mirror requirements.txt exactly so CI tests what the laptop tests.
+#
+# Omitted on purpose: jupyter, ipykernel (notebooks only; nothing under f1lab/ or tests/
+# imports them). Everything else is imported at module level by f1lab/ or tests/:
+#   fastf1        tests/conftest.py, f1lab/clean.py — the PACKAGE only. No session is
+#                 ever downloaded in CI: F1_CI=1 skips the session fixtures and the
+#                 `cache` marker deselects every direct loader call (§1.1).
+#   matplotlib    f1lab/pace.py imports matplotlib.cbook; fastf1 requires it anyway.
+#   statsmodels   f1lab/sim.py, f1lab/pace.py
+#   scikit-learn  f1lab/winprob.py (joblib comes with it; f1lab/decomp.py uses it)
+#   psycopg       f1lab/db.py — the py-db tiers
+#   PyYAML        tests/test_ask_schema_sync.py, scripts/gen_ask_schema.py
+#   anthropic     f1lab/report.py imports it lazily; installed so the key-less path
+#                 CI exercises is the same NoApiKey("ANTHROPIC_API_KEY is not set")
+#                 branch the laptop takes, not the "SDK missing" branch.
+fastf1==3.8.3
+pandas==2.3.3
+numpy==2.5.3
+matplotlib==3.11.1
+statsmodels==0.15.0
+psycopg[binary]==3.3.5
+pytest==9.1.1
+scikit-learn==1.7.2
+joblib==1.5.2
+anthropic>=1.0,<2
+PyYAML==6.0.3

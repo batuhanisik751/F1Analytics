@@ -122,6 +122,7 @@ def test_hazard_rows(db_conn):
         assert pooled == n_races, ck
 
 
+@pytest.mark.cache
 def test_idempotent(db_conn, dsn):
     from f1lab import ingest
     db_conn.rollback()

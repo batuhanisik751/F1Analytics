@@ -18,6 +18,8 @@ import pytest
 
 from f1lab import assumptions, clean
 
+pytestmark = pytest.mark.cache
+
 ROOT = Path(__file__).resolve().parent.parent
 CACHE = ROOT / "cache"
 

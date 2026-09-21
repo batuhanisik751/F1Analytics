@@ -10,6 +10,15 @@ the fixture simply fails loudly).
 
 ``db``-marked tests are skipped unless ``DATABASE_URL`` (or the default DSN) is
 reachable AND ``drizzle.__drizzle_migrations`` exists, i.e. WP0's migration ran.
+
+Two environment switches make the suite honest on a machine without the cache
+(OPS_SPEC §1.3, the visible-skip rule):
+
+    F1_CI=1          the four session fixtures skip with a fixed reason instead of
+                     failing, and every ``cache``-marked item skips with its own fixed
+                     reason. Both reasons are printed by ``-rs`` and counted by CI.
+    F1_REQUIRE_DB=1  an unreachable or unmigrated database is ``pytest.exit(3)``, never
+                     a skip: a CI run that lost its database cannot be green.
 """
 
 from __future__ import annotations
@@ -40,28 +49,49 @@ FIXTURE_ROUNDS = {
 }
 
 
+CI = os.environ.get("F1_CI") == "1"
+REQUIRE_DB = os.environ.get("F1_REQUIRE_DB") == "1"
+
+# The two fixed skip reasons. CI classifies skips by these strings; do not reword them.
+SKIP_FIXTURE_CACHE = "FastF1 cache absent (F1_CI=1)"
+SKIP_CACHE_MARKER = "cache marker: needs the FastF1 cache"
+
+# The fixtures that read the on-disk cache. CI counts items by this set (§1.1 shape a).
+SESSION_FIXTURES = frozenset({"hungary_2024", "miami_2025", "r1_2026", "any_session"})
+
+
 def _load(year: int, rnd: int):
     return clean.load_race(year, rnd, "R", cache=ROOT / "cache")
 
 
+def _ci_skip() -> None:
+    """Under F1_CI=1 a session fixture never touches the cache: it skips, visibly."""
+    if CI:
+        pytest.skip(SKIP_FIXTURE_CACHE)
+
+
 @pytest.fixture(scope="session")
 def hungary_2024():
+    _ci_skip()
     return _load(*FIXTURE_ROUNDS["hungary_2024"])
 
 
 @pytest.fixture(scope="session")
 def miami_2025():
+    _ci_skip()
     return _load(*FIXTURE_ROUNDS["miami_2025"])
 
 
 @pytest.fixture(scope="session")
 def r1_2026():
+    _ci_skip()
     return _load(*FIXTURE_ROUNDS["r1_2026"])
 
 
 @pytest.fixture(scope="session", params=list(FIXTURE_ROUNDS))
 def any_session(request):
     """Parametrised over all three fixtures; each is loaded once per test session."""
+    _ci_skip()
     return request.getfixturevalue(request.param)
 
 
@@ -123,6 +153,14 @@ _DB_STATE: tuple[bool, str] | None = None
 
 def pytest_collection_modifyitems(config, items):
     global _DB_STATE
+    if CI:
+        # Shape (b) of §1.1: tests that call the loaders directly carry the ``cache``
+        # marker. CI deselects them with ``-m "not cache"``; if one is ever collected
+        # anyway it skips with a printed reason rather than reaching FastF1's network path.
+        cache_skip = pytest.mark.skip(reason=SKIP_CACHE_MARKER)
+        for item in items:
+            if "cache" in item.keywords:
+                item.add_marker(cache_skip)
     if not any("db" in item.keywords for item in items):
         return
     if _DB_STATE is None:
@@ -130,6 +168,9 @@ def pytest_collection_modifyitems(config, items):
     ok, reason = _DB_STATE
     if ok:
         return
+    if REQUIRE_DB:
+        # A lost database is a failed run, never a quiet skip (§1.3 mechanism 2).
+        pytest.exit(f"F1_REQUIRE_DB=1 and the database is unavailable: {reason}", returncode=3)
     skip = pytest.mark.skip(reason=f"db marker: {reason}")
     for item in items:
         if "db" in item.keywords:

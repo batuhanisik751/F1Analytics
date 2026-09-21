@@ -65,6 +65,7 @@ def test_session_start_matches_the_name_exactly():
 
 # 24 + 24 + 23 = 71 Q rows and 6 + 6 + 6 = 18 SQ rows -- the counts §1.1's table predicts
 # for the backfill.
+@pytest.mark.cache
 @pytest.mark.parametrize("year, events, sprints", [(2024, 24, 6), (2025, 24, 6), (2026, 23, 6)])
 def test_schedule_rows_add_one_q_per_event_and_one_sq_per_sprint_weekend(year, events, sprints):
     """Measured on all three seasons and both event formats: every event has a session named
@@ -89,6 +90,7 @@ def test_schedule_rows_add_one_q_per_event_and_one_sq_per_sprint_weekend(year, e
             assert q["start_utc"] > sq_rounds[q["round"]]      # Saturday after Friday
 
 
+@pytest.mark.cache
 def test_schedule_rows_leave_the_r_and_s_rows_byte_identical():
     """`upsert_schedule` re-runs over 71 existing races; the R/S rows it writes must not move."""
     _, _, sessions = ingest.schedule_rows(2024)
