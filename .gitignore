@@ -15,3 +15,10 @@ web/.next*/
 .pytest_cache/
 .ruff_cache/
 .DS_Store
+
+# tool config — local only, never on the remote
+.claude/
+web/CLAUDE.md
+web/AGENTS.md
+.env*
+!**/.env.example
