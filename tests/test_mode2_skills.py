@@ -210,6 +210,11 @@ def test_verstappen_is_the_only_rating_clearing_zero_on_the_fast_side(one_lap):
     assert len(sk) - len(fast) - len(slow) == 24
 
 
+# G1 tolerance (2026-09-21). The refit reproduces the stored rows to max|diff| = 0.0 on the
+# laptop (Apple Silicon) and 3.1e-8 on the GitHub runner (Linux x86): different BLAS and FMA
+# rounding in the REML fit. 1e-9 was tighter than any platform guarantees. 1e-6 is still a real
+# gate -- a wrong construction differs by 1e-3 and more (GAPFILL_SPEC §1.6) -- and the r = 1.000
+# assertion beside it is the substantive check.
 def test_gate_g1_grid_pace_refit_reproduces_the_stored_rows(db_conn, asid, components):
     """GATE G1 (§6.3, DL-6) — MANDATORY, and it runs before any correlation exists.
 
@@ -221,7 +226,7 @@ def test_gate_g1_grid_pace_refit_reproduces_the_stored_rows(db_conn, asid, compo
     gate = decomp.assert_grid_pace_reproduces(db_conn, refit)
     assert gate["vacuous"] is False
     assert round(gate["r"], 3) == 1.000
-    assert gate["max_abs_diff"] == pytest.approx(0.0, abs=1e-9)
+    assert gate["max_abs_diff"] == pytest.approx(0.0, abs=1e-6)  # was 1e-9; see note above
 
 
 def test_gate_g2_qualifying_adds_rows_not_edges(db_conn, asid, components):
