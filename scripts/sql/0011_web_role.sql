@@ -44,8 +44,15 @@ DECLARE
                 'CONNECTION LIMIT 20';
 BEGIN
   IF EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'f1_web') THEN
-    EXECUTE format('ALTER ROLE f1_web WITH LOGIN PASSWORD %L %s',
+    -- A managed host may let this role be CREATED but not ALTERED on a later run (Neon:
+    -- 'permission denied to alter role'). Attempt it; on refusal say so and continue to the
+    -- grants below, which are the part a re-run exists to re-assert.
+    BEGIN
+      EXECUTE format('ALTER ROLE f1_web WITH LOGIN PASSWORD %L %s',
                    current_setting('app.web_pw'), flags);
+    EXCEPTION WHEN insufficient_privilege THEN
+      RAISE NOTICE 'f1_web: exists and cannot be altered here (password unchanged)';
+    END;
   ELSE
     EXECUTE format('CREATE ROLE f1_web LOGIN PASSWORD %L %s',
                    current_setting('app.web_pw'), flags);

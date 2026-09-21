@@ -49,8 +49,15 @@ DECLARE
                 'CONNECTION LIMIT 2';
 BEGIN
   IF EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'f1_push') THEN
-    EXECUTE format('ALTER ROLE f1_push WITH LOGIN PASSWORD %L %s',
+    -- A managed host may let this role be CREATED but not ALTERED on a later run (Neon:
+    -- 'permission denied to alter role'). Attempt it; on refusal say so and continue to the
+    -- grants below, which are the part a re-run exists to re-assert.
+    BEGIN
+      EXECUTE format('ALTER ROLE f1_push WITH LOGIN PASSWORD %L %s',
                    current_setting('app.push_pw'), flags);
+    EXCEPTION WHEN insufficient_privilege THEN
+      RAISE NOTICE 'f1_push: exists and cannot be altered here (password unchanged)';
+    END;
   ELSE
     EXECUTE format('CREATE ROLE f1_push LOGIN PASSWORD %L %s',
                    current_setting('app.push_pw'), flags);
@@ -67,7 +74,7 @@ GRANT USAGE ON SCHEMA public TO f1_push;
 --    the only thing to maintain; the two ask tables are also REVOKEd explicitly so a
 --    grant from an older version of this file cannot survive a re-run.
 -- ---------------------------------------------------------------------------
-SELECT format('GRANT SELECT, INSERT, DELETE ON public.%I TO f1_push', tablename)
+SELECT format('GRANT SELECT, INSERT, UPDATE, DELETE ON public.%I TO f1_push', tablename)
   FROM pg_tables
  WHERE schemaname = 'public'
    AND tablename NOT IN ('ask_query_log', 'ask_answer_cache', 'data_release')
