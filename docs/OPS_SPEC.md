@@ -779,6 +779,26 @@ and no role existed at the time, so the blast radius is the empty owner database
 - **The `f1-postgres` container has no CA bundle**; `verify-full` needs `ca-certificates`
   installed (done by hand; durable compose fix is a follow-up).
 
+### 10.3 First production deployment, 2026-09-21
+- **Neon** via the Vercel marketplace, plan Free, `us-east-1`, database `neondb`; the terms
+  acceptance is a browser step the CLI cannot perform (`integration_terms_acceptance_required`),
+  and the marketplace attaches the **owner** DSN to Production — replaced by `f1_web` before the
+  first deploy, and `DATABASE_URL_UNPOOLED` removed from Production.
+- **Gate on Neon:** 32 passed, 0 failed, 3 skipped (provider-owned `postgres` database).
+  **Load:** `push_remote.py --full` — 178 sessions, 274,435 rows, 14 s. **Verify:** remote == local.
+- **Env (Production only):** `DATABASE_URL` (f1_web, pooled), `ASK_DATABASE_URL` (f1_ask, direct),
+  `ASK_LOG_DATABASE_URL` (f1_ask_log, pooled), `ASK_IP_SALT`, `ASK_DAILY_BUDGET_USD=2.00`. No
+  `ANTHROPIC_API_KEY` (F7). All in the node-postgres shape.
+- **Vercel Authentication ON** (`ssoProtection: all`) before the first deploy (F8).
+- **First deploy attempt failed on my invocation, not the config:** `vercel deploy --prod` run from
+  inside `web/` uploads `web/` as the root, and Vercel then looks for `web/web`. The git
+  integration builds from the repository root and is the correct path; the push-triggered build
+  compiled in 46 s with zero errors. Rule: never run `vercel deploy` from inside the root directory.
+- **URLs:** https://f1-analytics-lac.vercel.app and
+  https://f1-analytics-batuhanisik751s-projects.vercel.app (both 302 → login while protected).
+- **Nightly:** the launchd job reloaded with `HOME`; `~/.config/f1analytics/remote.env` holds the
+  `f1_push` DSN (mode 600). First unattended push expected the night after Azerbaijan (26 Sept).
+
 ### 10.2b CI, first runs
 Run 1 (`faf9358`): `web` failed at `npm run lint` — a step never run locally — on the reduced-
 motion hook setting state inside an effect; `py-pure` passed; `py-db` skipped, `py-db-slow`
