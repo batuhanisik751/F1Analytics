@@ -799,6 +799,12 @@ and no role existed at the time, so the blast radius is the empty owner database
 - **Public since 2026-09-21** (`ssoProtection` removed) once every route answered 200 with verified
   content from outside: `/`, `/accuracy`, `/season/2026`, `/race/2026/13/telemetry`, `/ask`, `robots.txt`.
   The ask box stays OFF by the user's decision; no `ANTHROPIC_API_KEY` exists in production.
+- **`/ask` off state, found after going public:** with no key the page rendered the full form and
+  only answered `no_key` after a submit, and the failure copy said "Couldn't reach Claude" — untrue,
+  the model is deliberately absent. Now the page decides server-side via `askKeyPresent()`: a
+  `role="status"` banner states the box is switched off and why, the form renders inert (every
+  pinned string stays in the DOM; nothing can be sent), and `no_key` has its own truthful copy.
+  This is definition-of-done item (4)'s "honest off state", made honest before the question, not after.
 - **Nightly:** the launchd job reloaded with `HOME`; `~/.config/f1analytics/remote.env` holds the
   `f1_push` DSN (mode 600). First unattended push expected the night after Azerbaijan (26 Sept).
 
