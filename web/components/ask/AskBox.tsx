@@ -172,6 +172,7 @@ export default function AskBox({ replay, offline = false }: AskBoxProps): React.
           Ask a question about this database
         </label>
         <input
+            disabled={offline}
           id="ask-question"
           name="question"
           type="text"
