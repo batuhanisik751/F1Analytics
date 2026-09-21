@@ -130,7 +130,7 @@ export default function AskBox({ replay, offline = false }: AskBoxProps): React.
         setPhase({ k: "failed", code: "connection", message: "", sql: null, gate: null });
       }
     },
-    [apply, busy, replay],
+    [apply, busy, offline, replay],
   );
 
   useEffect(() => () => abortRef.current?.abort(), []);
