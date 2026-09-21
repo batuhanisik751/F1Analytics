@@ -1,0 +1,7 @@
+# Pin for the CI database fixture. Written by scripts/publish_fixture.sh --commit; do not edit by hand.
+# No fixture has been published yet: run scripts/publish_fixture.sh --commit on a clean tree with gh
+# authenticated, and this file is rewritten with the asset name and sha256 CI downloads and checks.
+tag=
+release=fixtures
+asset=
+sha256=
