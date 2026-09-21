@@ -78,6 +78,13 @@
       "when": 1789616612915,
       "tag": "0010_trail_braking",
       "breakpoints": true
+    },
+    {
+      "idx": 11,
+      "version": "7",
+      "when": 1789955915196,
+      "tag": "0011_data_release",
+      "breakpoints": true
     }
   ]
 }

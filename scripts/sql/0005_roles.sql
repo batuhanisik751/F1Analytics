@@ -56,8 +56,20 @@ $guard$;
 --    and USAGE on schema public ({…,=U/pg_database_owner}); a role-scoped
 --    REVOKE cannot touch either.
 -- ---------------------------------------------------------------------------
-REVOKE ALL ON DATABASE f1        FROM PUBLIC;
-REVOKE ALL ON DATABASE postgres  FROM PUBLIC;   -- closes cross-database CONNECT
+-- The two database-level REVOKEs are guarded (OPS_SPEC §4.2, §8 risk 3): on a managed
+-- host the `postgres` database is not visible and the bare statement would abort the whole
+-- file under ON_ERROR_STOP, leaving every PUBLIC grant below in place. When the database is
+-- absent the guard raises a NOTICE so the skip is on the record, never silent.
+SELECT CASE WHEN EXISTS (SELECT 1 FROM pg_database WHERE datname = 'f1')
+  THEN 'REVOKE ALL ON DATABASE f1 FROM PUBLIC'
+  ELSE $n$DO $b$ BEGIN RAISE NOTICE '0005_roles: database "f1" not visible here; its PUBLIC REVOKE was skipped'; END $b$$n$
+END
+\gexec
+SELECT CASE WHEN EXISTS (SELECT 1 FROM pg_database WHERE datname = 'postgres')
+  THEN 'REVOKE ALL ON DATABASE postgres FROM PUBLIC'   -- closes cross-database CONNECT
+  ELSE $n$DO $b$ BEGIN RAISE NOTICE '0005_roles: database "postgres" not visible here; its PUBLIC REVOKE was skipped'; END $b$$n$
+END
+\gexec
 REVOKE ALL ON SCHEMA public      FROM PUBLIC;   -- removes =U/pg_database_owner
 REVOKE ALL ON ALL TABLES    IN SCHEMA public FROM PUBLIC;
 REVOKE ALL ON ALL FUNCTIONS IN SCHEMA public FROM PUBLIC;
