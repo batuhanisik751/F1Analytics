@@ -2,7 +2,7 @@
 // SPEC §3.4 — the ONE ECharts wrapper. Nothing else in the web app imports `echarts`.
 // The container <div> renders on the server (stable layout); the canvas is drawn
 // only on the client inside useEffect, so there is no hydration mismatch.
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useSyncExternalStore } from "react";
 import type { EChartsOption } from "echarts";
 import * as echarts from "echarts/core";
 import {
@@ -75,17 +75,22 @@ export type EChartProps = {
  */
 const REDUCED_MOTION_QUERY = "(prefers-reduced-motion: reduce)";
 
+// A media query is an external store, so it is read through useSyncExternalStore rather
+// than mirrored into state from an effect: the value is available on the first client
+// render (no flash of animated chart before the effect runs), the server snapshot keeps SSR
+// deterministic, and there is no setState inside an effect for the React compiler to reject.
+function subscribeReducedMotion(onChange: () => void): () => void {
+  if (typeof window === "undefined" || !window.matchMedia) return () => {};
+  const mq = window.matchMedia(REDUCED_MOTION_QUERY);
+  mq.addEventListener("change", onChange);
+  return () => mq.removeEventListener("change", onChange);
+}
+const readReducedMotion = (): boolean =>
+  typeof window !== "undefined" && !!window.matchMedia && window.matchMedia(REDUCED_MOTION_QUERY).matches;
+const serverReducedMotion = (): boolean => false;
+
 export function useReducedMotion(): boolean {
-  const [reduced, setReduced] = useState(false);
-  useEffect(() => {
-    if (typeof window === "undefined" || !window.matchMedia) return;
-    const mq = window.matchMedia(REDUCED_MOTION_QUERY);
-    setReduced(mq.matches);
-    const onChange = (e: MediaQueryListEvent): void => setReduced(e.matches);
-    mq.addEventListener("change", onChange);
-    return () => mq.removeEventListener("change", onChange);
-  }, []);
-  return reduced;
+  return useSyncExternalStore(subscribeReducedMotion, readReducedMotion, serverReducedMotion);
 }
 
 /** Strips every animation switch ECharts honours, including the per-series ones. */
