@@ -796,6 +796,9 @@ and no role existed at the time, so the blast radius is the empty owner database
   compiled in 46 s with zero errors. Rule: never run `vercel deploy` from inside the root directory.
 - **URLs:** https://f1-analytics-lac.vercel.app and
   https://f1-analytics-batuhanisik751s-projects.vercel.app (both 302 → login while protected).
+- **Public since 2026-09-21** (`ssoProtection` removed) once every route answered 200 with verified
+  content from outside: `/`, `/accuracy`, `/season/2026`, `/race/2026/13/telemetry`, `/ask`, `robots.txt`.
+  The ask box stays OFF by the user's decision; no `ANTHROPIC_API_KEY` exists in production.
 - **Nightly:** the launchd job reloaded with `HOME`; `~/.config/f1analytics/remote.env` holds the
   `f1_push` DSN (mode 600). First unattended push expected the night after Azerbaijan (26 Sept).
 
