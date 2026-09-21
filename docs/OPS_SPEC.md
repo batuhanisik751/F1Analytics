@@ -753,6 +753,23 @@ Nothing in WP-1..7 needs Neon or Vercel; nothing in CI needs a secret.
   successful push (solo-operability graft) — accepted that launchd now runs `git push`.
 
 ## 10. As built
+
+### 10.1 Incident, 2026-09-21: owner credential exposed during first setup
+While applying `neon_migrate.sh`, the Neon owner DSN was `source`d from a dotenv file. Its `&`
+separators were parsed as shell job control, splitting the value and printing the password in
+bash's job-completion output — into the session transcript. Consequence: the `neondb_owner`
+password is treated as compromised and must be rotated **before** any migration runs against
+it; the rotation is a secret-store write and is performed by the user (Neon console, which also
+re-syncs the Vercel-managed env var) rather than by tooling. Rule recorded in `RUNBOOK.md`
+(production section) and in §3.4's credential handling: credential files are read by Python or
+`grep`, never sourced; values are single-quoted; DSNs are one argv element. No data was loaded
+and no role existed at the time, so the blast radius is the empty owner database.
+
+### 10.2 CI, first runs
+Run 1 (`faf9358`): `web` failed at `npm run lint` — a step never run locally — on the reduced-
+motion hook setting state inside an effect; `py-pure` passed; `py-db` skipped, `py-db-slow`
+cancelled, `coverage` failed for want of reports. Fixed with `useSyncExternalStore` (`2566031`).
+Run 2: pending at the time of writing; the measured coverage line is recorded below when it lands.
 (empty — filled in by each work package as it lands, with the measured numbers that replace
 every EST above: CI wall and billed minutes, `py-db-slow` on the runner, the initial load
 time to Neon, the first fortnight's CU-hours and egress, first-hit latency for `/` and the

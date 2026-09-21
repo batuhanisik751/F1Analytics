@@ -152,6 +152,13 @@ those weekends silently. Daily is self-healing: six days a week it finds nothing
 seconds, and a session recorded `failed` with *no timing data available* is retried on the next
 run. Watch it with `tail -f output/update_season.log`; stop it with `launchctl unload`.
 
+> **Never `source` a file that holds a connection string.** Neon DSNs carry `&` between query
+> parameters (`sslmode=…&channel_binding=…`). `source`d unquoted, the shell reads each `&` as a
+> job separator: the value is split, the fragments run as background commands, and bash prints
+> them — password included — in its `Done` lines. That happened once on 2026-09-21 during the
+> first production setup and the owner password had to be rotated. Read credential files with
+> Python or `grep`, write values single-quoted, and pass DSNs as a single argv element.
+
 **It refuses to run rather than risk the corpus.** There must never be two writers — two
 concurrent ingests corrupted four sprint sessions earlier in this project, and a background
 process that outlived its shell widened the telemetry corpus by 42 sessions before anyone
