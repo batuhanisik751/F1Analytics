@@ -1,7 +1,7 @@
 {
   "measured_on": "2026-09-20",
   "measured_with": "pytest --collect-only over tests/ with a fixture-list plugin, then F1_CI=1 pytest tests -m 'not db and not cache' -rs",
-  "fixture_tag": null,
+  "fixture_tag": "fixture-2026-09-21",
   "total_items": 961,
   "files": 34,
   "ran_floor": 681,
