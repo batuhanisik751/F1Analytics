@@ -1,5 +1,7 @@
 # F1 Analytics
 
+[![CI](https://github.com/batuhanisik751/F1Analytics/actions/workflows/ci.yml/badge.svg)](https://github.com/batuhanisik751/F1Analytics/actions/workflows/ci.yml)
+
 A read-only Formula 1 statistics site over precomputed Postgres tables. Python (`f1lab`)
 pulls timing data through [FastF1](https://github.com/theOehrly/Fast-F1), cleans it, and
 computes every analytic at ingest time; a Next.js app renders four pages by selecting rows.
@@ -91,6 +93,28 @@ at Belgium 2025 and Hungary 2026 (kept, with a colour); Spain 2025's 19-car resu
 unpaired team is listed under the teammate chart); red-flag races in 2026 (rounds 6, 12, 13);
 pit stops without an out-lap; DNS drivers; lapped cars whose API "time" is not a gap to the
 winner (never shown as one).
+
+## What CI runs, and what it cannot
+
+Every push runs the web suite (unit, accessibility against a started server, typecheck, build,
+invariants) and the Python suite against a **restored copy of the real database** — a scrubbed
+`pg_dump` published as a GitHub Release asset and loaded fresh into a Postgres service container
+on every run, then migrated, so a pull request's migration is exercised on real data.
+
+The run ends with one line in the job summary, and it is the honest part:
+
+```
+ran 681 of 961 (70.9%) — not run: 83 fixture-cache, 197 direct-cache
+```
+
+The 280 not run need the 10 GB FastF1 cache on local disk — they re-ingest real sessions and
+take 25–40 minutes a file — and cannot run on a hosted runner. They are marked `cache` and run
+on the laptop with `.venv/bin/python -m pytest tests`. CI **fails** if the ran count drops below
+the committed floor in `tests/ci_census.json`, and a lost database is an exit code, never a skip:
+a green run over nine files would be a lie by omission, and this project does not do that.
+
+Nothing in CI needs a secret. The ask box is exercised in its key-absent state, which is also
+how production ships.
 
 ## The analytics and their caveats
 

@@ -10,6 +10,7 @@
 --   ask_answer_cache       Same: cached rows and headlines keyed by other people's questions.
 --   ask_query_log          Holds other fans' questions — untrusted free text a stranger typed. Making it queryable would turn the ask box into a read channel for every payload ever submitted.
 --   circuit_layout         Rendering geometry (rotation, reference session). Answers no question a fan asks.
+--   data_release           Push bookkeeping for the production database (when the laptop last synced, how many rows). Operational, not a fact about a race; the site footer reads it directly.
 --   ingest_runs            hostname is the owner's machine and cli_args carries local cache paths; error carries Python tracebacks with absolute /Users/ paths. The one real PII surface here.
 --   lap_exclusion_report   Per-lap audit plumbing. The clean-lap story is laps.is_representative and ask.lap_status, both of which are queryable.
 --   lap_telemetry          10 Hz channel arrays, ~626 values per column per row. The planner prices unnest() at 10 rows: a query over these reads 2.2M samples while reporting a total cost of ~1,800, so MAX_PLAN_COST and MAX_PLAN_ROWS cannot see it (measured: 53,240 estimated against 3,332,582 actual, 62.6x under). A single SELECT of one array column also blows the response byte cap. The answerable half is ask.lap_telemetry_summary and ask.lap_corner_speeds, which are honest scalar rows.

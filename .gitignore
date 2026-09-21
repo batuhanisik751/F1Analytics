@@ -16,9 +16,6 @@ web/.next*/
 .ruff_cache/
 .DS_Store
 
-# tool config — local only, never on the remote
-.claude/
-web/CLAUDE.md
-web/AGENTS.md
+# editor and tooling config is excluded locally via .git/info/exclude, not here
 .env*
 !**/.env.example

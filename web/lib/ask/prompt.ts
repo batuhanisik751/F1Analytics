@@ -190,7 +190,7 @@ export function promptPrefixSha256(): string {
 // cached answer predates them, so the deploy step in scripts/sql/ask_views_telemetry.sql
 // empties ask_answer_cache alongside this line.
 export const PROMPT_PREFIX_SHA256 =
-  "1318c2dab109ceba4ea829fc942b35a8b203063dc1321171d8e1635f28962953";
+  "8787b34405febe63760607fe6b241bda23c303243a6cd95d5735b4e3c2b6623f";
 
 /** True when the assembled prefix still matches the committed hash. WP-7's CI check. */
 export function promptPrefixMatchesCommitted(): boolean {

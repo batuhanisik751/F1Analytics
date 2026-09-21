@@ -65,7 +65,7 @@ selecting rows. Nothing is computed on request beyond formatting and sorting.
 `<root>/web` was created with `create-next-app` (Next 16.3.5, React 19.2.8, Tailwind 4, ESLint 9,
 TypeScript 5.9, **npm** with `package-lock.json`, **no `src/` directory**, `@/*` → `./*`). It contains
 `app/layout.tsx`, `app/page.tsx`, `app/globals.css`, `eslint.config.mjs`, `next.config.ts`,
-`postcss.config.mjs`, `tsconfig.json`, `AGENTS.md`/`CLAUDE.md` (Next-generated; leave as is).
+`postcss.config.mjs`, `tsconfig.json`; editor-generated instruction files are excluded locally and never tracked.
 Package WP0 EDITS this scaffold; nobody runs `create-next-app` again, nobody introduces pnpm/yarn.
 
 Next 16 facts that matter (verified in `web/node_modules/next/dist/docs`):
