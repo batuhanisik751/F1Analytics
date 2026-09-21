@@ -152,6 +152,31 @@ those weekends silently. Daily is self-healing: six days a week it finds nothing
 seconds, and a session recorded `failed` with *no timing data available* is retried on the next
 run. Watch it with `tail -f output/update_season.log`; stop it with `launchctl unload`.
 
+### Three TLS environments, not two
+
+| who connects to Neon | library | `sslrootcert` |
+|---|---|---|
+| `neon_migrate.sh`, `db_ask_verify.sh` (psql inside the `f1-postgres` container) | container libpq 16 | `system` — needs `ca-certificates` in the image (`db/Dockerfile`) |
+| `push_remote.py`, `update_season.py` (psycopg on the Mac) | host libpq 18 | an explicit bundle: `/etc/ssl/cert.pem`. `system` fails here with *certificate verify failed* |
+| the site, and the gate's protocol rail | node-postgres | **none** — `pg` opens the value as a file |
+
+`remote.env` is read only by the host path, so it carries `/etc/ssl/cert.pem`; `owner.env` is
+used only through the container and carries `system`.
+
+### The push that verified against itself
+
+The first production load reported *178 sessions OK* and *remote == local* while Neon stayed
+empty: `remote.env` still held the **test** target `f1_remote` (a second database in the local
+container), the push loaded it, and the verify compared it with local — trivially equal.
+`push_remote.py` now names its target host on every run and **refuses a local host** unless
+`--allow-local` is passed. After any push, believe a content check (`seasons`, row counts on
+Neon as the owner), not the tool's own summary.
+
+Two smaller traps from the same evening: `kill -9` of a push leaves `output/update_season.lock`
+behind (delete it once `pgrep -f push_remote` is empty); and the schema check compares the
+ordered **hashes** of `drizzle.__drizzle_migrations`, never the serial ids — a rolled-back
+apply consumes an id on one side only.
+
 ### Two connection-string shapes — never confuse them
 
 | path | library | DSN must carry |

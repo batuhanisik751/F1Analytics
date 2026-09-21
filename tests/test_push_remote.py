@@ -128,3 +128,21 @@ def test_aggregate_rows_that_point_at_a_session_go_out_and_come_back_with_it():
     # It sorts after its parent, so the reversed (delete) pass reaches it first.
     order = [x.name for x in pr.fk_order([t, Table("sessions", ["session_id"], ["session_id"])])]
     assert order == ["sessions", "circuit_layout"]
+
+
+def test_ledger_ids_are_bookkeeping_only():
+    """A serial gap on one side must not read as a diverged schema (2026-09-21).
+
+    The local ledger skips id 10 (a rolled-back apply consumed it); Neon's is 1..12. Same
+    twelve hashes in the same order is the same schema. check_schema compares hash sequences.
+    """
+    import pytest
+    from scripts.push_remote import compare_ledgers, Refusal
+    local = ["h%d" % i for i in range(12)]
+    compare_ledgers(local, list(local))                        # identical: no raise
+    with pytest.raises(Refusal, match="SCHEMA BEHIND"):
+        compare_ledgers(local, local[:11])                     # production one behind: named, refused
+    with pytest.raises(Refusal, match="SCHEMA AHEAD"):
+        compare_ledgers(local[:11], local)                     # this machine behind
+    with pytest.raises(Refusal, match="DIVERGED"):
+        compare_ledgers(local, local[:11] + ["other"])         # a different twelfth migration

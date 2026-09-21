@@ -799,6 +799,18 @@ and no role existed at the time, so the blast radius is the empty owner database
 - **Nightly:** the launchd job reloaded with `HOME`; `~/.config/f1analytics/remote.env` holds the
   `f1_push` DSN (mode 600). First unattended push expected the night after Azerbaijan (26 Sept).
 
+### 10.4 The load that went to the wrong database
+The first `push_remote.py --full` targeted `f1_remote` — WP-7's local test database — because
+`~/.config/f1analytics/remote.env` still held the test credential: the chain that was meant to
+rewrite it exited at a failed gate before the write, and the rebuilt chain omitted the write.
+The push reported 178 sessions OK and `--verify-only` reported remote == local, both true of the
+wrong database, while Neon had 0 rows and the site showed its empty state. Fixes: the tool logs
+its credential source and target host on every run; a local host is refused without
+`--allow-local`; the schema check compares hash sequences (the local ledger skips serial id 10);
+and the runbook says to trust a content check over the tool's summary. Also found: host-side
+libpq rejects `sslrootcert=system` (an explicit bundle is required), and `kill -9` leaves the
+lock behind.
+
 ### 10.2b CI, first runs
 Run 1 (`faf9358`): `web` failed at `npm run lint` — a step never run locally — on the reduced-
 motion hook setting state inside an effect; `py-pure` passed; `py-db` skipped, `py-db-slow`

@@ -108,6 +108,7 @@ def load_remote_dsn(path: Path = REMOTE_ENV, env: dict[str, str] | None = None) 
     """
     env = os.environ if env is None else env
     if env.get(REMOTE_ENV_KEY):
+        log.info("target credential: %s from the environment", REMOTE_ENV_KEY)
         return env[REMOTE_ENV_KEY]
     if not path.exists():
         return None
@@ -123,8 +124,33 @@ def load_remote_dsn(path: Path = REMOTE_ENV, env: dict[str, str] | None = None) 
         line = line.strip()
         if line.startswith(REMOTE_ENV_KEY + "="):
             value = line.split("=", 1)[1].strip().strip("'\"")
+            log.info("target credential: %s from %s", REMOTE_ENV_KEY, path)
             return value or None
     return None
+
+
+LOCAL_HOSTS = {"localhost", "127.0.0.1", "::1", "host.docker.internal", "f1-postgres"}
+
+
+def target_host(dsn: str) -> str:
+    m = re.search(r"@([^/:?]+)", dsn)
+    return m.group(1) if m else "?"
+
+
+def assert_not_local(dsn: str, allow_local: bool) -> None:
+    """A production push must never land on a local database by accident (2026-09-21).
+
+    The first production load did exactly that: the credential file still held the test
+    target `f1_remote` in the Docker container, the push reported 178 sessions OK and the
+    verify reported remote == local -- trivially, since remote WAS local -- while Neon stayed
+    empty and the deployed site showed its empty state. The push tool now names its target
+    on every run and refuses a local host unless told, in so many words, that local is intended.
+    """
+    host = target_host(dsn)
+    log.info("target host: %s", host)
+    if host in LOCAL_HOSTS and not allow_local:
+        raise Refusal(f"target host {host!r} is local; a production push never is. "
+                      f"Pass --allow-local only for a test database.")
 
 
 @dataclass
@@ -257,15 +283,23 @@ def _settings(conn) -> None:
                     "SET TimeZone = 'UTC'; SET extra_float_digits = 3; SET bytea_output = 'hex'")
 
 
-def migrations(conn) -> list[tuple[int, str]]:
+def migrations(conn) -> list[str]:
     with conn.cursor() as cur:
-        cur.execute("SELECT id, hash FROM drizzle.__drizzle_migrations ORDER BY id")
-        return [(int(i), h) for i, h in cur.fetchall()]
+        # Hashes only, in apply order. The serial `id` is bookkeeping: a migration that was
+        # applied and rolled back consumes a number on one side and not the other, and the
+        # local ledger already skips id 10 for exactly that reason while Neon's is contiguous.
+        # Comparing ids blocked the first production push over an identical schema (2026-09-21).
+        cur.execute("SELECT hash FROM drizzle.__drizzle_migrations ORDER BY id")
+        return [h for (h,) in cur.fetchall()]
 
 
 def check_schema(local, remote) -> None:
     """Refuse on any ledger difference, before a single write (§3.2 step 1, §9-D4)."""
-    l, r = migrations(local), migrations(remote)
+    compare_ledgers(migrations(local), migrations(remote))
+
+
+def compare_ledgers(l: list[str], r: list[str]) -> None:
+    """Pure: ordered hash sequences. Equal, or one a strict prefix of the other, or diverged."""
     if l == r:
         return
     if r[:len(l)] == l:
@@ -637,6 +671,8 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument("--verify-only", action="store_true", help="compare, write nothing")
     ap.add_argument("--dry-run", action="store_true", help="print the plan, write nothing")
     ap.add_argument("--retries", type=int, default=3)
+    ap.add_argument("--allow-local", action="store_true",
+                    help="permit a localhost/container target (test databases only)")
     ap.add_argument("--remote-env", type=Path, default=REMOTE_ENV,
                     help=f"file holding {REMOTE_ENV_KEY} (mode 600)")
     a = ap.parse_args(argv)
@@ -644,6 +680,8 @@ def main(argv: list[str] | None = None) -> int:
                         format="%(asctime)s %(levelname)s %(message)s")
     try:
         remote = load_remote_dsn(a.remote_env)
+        if remote:
+            assert_not_local(remote, getattr(a, 'allow_local', False))
     except Refusal as e:
         log.error("push: REFUSED: %s", e)
         return 2
