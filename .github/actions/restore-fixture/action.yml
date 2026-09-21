@@ -1,0 +1,123 @@
+name: restore-fixture
+description: >
+  Download the pinned database fixture (a GitHub Release asset named in tests/ci_fixture.txt),
+  check its sha256, restore it into the job's postgres:16 service, bring it to the repo's
+  migration head with `npm run db:migrate` (asserting the ledger before and after), and apply
+  the role and ask-view SQL so tests exercise the real grant boundary (OPS_SPEC §2.3, §2.4).
+  Needs Python 3.13 with requirements-ci.txt and Node 22 already set up by the calling job.
+
+inputs:
+  database-url:
+    description: Owner DSN of the service database to restore into.
+    default: postgres://f1:f1@localhost:5432/f1
+  pin-file:
+    description: The fixture pin (key=value lines written by scripts/publish_fixture.sh).
+    default: tests/ci_fixture.txt
+  role-password:
+    description: Password given to every role the SQL files create; the service DB is throw-away.
+    default: ci-only-pw
+  jobs:
+    description: Parallel pg_restore workers.
+    default: "4"
+
+outputs:
+  tag:
+    description: The fixture tag that was restored.
+    value: ${{ steps.pin.outputs.tag }}
+  asset:
+    description: The asset file name that was restored.
+    value: ${{ steps.pin.outputs.asset }}
+
+runs:
+  using: composite
+  steps:
+    - id: pin
+      shell: bash
+      run: |
+        python scripts/ci_fixture.py pin "${{ inputs.pin-file }}" > out.pin
+        cat out.pin | tee -a "$GITHUB_OUTPUT"
+        rm out.pin
+
+    - name: Postgres 16 client tools
+      shell: bash
+      run: |
+        major="$(pg_restore --version 2>/dev/null | grep -oE '[0-9]+' | head -1 || true)"
+        if [ "${major:-0}" -lt 16 ]; then
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq postgresql-client-16
+        fi
+        pg_restore --version
+        psql --version
+
+    - name: Fixture cache
+      id: fixture-cache
+      uses: actions/cache@v4
+      with:
+        path: out/${{ steps.pin.outputs.asset }}
+        key: fixture-${{ steps.pin.outputs.sha256 }}
+
+    - name: Download the release asset
+      if: steps.fixture-cache.outputs.cache-hit != 'true'
+      shell: bash
+      env:
+        GH_TOKEN: ${{ github.token }}
+      run: |
+        mkdir -p out
+        gh release download "${{ steps.pin.outputs.release }}" \
+          --repo "$GITHUB_REPOSITORY" \
+          --pattern "${{ steps.pin.outputs.asset }}" \
+          --dir out --clobber
+
+    - name: Check the asset against the pin
+      shell: bash
+      run: python scripts/ci_fixture.py check-asset "out/${{ steps.pin.outputs.asset }}" "${{ inputs.pin-file }}"
+
+    - name: Wait for the service database
+      shell: bash
+      run: python scripts/ci_wait.py "${{ inputs.database-url }}" 60
+
+    - name: Restore
+      shell: bash
+      run: |
+        start=$(date +%s)
+        pg_restore --dbname "${{ inputs.database-url }}" --no-owner --no-privileges \
+          --jobs "${{ inputs.jobs }}" --exit-on-error "out/${{ steps.pin.outputs.asset }}"
+        echo "restore took $(( $(date +%s) - start )) s"
+
+    - name: Fixture ledger is not newer than the repo
+      shell: bash
+      env:
+        DATABASE_URL: ${{ inputs.database-url }}
+      run: python scripts/ci_fixture.py assert-not-newer
+
+    - name: Migrate to head
+      shell: bash
+      working-directory: web
+      env:
+        DATABASE_URL: ${{ inputs.database-url }}
+      run: |
+        npm ci --no-audit --no-fund
+        npm run db:migrate
+
+    - name: Ledger is at head
+      shell: bash
+      env:
+        DATABASE_URL: ${{ inputs.database-url }}
+      run: python scripts/ci_fixture.py assert-at-head
+
+    - name: Roles and ask views (the same order as scripts/neon_migrate.sh)
+      shell: bash
+      env:
+        PW: ${{ inputs.role-password }}
+      run: |
+        sql() { psql "${{ inputs.database-url }}" -X -q -v ON_ERROR_STOP=1 "$@"; }
+        sql -f scripts/sql/0005_ask_views.sql
+        sql -v ask_password="$PW" -v ask_log_password="$PW" -f scripts/sql/0005_roles.sql
+        sql -f scripts/sql/0005_ask_views.sql
+        sql -f scripts/sql/ask_views_telemetry.sql
+        sql -v web_password="$PW" -f scripts/sql/0011_web_role.sql
+        sql -v push_password="$PW" -f scripts/sql/0012_push_role.sql
+        sql -tA -c "SELECT 'migrations ' || count(*) FROM drizzle.__drizzle_migrations
+                    UNION ALL SELECT 'sessions ' || count(*) FROM sessions
+                    UNION ALL SELECT 'ask views ' || count(*) FROM pg_views WHERE schemaname = 'ask'
+                    UNION ALL SELECT 'roles ' || count(*) FROM pg_roles WHERE rolname LIKE 'f1\_%'"

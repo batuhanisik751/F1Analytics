@@ -1,0 +1,234 @@
+# CI for F1 Analytics (OPS_SPEC §1, §6.1). No secrets: the only token is the job's own
+# GITHUB_TOKEN, used read-only to download the fixture Release asset. No make.
+#
+#   web         T0  npm ci, check:invariants, typecheck, lint, unit tests, build (artefact for a11y)
+#   py-pure     T0  pytest -m "not db and not cache" — no services
+#   py-db       T1  postgres:16 + fixture restore + migrate + roles; pytest -m "db and not cache"
+#                   in ONE invocation (db tests mutate; never sharded); then a11y against `next start`
+#   py-db-slow  T1  tests/test_mode2_model.py on its own service and its own restore
+#   coverage        sums the junit XML and prints `ran N of T (P%) — not run: A fixture-cache,
+#                   B direct-cache`; fails below the floor in tests/ci_census.json
+#
+# Every skip is printed (-rs); a lost database is pytest.exit(3) (F1_REQUIRE_DB=1); a11y cannot
+# skip (A11Y_REQUIRE=1); every job has timeout-minutes: 20 so a cache-bound test that reaches
+# FastF1's network path goes red, never slow-green.
+
+name: ci
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  F1_CI: "1"
+  PYTHONDONTWRITEBYTECODE: "1"
+  PIP_DISABLE_PIP_VERSION_CHECK: "1"
+  NODE_VERSION: "22.19.0"
+  PYTHON_VERSION: "3.13.5"
+
+jobs:
+  web:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    defaults:
+      run:
+        working-directory: web
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+          cache-dependency-path: web/package-lock.json
+      - run: npm ci --no-audit --no-fund
+      - run: npm run check:invariants
+      - run: npm run typecheck
+      - run: npm run lint
+      - run: npm run test
+      - run: npm run build
+      - uses: actions/upload-artifact@v4
+        with:
+          name: next-build
+          path: |
+            web/.next
+            !web/.next/cache
+          include-hidden-files: true
+          retention-days: 1
+          if-no-files-found: error
+
+  py-pure:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: pip
+          cache-dependency-path: requirements-ci.txt
+      - run: pip install -r requirements-ci.txt
+      - name: Collected total (the denominator of the coverage line)
+        run: |
+          mkdir -p out
+          python -m pytest tests --collect-only -q | tail -1 | tee out/collected.txt
+      - run: python -m pytest tests -m "not db and not cache" -q -rs --junitxml=out/junit-pure.xml
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: junit-pure
+          path: |
+            out/junit-pure.xml
+            out/collected.txt
+          if-no-files-found: error
+
+  py-db:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    needs: [web]                       # only for the .next artefact; py-pure stays parallel
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: f1
+          POSTGRES_PASSWORD: f1
+          POSTGRES_DB: f1
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U f1 -d f1"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 20
+    env:
+      DATABASE_URL: postgres://f1:f1@localhost:5432/f1
+      F1_REQUIRE_DB: "1"               # an unreachable database is pytest.exit(3), never a skip
+      A11Y_BASE_URL: http://localhost:3000
+      A11Y_REQUIRE: "1"                # serverUp() throws instead of skipping
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: pip
+          cache-dependency-path: requirements-ci.txt
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+          cache-dependency-path: web/package-lock.json
+      - run: pip install -r requirements-ci.txt
+      - name: Restore the fixture, migrate to head, apply roles
+        uses: ./.github/actions/restore-fixture
+      - name: Migrations apply from an empty database
+        working-directory: web
+        env:
+          DATABASE_URL: postgres://f1:f1@localhost:5432/f1_empty
+        run: |
+          psql postgres://f1:f1@localhost:5432/f1 -X -v ON_ERROR_STOP=1 -c "CREATE DATABASE f1_empty"
+          npm run db:migrate
+          python ../scripts/ci_fixture.py assert-at-head
+      - name: pytest — db tier, one invocation in file order
+        run: >-
+          python -m pytest tests -m "db and not cache" -q -rs --durations=15
+          --ignore=tests/test_mode2_model.py --junitxml=out/junit-db.xml
+      - uses: actions/download-artifact@v4
+        with:
+          name: next-build
+          path: web/.next
+      - name: Start the production server
+        working-directory: web
+        run: |
+          mkdir -p ../out
+          nohup npm run start -- -p 3000 > ../out/next-start.log 2>&1 &
+          echo $! > ../out/next-start.pid
+          python ../scripts/ci_wait.py "$A11Y_BASE_URL/glossary" 90 || { cat ../out/next-start.log; exit 1; }
+      - name: a11y against next start
+        working-directory: web
+        env:
+          A11Y_TEST_FLAGS: --test-reporter=junit --test-reporter-destination=../out/junit-a11y.xml
+        run: npm run test:a11y
+      - name: Stop the server
+        if: always()
+        run: |
+          test -f out/next-start.pid && kill "$(cat out/next-start.pid)" 2>/dev/null || true
+          test -f out/next-start.log && tail -n 40 out/next-start.log || true
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: junit-db
+          path: out/junit-*.xml
+          if-no-files-found: error
+
+  py-db-slow:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: f1
+          POSTGRES_PASSWORD: f1
+          POSTGRES_DB: f1
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U f1 -d f1"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 20
+    env:
+      DATABASE_URL: postgres://f1:f1@localhost:5432/f1
+      F1_REQUIRE_DB: "1"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: pip
+          cache-dependency-path: requirements-ci.txt
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+          cache-dependency-path: web/package-lock.json
+      - run: pip install -r requirements-ci.txt
+      - name: Restore the fixture, migrate to head, apply roles
+        uses: ./.github/actions/restore-fixture
+      - name: pytest — tests/test_mode2_model.py alone
+        run: python -m pytest tests/test_mode2_model.py -q -rs --durations=10 --junitxml=out/junit-db-slow.xml
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: junit-db-slow
+          path: out/junit-db-slow.xml
+          if-no-files-found: error
+
+  coverage:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    needs: [py-pure, py-db, py-db-slow]
+    if: always()
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: junit-*
+          path: out
+          merge-multiple: true
+      - run: ls -l out
+      - name: The number and the floor
+        run: >-
+          python scripts/ci_coverage.py out/*.xml
+          --census tests/ci_census.json
+          --pin tests/ci_fixture.txt
+          --collected out/collected.txt
+          --expect junit-pure.xml,junit-db.xml,junit-db-slow.xml,junit-a11y.xml
