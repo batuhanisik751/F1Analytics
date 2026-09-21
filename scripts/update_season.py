@@ -17,6 +17,15 @@ that are already stored, so a daily schedule costs seconds on most days and does
 on the one day a week it matters. It is also safe to run twice by accident -- the second run
 blocks on the lock and then finds nothing to do.
 
+Since v1.11 the run ends by publishing (step 4): `scripts/push_remote.py` diffs this machine
+against the production database and applies the difference in one remote transaction, but
+only when every step above reported success -- a corpus the growth guard did not sign is never
+published. On a successful push that moved sessions, step 5 commits the census baseline and
+re-publishes the CI fixture so the tree is clean by morning. The production credential is read
+from `~/.config/f1analytics/remote.env` (mode 600) and nowhere else; without that file the run
+is local-only and says so. `--no-push` keeps a run local, `--push-only` skips ingest and derive
+and pushes what is local now, `--dry-run` prints the push plan and writes nothing anywhere.
+
 Exit codes: 0 nothing to do or everything succeeded; 1 something failed (details in the log);
 2 refused to start (another writer, or the lock is held).
 """
@@ -37,6 +46,8 @@ PY = str(ROOT / ".venv" / "bin" / "python")
 LOCK = ROOT / "output" / "update_season.lock"
 BASELINE = ROOT / "db" / "trail_census_baseline.json"
 DSN = os.environ.get("DATABASE_URL", "postgres://f1:f1@localhost:5432/f1")
+# The production credential (F6): read at run time, never stored anywhere else.
+REMOTE_ENV = Path.home() / ".config" / "f1analytics" / "remote.env"
 
 log = logging.getLogger("update_season")
 
@@ -119,6 +130,64 @@ def _write_baseline(conn) -> dict:
             "added": len(by) - len(prev.get("sessions", {}))}
 
 
+def _remote_dsn() -> str | None:
+    """The production credential: the environment, else REMOTE_ENV (refused unless 0600)."""
+    from scripts.push_remote import load_remote_dsn
+    return load_remote_dsn(REMOTE_ENV)
+
+
+def _push_step(a, failures: list[str], new_sessions: list[int]) -> None:
+    """Step 4: publish the corpus to production; step 5: commit what the push changed.
+
+    Gated on zero failures so far (ingest, derive, the growth guard): only a guard-signed
+    corpus is published. A run without the credential file is local-only and says so. The
+    push holds the same lock as the ingest, so there is exactly one writer on both ends.
+    """
+    if a.no_push:
+        log.info("push: skipped (--no-push)")
+        return
+    if failures:
+        log.warning("push: SKIPPED because this run reported failures -- production is unchanged")
+        return
+    try:
+        remote = _remote_dsn()
+    except Exception as e:                      # a refusal on the credential file's mode/owner
+        log.error("push: REFUSED: %s", e)
+        failures.append(f"push: REFUSED: {e}")
+        return
+    if not remote:
+        log.info("push: no REMOTE_DATABASE_URL in %s -- local only", REMOTE_ENV)
+        return
+    from scripts.push_remote import push
+    rc, summary = push(local_dsn=DSN, remote_dsn=remote, full=False, retries=3, dry_run=a.dry_run)
+    (log.error if rc else log.info)("push: %s", summary)
+    if rc != 0:
+        failures.append(f"push: {summary}")
+        if summary.startswith("FAILED"):
+            log.error("PUSH FAILED")
+        return
+    if a.dry_run or not summary.startswith("OK"):
+        return
+    # 5. The baseline moved with the corpus and the CI fixture must follow it, tonight, so the
+    # tree is clean by morning and CI never runs against a number the site no longer shows.
+    what = f"round(s) {', '.join(map(str, new_sessions))}" if new_sessions else summary
+    rc, tail = _run(["git", "commit", "-qm", f"Baseline after {what}", "--", str(BASELINE)],
+                    "commit baseline")
+    if rc != 0:
+        log.warning("baseline commit did not happen (%s); the tree stays as it is until "
+                    "morning", tail.strip().splitlines()[-1] if tail.strip() else "no output")
+        return
+    publisher = ROOT / "scripts" / "publish_fixture.sh"
+    if not publisher.exists():
+        log.warning("fixture not re-published: %s is missing", publisher)
+        return
+    rc, tail = _run([str(publisher), "--commit"], "re-publish CI fixture")
+    if rc != 0:
+        log.warning("fixture re-publish failed (%s); re-run scripts/publish_fixture.sh --commit "
+                    "after a green local pytest", tail.strip().splitlines()[-1] if tail.strip()
+                    else "no output")
+
+
 def main(argv: list[str] | None = None) -> int:
     ap = argparse.ArgumentParser(description=__doc__,
                                  formatter_class=argparse.RawDescriptionHelpFormatter)
@@ -129,7 +198,11 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument("--no-telemetry", action="store_true",
                     help="ingest only; skip the warm/derive pass")
     ap.add_argument("--dry-run", action="store_true",
-                    help="report what would be done, write nothing")
+                    help="report what would be done, write nothing (locally or remotely)")
+    ap.add_argument("--no-push", action="store_true",
+                    help="ingest and verify only; do not touch production")
+    ap.add_argument("--push-only", action="store_true",
+                    help="skip ingest/derive; diff-and-push what is local now")
     a = ap.parse_args(argv)
 
     logging.basicConfig(level=logging.INFO, stream=sys.stdout,
@@ -163,15 +236,29 @@ def main(argv: list[str] | None = None) -> int:
         before_failed = _failed_telemetry(conn)
         conn.rollback()
 
+        failures: list[str] = []
+
         if a.dry_run:
             log.info("dry run: %d telemetried sessions, %d in the census baseline",
                      len(before_sessions), len(before_census))
-            rc, tail = _run([PY, "-m", "f1lab.ingest", "--season", str(a.season),
-                             "--dry-run", "--dsn", DSN], "ingest --dry-run")
-            log.info("%s", tail[-1200:])
-            return 0 if rc == 0 else 1
+            if not a.push_only:
+                rc, tail = _run([PY, "-m", "f1lab.ingest", "--season", str(a.season),
+                                 "--dry-run", "--dsn", DSN], "ingest --dry-run")
+                log.info("%s", tail[-1200:])
+                if rc != 0:
+                    failures.append(f"ingest --dry-run exited {rc}")
+            # The push plan is part of the report: `push: nothing to do` is what an armed
+            # machine prints on a quiet night (RUNBOOK §9).
+            _push_step(a, failures, new_sessions=[])
+            return 1 if failures else 0
 
-        failures: list[str] = []
+        if a.push_only:
+            log.info("push-only: ingest, derive and the growth check are skipped; the corpus "
+                     "as it stands (last guard-signed run) is what gets published")
+            _push_step(a, failures, new_sessions=[])
+            log.info("=== done in %.0fs: %s ===", (dt.datetime.now() - started).total_seconds(),
+                     "OK" if not failures else "FAILURES: " + "; ".join(failures))
+            return 1 if failures else 0
 
         # 1. Ingest. Idempotent: already-stored sessions are skipped, failed ones retried.
         rc, tail = _run([PY, "-m", "f1lab.ingest", "--season", str(a.season),
@@ -207,6 +294,7 @@ def main(argv: list[str] | None = None) -> int:
 
         # 3. Growth, not drift. Nothing that already existed may have moved.
         conn.rollback()
+        new: list[int] = []
         moved = _pre_existing_rows_unchanged(conn, before_census)
         if moved:
             log.error("PRE-EXISTING DATA CHANGED -- baseline NOT updated. %s",
@@ -218,6 +306,10 @@ def main(argv: list[str] | None = None) -> int:
             stats = _write_baseline(conn)
             log.info("growth verified: %d session(s) added %s; baseline now %d sessions, "
                      "%d rows", len(new), new or "", stats["sessions"], stats["rows"])
+
+        # 4-5. Publish, then keep the repo consistent. Still inside the lock: the push and
+        # the ingest share it so there is one writer on both ends.
+        _push_step(a, failures, new_sessions=new)
 
         log.info("=== done in %.0fs: %s ===", (dt.datetime.now() - started).total_seconds(),
                  "OK" if not failures else "FAILURES: " + "; ".join(failures))

@@ -43,8 +43,13 @@
   <key>WorkingDirectory</key>
   <string>/Users/batuhanisik/Desktop/Projects/F1Analytics</string>
 
+  <!-- HOME is the only addition for the production push: the credential for the remote
+       database is read from $HOME/.config/f1analytics/remote.env (mode 600) at run time and
+       is never written here, so this tracked file holds nothing secret. -->
   <key>EnvironmentVariables</key>
   <dict>
+    <key>HOME</key>
+    <string>/Users/batuhanisik</string>
     <key>PYTHONPATH</key>
     <string>/Users/batuhanisik/Desktop/Projects/F1Analytics</string>
     <key>DATABASE_URL</key>

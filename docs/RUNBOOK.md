@@ -169,6 +169,22 @@ whatever it adds. The old check pinned grand totals, which could not tell "a rac
 from "a gate was quietly loosened" — both make the number rise — and would have failed on every
 race for the rest of the season.
 
+**It publishes to production itself (step 4, v1.11).** After the growth check passes with
+zero failures, and still inside the lock, the run calls `scripts/push_remote.py`: a
+session-scoped diff against the production database, applied in one remote transaction, then
+verified (§9). Six nights a week the log line is `push: nothing to do`; after a race it is
+`push: OK n sessions, r rows, s`. The credential is read from
+`~/.config/f1analytics/remote.env` (mode 600, refused otherwise) and from nowhere else; if the
+file is absent the run is local-only and says so. `--no-push` keeps a run local, `--push-only`
+skips ingest and derive and pushes what is local now (the "stuck night" recovery),
+`--dry-run` prints the push plan and writes nothing on either side. A run that reported any
+failure -- ingest, a new derive fault, or the growth guard -- skips the push: only a
+guard-signed corpus is published. On a successful push that moved sessions, step 5 commits
+`db/trail_census_baseline.json` and re-publishes the CI fixture (`scripts/publish_fixture.sh
+--commit`), so the tree is clean by morning; if that commit or push fails the log says so and
+the tree stays dirty until you look. Re-publish the fixture only after a green local
+`pytest`, never to make CI green.
+
 **Re-ingest one round** (both its race and its sprint, regardless of current status):
 
 ```bash
@@ -208,6 +224,14 @@ make test-fast     # .venv/bin/python -m pytest tests -m "not db" -q   (cached s
 make test          # .venv/bin/python -m pytest tests -q               (needs the migrated DB; re-ingests 2024 R13 a few times)
 make test-web      # cd web && npm test && npx tsx --test components/sim/simState.test.ts   (v1.1 engine parity + editor reducer)
 ```
+
+Cache-dependence is **per test, not per file**. The measured census (`pytest --collect-only`
+with a fixture-list plugin) is 952 items in 34 files = 462 needing neither the database nor
+the FastF1 cache, 404 database-only, 84 cache-only and 2 needing both; `test_derive`,
+`test_quali_clean` and `test_quali_frames` are not database tests, while one test in
+`test_moments.py` needs both. So `pytest -m "not db"` on a machine without `cache/` is red,
+not green -- conftest's session fixtures fail rather than skip -- and CI classifies each test
+by what it actually uses (OPS_SPEC §1), printing `ran N of 952` with the two not-run counts.
 
 ### 3.7 v1.1 simulator: recompute procedure (SIM_SPEC §3.7)
 
@@ -964,3 +988,131 @@ bundle size). Run it on ONE session by hand and read the result before backfilli
 
 Run both in CI next to `make lint`. A failure in either is an architectural regression, not a
 style problem: fix the code, never the checker.
+
+## 9. Production: the push to the remote database (v1.11, OPS_SPEC §3)
+
+Two pipelines that never touch. **Code** goes GitHub → Vercel (Git integration, `main`
+only, CI as a required check); **data** goes laptop → the remote Postgres, once a night, from
+`scripts/update_season.py` step 4. A deploy never moves data; a push never redeploys. No
+process on any server knows about this machine; the FastF1 cache, the Docker database and
+`.env.local` never leave it.
+
+### 9.1 What one push does
+
+`scripts/push_remote.py` is a stateless diff, not a replay. Every run asks both sides what
+they hold and applies exactly the difference inside **one remote transaction** under ROW
+EXCLUSIVE locks, so readers never block and see the old rows until COMMIT and the new rows
+after. In order:
+
+1. **Refuse before writing** if anything is off: the migration ledgers
+   (`drizzle.__drizzle_migrations`) differ (`SCHEMA BEHIND: run scripts/neon_migrate.sh`,
+   or `SCHEMA AHEAD`, exit 2), a table has no classification rule (`unclassified table X`,
+   exit 2 -- add it to `WHOLE_TABLES` or `EXCLUDE_TABLES` deliberately), the credential file
+   is not mode 600 (exit 2), or `output/update_season.lock` is held (exit 2).
+2. **Diff.** The unit of change is `(table, session_id)` for the 35 session-keyed tables:
+   a session is pushed when its fingerprint (ingest status, analytics status, warnings,
+   trail census, per-table row counts) differs or it is absent remotely, and deleted
+   remotely when it no longer exists here. The 35 aggregate tables without a `session_id`
+   are hashed whole and, when different, diffed row by row on their primary key.
+3. **Nothing to do → exit 0 in a few seconds.** Six nights a week this is the whole push.
+4. **Snapshot** `output/snapshots/f1-YYYYMMDD.dump` (last 7 kept) before any write.
+5. **Apply**: `DELETE ... WHERE session_id = ANY(...)` children first, then `COPY` parents
+   first (streamed between the two connections, no temp file; foreign-key order read from
+   `pg_constraint` at run time), then one row in `data_release`. `COMMIT`.
+6. **Verify after COMMIT**: per-session fingerprints of the pushed sessions equal, every
+   aggregate table equal, `f1_ask` has no USAGE on `public` and has USAGE on `ask`, and
+   `ask_query_log_ask_id_seq.last_value >= max(ask_id)`. A mismatch prints
+   `PUSH VERIFY FAILED`, exit 1; the next night's diff repairs it, because the diff is the
+   mechanism rather than the run's memory.
+7. **Retries**: 3 attempts at 30 s / 2 min / 5 min, then `PUSH FAILED: production is N
+   session(s) behind`. `output/last_push.json` records `{at, sessions, rows, ok, release_id}`.
+
+**What never leaves this machine.** `EXCLUDE_TABLES = {ingest_runs, ask_query_log,
+ask_answer_cache}` are never diffed and never copied, and the sequence
+`ask_query_log_ask_id_seq` is never read or set: production owns the ask log entirely.
+`session_ingests.error` crosses as NULL. One forced exception: `session_ingests.run_id` is a
+NOT NULL foreign key to `ingest_runs`, so the referenced `ingest_runs` rows cross as stubs
+with `hostname`, `cli_args` and `error` blanked -- the row exists, its content does not.
+One aggregate table points back at sessions: `circuit_layout.ref_session_id` is a
+not-deferrable foreign key to `sessions`, so when a session is replaced its `circuit_layout`
+rows are deleted first and this machine's copy of them is put back after the COPY, inside
+the same transaction. The catalogue is read at run time, so a second such column would be
+handled the same way without a code change.
+
+### 9.2 The credential (F5, F6)
+
+The nightly job authenticates as **`f1_push`** (DML on the corpus tables only; no SELECT on
+`ask_query_log`, no DDL). Its DSN lives in exactly one place:
+
+```bash
+mkdir -p ~/.config/f1analytics
+printf 'REMOTE_DATABASE_URL=postgres://f1_push:<pw>@<ep>.<region>.aws.neon.tech/f1?sslmode=verify-full&sslrootcert=system\n' \
+  > ~/.config/f1analytics/remote.env
+chmod 600 ~/.config/f1analytics/remote.env
+```
+
+The script **refuses** (exit 2) unless that file is a regular file owned by you at mode
+exactly 0600. The tracked plist carries only `HOME`, so the job can find the file; the value
+is never in git, the plist, shell history or Vercel. The owner role is used interactively
+only (`scripts/neon_migrate.sh` prompts for it and never stores it).
+
+### 9.3 The morning check, and what each line means
+
+Nothing to do by hand. When you want to know: `tail -3 output/update_season.log`.
+
+| line | meaning | action |
+|---|---|---|
+| `push: nothing to do` | both sides equal; the quiet-night case | none |
+| `push: OK 2 sessions, 41,377 rows, 38s` | a race landed and is live | none; step 5 committed the baseline and fixture |
+| `push: SKIPPED because this run reported failures` | ingest, a new derive fault or the growth guard failed | read the lines above it; production is unchanged |
+| `push: no REMOTE_DATABASE_URL in ...` | the credential file is absent | write it (§9.2) if production should exist |
+| `push: SCHEMA BEHIND: run scripts/neon_migrate.sh` | a migration landed here but not on production | run `scripts/neon_migrate.sh` (prompts for the owner URL), then `update_season.py --push-only` |
+| `push: SCHEMA AHEAD` / `SCHEMA DIVERGED` | production's ledger is newer or unrelated | stop; nothing is written until a human looks |
+| `push: REFUSED: ...` | credential mode, an unclassified table, or the lock | the message names the fix |
+| `PUSH FAILED: production is N session(s) behind` | three attempts could not reach or commit | nothing; the next night re-diffs from scratch |
+| `PUSH VERIFY FAILED: ...` | committed, but the read-back differed | the next night's diff repairs it; look if it repeats |
+
+Manual runs use the same lock, so they cannot collide with the scheduler:
+
+```bash
+.venv/bin/python scripts/push_remote.py --verify-only    # remote == local ? (writes nothing)
+.venv/bin/python scripts/push_remote.py --dry-run        # print the plan, write nothing
+.venv/bin/python scripts/push_remote.py                  # diff and push now
+.venv/bin/python scripts/update_season.py --season 2026 --push-only   # the "stuck night" recovery
+```
+
+**Stuck night** (a run died holding the lock): `rm output/update_season.lock`, then
+`update_season.py --push-only`. **When a migration lands**: run `scripts/neon_migrate.sh`
+*before* merging the web code that needs it; the nightly job cannot migrate production
+because it holds only the `f1_push` credential (decision D4: the stall is loud, not silent).
+
+### 9.4 Rollback
+
+Every writing run first dumps this machine to `output/snapshots/f1-YYYYMMDD.dump` (last 7).
+To roll production back to a snapshot, restore it **locally** and let the diff converge:
+
+```bash
+docker exec -i f1-postgres pg_restore -U f1 -d f1 --clean --if-exists --no-owner < output/snapshots/f1-20260920.dump
+.venv/bin/python scripts/push_remote.py --full           # every session and aggregate row, one transaction
+```
+
+To pull one round off production before the morning without touching this machine:
+
+```bash
+.venv/bin/python scripts/push_remote.py --sessions 2026:17     # deletes that round's sessions from every keyed table remotely
+```
+
+The next plain push would put it back, because the diff is stateless: fix or remove the
+local data first if the removal is meant to stick. Production has no state of its own except
+`ask_query_log` and `ask_answer_cache`, which the push never touches, so nothing is lost by
+converging it to a local snapshot.
+
+### 9.5 Two facts about production worth remembering
+
+- The ask box's per-IP token bucket lives in the memory of one Vercel function instance, so
+  it is pacing only, never a control: a second instance has its own bucket. The controls are
+  `ASK_DAILY_BUDGET_USD` (the dollar tripwire in the database) and the spend limit set on the
+  model provider's console; set both before the key exists (OPS_SPEC §4.1, §6.3 steps 10-11).
+- Re-publish the CI fixture (`scripts/publish_fixture.sh`) only after a green local `pytest`,
+  never to make CI green: a red CI on a true-but-stale number is the fixture telling you the
+  data moved, and the nightly step 5 already re-publishes after every successful push.
