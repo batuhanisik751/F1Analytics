@@ -89,7 +89,11 @@ const UNREACHABLE: AskFailureCopy = {
 Object.assign(FAILURES, {
   connection: UNREACHABLE,
   upstream: UNREACHABLE,
-  no_key: UNREACHABLE,
+  no_key: {
+    title: "The ask box is switched off on this site.",
+    body: "No language model is configured here, so questions cannot be answered. Everything else on this site is precomputed from the timing data and works without one.",
+    offerPages: true,
+  },
   auth: UNREACHABLE,
   bad_request: UNREACHABLE,
   schema: {

@@ -9,6 +9,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import AskBox from "@/components/ask/AskBox";
+import { askKeyPresent } from "@/lib/ask/anthropic";
 import Disclosure from "@/components/ui/Disclosure";
 import PageHeader from "@/components/ui/PageHeader";
 
@@ -18,7 +19,14 @@ export const metadata: Metadata = {
     "Ask a question in English; Claude writes one read-only SQL query against this site's database and the query is always shown.",
 };
 
+/** Verbatim; pinned by the captions test once published. States the off state BEFORE a question is typed. */
+export const C_ASK_OFF =
+  "The ask box is switched off on this site. No language model is configured, so nothing on this " +
+  "page can be asked — the form below is shown so you can see what it does, and it will not send " +
+  "anything. Every other page is precomputed from the timing data and works without a model.";
+
 export default function AskPage(): React.JSX.Element {
+  const enabled = askKeyPresent();
   return (
     <div className="max-w-4xl">
       <PageHeader title="Ask the data" subtitle="2024–2026" />
@@ -31,7 +39,15 @@ export default function AskPage(): React.JSX.Element {
       </p>
 
       <div className="mt-5 rounded-lg border border-dashed border-accent/40 bg-surface/40 p-4">
-        <AskBox />
+        {enabled ? null : (
+          <p
+            role="status"
+            className="mb-4 rounded-lg border border-accent/60 bg-accent/10 px-4 py-3 text-sm leading-relaxed text-fg"
+          >
+            {C_ASK_OFF}
+          </p>
+        )}
+        <AskBox offline={!enabled} />
       </div>
 
       {/* §8.6's standing explanation: once, under the box, in Caption style. Not a modal, not a

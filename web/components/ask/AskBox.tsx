@@ -28,11 +28,14 @@ type Phase =
   | { k: "failed"; code: string; message: string; sql: string | null; gate: string | null };
 
 export type AskBoxProps = {
+  /** The site has no model configured: render the box inert. Every string stays in the DOM (the
+   *  copy is pinned), nothing can be submitted, and the page above says why. */
+  offline?: boolean;
   /** Replays a recorded stream instead of calling /api/ask (fixture-driven rendering, §9 WP-6). */
   replay?: (question: string) => AsyncIterable<AskEvent>;
 };
 
-export default function AskBox({ replay }: AskBoxProps): React.JSX.Element {
+export default function AskBox({ replay, offline = false }: AskBoxProps): React.JSX.Element {
   const [question, setQuestion] = useState("");
   const [asked, setAsked] = useState<string | null>(null);
   const [phase, setPhase] = useState<Phase>({ k: "idle" });
@@ -88,6 +91,7 @@ export default function AskBox({ replay }: AskBoxProps): React.JSX.Element {
         return;
       }
       try {
+        if (offline) return;
         const res = await fetch("/api/ask", {
           method: "POST",
           headers: { "content-type": "application/json" },
@@ -196,7 +200,7 @@ export default function AskBox({ replay }: AskBoxProps): React.JSX.Element {
           </p>
           <button
             type="submit"
-            disabled={busy || question.trim().length < 3}
+            disabled={offline || busy || question.trim().length < 3}
             className="ml-auto min-h-[44px] rounded-lg border border-accent px-4 py-1.5 text-sm font-medium text-accent hover:bg-accent/10 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent disabled:opacity-40"
           >
             {busy ? "Asking…" : "Ask"}
@@ -210,7 +214,7 @@ export default function AskBox({ replay }: AskBoxProps): React.JSX.Element {
           <button
             key={ex}
             type="button"
-            disabled={busy}
+            disabled={offline || busy}
             onClick={() => void ask(ex)}
             className="inline-flex min-h-[44px] items-center rounded-full border border-grid px-3 py-0.5 hover:border-accent hover:text-accent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent disabled:opacity-40"
           >
