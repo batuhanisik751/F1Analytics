@@ -396,6 +396,12 @@ has not been recomputed since this race was added*, and the next `--recompute-co
 does a full cold refit instead of the 1-second short-circuit. The rule is simply: **ingest
 everything, then recompute the companion once.**
 
+**And since v1.12: run `--snapshot-only` first.** `preview` is DELETE-then-INSERT with a new
+`computed_at`; a manual recompute destroys the preview the ledger has not copied yet. Copy it
+(`scripts/update_season.py --season 2026 --snapshot-only`, §3.15), then recompute.
+Manual runs need the launcher's environment: `PYTHONPATH=<project root>` and `DATABASE_URL` as the plist sets them — without PYTHONPATH the step fails at `import f1lab` before it can log anything.
+
+
 **Measured wall clock on this machine's data volume** (62 race sessions, 69,468 lap rows),
 timed serially with nothing else touching the database:
 
@@ -819,6 +825,60 @@ docker exec -i f1-postgres psql -U f1 -d f1 -v ON_ERROR_STOP=1 -f - < scripts/sq
 The last line empties `ask_answer_cache`, whose keys are `sha256(question_norm + prefix)` and
 are therefore all invalid once the prefix moves. This is not telemetry-specific; it is true of
 any `--force` in this or a later release.
+
+### 3.15 v1.12 preview ledger: the copy, `--snapshot-only`, and the two Neon gates (LEDGER_SPEC §2, §0)
+
+Since v1.12 every nightly copies the current `preview_round` / `preview_finish_order` into
+`preview_snapshot_round` / `preview_snapshot_order` twice: once before the ingest (step 0,
+whatever preview the last recompute left) and once after it (step 1b, the fresh recompute).
+The key of both tables is the preview's own `computed_at`, so the copy is append-only and
+idempotent: a second run inserts nothing. The step runs on its own connection with a 5 s
+lock timeout, never inside the ingest, and its failure is **deferred**: the push still
+runs, and only then is the reason folded into the done line (exit 1). The log lines:
+
+```
+snapshot(before): nothing new
+snapshot(after): +8 round, +176 order rows (computed_at max=2026-09-27 03:21:14+00:00)
+snapshot(after): FAILED OperationalError: <redacted>
+```
+
+**The backfill is the same function**, behind one flag -- no ingest, no telemetry, no push:
+
+```bash
+.venv/bin/python scripts/update_season.py --season 2026 --snapshot-only    # first run: +9 round, +198 order rows
+.venv/bin/python scripts/update_season.py --season 2026 --snapshot-only    # again: `snapshot(backfill): nothing new`, exit 0
+```
+
+It takes the same lock and the same `_other_writers` check as a full run, so it refuses
+(exit 2) while an ingest is running. Check it with
+`SELECT count(*), min(computed_at), max(computed_at) FROM preview_snapshot_round`.
+
+**Run `--snapshot-only` before any manual `--recompute-companion`.** The `preview` step is
+DELETE-then-INSERT with a new `computed_at` (§3.9); a manual recompute between two nightlies
+destroys the preview the ledger has not yet copied, and the ledger is what the `/accuracy`
+page scores after the race. The nightly's step 0 covers the scheduled case only.
+
+**N2 -- `neon_migrate.sh` rotates passwords.** Its step 7 re-applies `0012_push_role.sql`,
+which (re)grants `f1_push` on every table in `pg_tables` -- the only way the new tables get a
+push grant on Neon -- but it also `ALTER ROLE ... PASSWORD` for all four roles to the values
+in the environment. Run it **only** with the four values that `~/.config/f1analytics/remote.env`
+and Vercel already carry, passed as environment variables on the command line or read into
+the environment by Python or `grep`, **never `source`d** (the `&` in a Neon DSN becomes shell
+job control and prints the password; see "Two connection-string shapes" above). Different
+values silently rotate production's credentials and the next nightly cannot connect.
+
+**N3 -- the dry run is the gate.** After N2, and before the first unattended push:
+
+```bash
+.venv/bin/python scripts/update_season.py --season 2026 --dry-run
+```
+
+must end `push: DRY RUN (nothing written): ...` naming both snapshot tables and exit 0. It is
+the only step that exercises `f1_push` against Neon before the night: `diff()` fingerprints
+every whole table remotely before the dry-run return, so a missing grant surfaces here as a
+traceback (fix: N2), and `SCHEMA AHEAD/BEHIND` or `SCHEMA MISMATCH` means one side lacks
+migration 0012. A clean dry run proves the lock, the classification, the migration parity
+and the plan; it does not write the copy -- that is what `--snapshot-only` is for.
 
 ## 4. Changing a modelling assumption — and what happens next
 

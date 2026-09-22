@@ -156,3 +156,40 @@ export const C_ACC_18 =
 export const C_ACC_EMPTY =
   "No scored predictions yet. This page fills in once the model has been trained and the " +
   "races it predicted have been run.";
+
+// --- LEDGER_SPEC §4 — the preview ledger ---------------------------------------------
+
+/** Above the ledger table. */
+export const C_LED_1 =
+  "These are the previews as they stood before each race, copied the night they were " +
+  "computed and never edited afterwards. A preview computed after a race had started is " +
+  "kept in the record but is never scored here.";
+
+/** The size of the record. Slots: races — a pre-formatted count ("9 races"); first — a date. */
+export const cLed2 = (races: string, first: string) =>
+  `${races} on record since ${first}. The first copy was taken by hand from a preview ` +
+  `computed before the copying step existed; every later copy is written the night it is ` +
+  `made. One race is an anecdote, and this table only starts to mean something once it is ` +
+  `long enough to disagree with the backtest above.`;
+
+/** Why these rows are not the backtest rows elsewhere on the page. */
+export const C_LED_3 =
+  "The backtest rows elsewhere on this page are predictions for races that were already " +
+  "stored, scored out of fold. Each row here was written down before its race and cannot " +
+  "have seen it; the claimed figures beside it are what that same preview said about itself.";
+
+/** Snapshots on record but no race run yet. Slot: previews — a pre-formatted count ("9 previews"). */
+export const cLedEmpty = (previews: string) =>
+  `No race has been run since the record began. ${previews} on record, waiting for the race.`;
+
+/** The record has no rows at all for the season. */
+export const C_LED_EMPTY_NONE =
+  "The record has not received its first copy yet. It is written the night the next update runs.";
+
+/** Above the title-odds table. */
+export const C_LED_4 =
+  "Title chances after each round, recomputed from the stored results up to that round with " +
+  "the current model. These are not the figures as first published: a model change rewrites " +
+  "every column. The range beside each figure is its uncertainty, and a figure marked prior " +
+  "belongs to a driver with no completed race at that point, so it rests on the prior rather " +
+  "than on results.";

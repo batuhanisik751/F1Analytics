@@ -247,6 +247,9 @@ MEASURED: 35 public tables carry `session_id` (~172 MB, every table over 1.5 MB)
    (+ sequence `ask_query_log_ask_id_seq` never touched); `session_ingests.error` written as
    NULL. A table in none of {session-keyed, whole, excluded} → refuse, exit 2 ("unclassified
    table X" — red, not a guess).
+   2026-09-22: `preview_snapshot_round` / `preview_snapshot_order` (LEDGER_SPEC) are two more whole
+   tables, append-only, listed in `WHOLE_TABLES`; `f1_push` needs `0012_push_role.sql` re-run on Neon
+   after migration 0012 so their SELECT/COPY grants exist.
 3. **Nothing to do → exit 0 in ~5 s.** Six nights a week this is the whole push.
 4. **Apply, one remote transaction**: children-first `DELETE … WHERE session_id = ANY(%s)`, then
    parents-first `COPY (SELECT …) TO STDOUT` local piped into `COPY t FROM STDIN` remote

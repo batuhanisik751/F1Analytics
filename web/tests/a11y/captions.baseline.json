@@ -1876,6 +1876,72 @@
         "verdict": "new or rewritten string, pinned by lib/accuracy/captions.test.ts",
         "why": "New or rewritten in the /accuracy revision (ACCURACY_SPEC §2). No pre-release DOM captured this string on /accuracy, so it is frozen by lib/accuracy/captions.test.ts, which pins it byte-for-byte; hand-typed here on 2026-09-22 ahead of the regenerate-baseline run, which must only add /accuracy entries."
       }
+    },
+    {
+      "route": "/accuracy",
+      "capturedAt": "2026-09-22",
+      "text": "These are the previews as they stood before each race, copied the night they were computed and never edited afterwards. A preview computed after a race had started is kept in the record but is never scored here.",
+      "changed": {
+        "spec": "LEDGER_SPEC §4 (C_LED_1)",
+        "owner": "WP-WEB",
+        "verdict": "new string, pinned by lib/accuracy/captions.test.ts",
+        "why": "New in the preview-ledger revision (LEDGER_SPEC §4). No pre-release DOM captured this string on /accuracy, so it is frozen by lib/accuracy/captions.test.ts, which pins it byte-for-byte; hand-typed here on 2026-09-22 ahead of the regenerate-baseline run, which must only add /accuracy entries. The empty states and the cLed2 line are conditional on the record, so only one of them is in the DOM at a time."
+      }
+    },
+    {
+      "route": "/accuracy",
+      "capturedAt": "2026-09-22",
+      "text": "{races} on record since {first}. The first copy was taken by hand from a preview computed before the copying step existed; every later copy is written the night it is made. One race is an anecdote, and this table only starts to mean something once it is long enough to disagree with the backtest above.",
+      "changed": {
+        "spec": "LEDGER_SPEC §4 (cLed2)",
+        "owner": "WP-WEB",
+        "verdict": "new string, pinned by lib/accuracy/captions.test.ts",
+        "why": "New in the preview-ledger revision (LEDGER_SPEC §4). No pre-release DOM captured this string on /accuracy, so it is frozen by lib/accuracy/captions.test.ts, which pins it byte-for-byte; hand-typed here on 2026-09-22 ahead of the regenerate-baseline run, which must only add /accuracy entries. The empty states and the cLed2 line are conditional on the record, so only one of them is in the DOM at a time."
+      }
+    },
+    {
+      "route": "/accuracy",
+      "capturedAt": "2026-09-22",
+      "text": "The backtest rows elsewhere on this page are predictions for races that were already stored, scored out of fold. Each row here was written down before its race and cannot have seen it; the claimed figures beside it are what that same preview said about itself.",
+      "changed": {
+        "spec": "LEDGER_SPEC §4 (C_LED_3)",
+        "owner": "WP-WEB",
+        "verdict": "new string, pinned by lib/accuracy/captions.test.ts",
+        "why": "New in the preview-ledger revision (LEDGER_SPEC §4). No pre-release DOM captured this string on /accuracy, so it is frozen by lib/accuracy/captions.test.ts, which pins it byte-for-byte; hand-typed here on 2026-09-22 ahead of the regenerate-baseline run, which must only add /accuracy entries. The empty states and the cLed2 line are conditional on the record, so only one of them is in the DOM at a time."
+      }
+    },
+    {
+      "route": "/accuracy",
+      "capturedAt": "2026-09-22",
+      "text": "No race has been run since the record began. {previews} on record, waiting for the race.",
+      "changed": {
+        "spec": "LEDGER_SPEC §4 (cLedEmpty)",
+        "owner": "WP-WEB",
+        "verdict": "new string, pinned by lib/accuracy/captions.test.ts",
+        "why": "New in the preview-ledger revision (LEDGER_SPEC §4). No pre-release DOM captured this string on /accuracy, so it is frozen by lib/accuracy/captions.test.ts, which pins it byte-for-byte; hand-typed here on 2026-09-22 ahead of the regenerate-baseline run, which must only add /accuracy entries. The empty states and the cLed2 line are conditional on the record, so only one of them is in the DOM at a time."
+      }
+    },
+    {
+      "route": "/accuracy",
+      "capturedAt": "2026-09-22",
+      "text": "The record has not received its first copy yet. It is written the night the next update runs.",
+      "changed": {
+        "spec": "LEDGER_SPEC §4 (C_LED_EMPTY_NONE)",
+        "owner": "WP-WEB",
+        "verdict": "new string, pinned by lib/accuracy/captions.test.ts",
+        "why": "New in the preview-ledger revision (LEDGER_SPEC §4). No pre-release DOM captured this string on /accuracy, so it is frozen by lib/accuracy/captions.test.ts, which pins it byte-for-byte; hand-typed here on 2026-09-22 ahead of the regenerate-baseline run, which must only add /accuracy entries. The empty states and the cLed2 line are conditional on the record, so only one of them is in the DOM at a time."
+      }
+    },
+    {
+      "route": "/accuracy",
+      "capturedAt": "2026-09-22",
+      "text": "Title chances after each round, recomputed from the stored results up to that round with the current model. These are not the figures as first published: a model change rewrites every column. The range beside each figure is its uncertainty, and a figure marked prior belongs to a driver with no completed race at that point, so it rests on the prior rather than on results.",
+      "changed": {
+        "spec": "LEDGER_SPEC §4 (C_LED_4)",
+        "owner": "WP-WEB",
+        "verdict": "new string, pinned by lib/accuracy/captions.test.ts",
+        "why": "New in the preview-ledger revision (LEDGER_SPEC §4). No pre-release DOM captured this string on /accuracy, so it is frozen by lib/accuracy/captions.test.ts, which pins it byte-for-byte; hand-typed here on 2026-09-22 ahead of the regenerate-baseline run, which must only add /accuracy entries. The empty states and the cLed2 line are conditional on the record, so only one of them is in the DOM at a time."
+      }
     }
   ]
 }

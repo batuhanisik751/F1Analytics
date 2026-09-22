@@ -418,6 +418,15 @@ gets a syntax error, and a join that adds the predicate gets nothing.
 | `quali_segment_times` | session × driver × segment | per-segment best, gap to the segment best, spread, sd, compound, and `verified` — false on the three driver-segments whose official time is a duplicate of another segment's, so nothing can confirm the lap |
 | `quali_teammate_h2h` | session × team pair | the gap in the deepest segment both drivers set a time in, with `session_sd_s` — that session's own repeatability — stored beside it, and `below_noise` precomputed. **371 of 779 rows are `below_noise` and must render as "no measurable difference", never as a number** |
 
+**2026-09-22 added two preview-snapshot tables that are NOT in this family either** (`docs/LEDGER_SPEC.md`):
+history; append-only; keyed by the preview's own `computed_at`; no FK to `events`; written by
+`scripts/update_season.py _snapshot_step` before and after ingest. Neither carries `session_id`.
+
+| table | grain | what it holds |
+|---|---|---|
+| `preview_snapshot_round` | year × round × `computed_at` | the 21 `preview_round` columns copied verbatim plus `snapshot_at` (audit only, never shown as the preview's date); PK `(year, round, computed_at)`; no FK, no CHECK |
+| `preview_snapshot_order` | year × round × `computed_at` × driver | the `preview_finish_order` columns copied verbatim plus `snapshot_at`; one FK to `preview_snapshot_round` ON DELETE CASCADE |
+
 `lap_exclusion_report` is written for Q/SQ too, with the qualifying rule set
 (`QUALI_SPEC §2.3`): no fuel correction, no 107% outlier rule, and the green-flag rule
 *reported* rather than applied, because four official Monaco Q1 bests sit on TrackStatus
@@ -717,6 +726,7 @@ CREATE TABLE session_ingests (
 | track_status_events | R | `session.track_status` |
 | driver_standings, constructor_standings, driver_season_summary, teammate_h2h | — | `season.recompute(conn, year)` reading Postgres only |
 | ingest_runs, session_ingests | — | `ingest.py` |
+| preview_snapshot_round, preview_snapshot_order | — | `scripts/update_season.py _snapshot_step` (before and after ingest; also `--snapshot-only`): copies the current `preview_round` / `preview_finish_order` rows, append-only, keyed by the preview's own `computed_at` |
 
 where `laps_fc = pace.fuel_correct(clean.clean_laps(session), session.total_laps, lap_km=None)` — exactly
 the notebook's pipeline, so every stored number equals the notebook's and `fuel_sensitivity`'s

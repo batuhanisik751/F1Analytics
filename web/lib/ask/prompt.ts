@@ -189,8 +189,11 @@ export function promptPrefixSha256(): string {
 // telemetry signature lines, their purpose sentences and the two telemetry conventions. Every
 // cached answer predates them, so the deploy step in scripts/sql/ask_views_telemetry.sql
 // empties ask_answer_cache alongside this line.
+// Updated for v1.12 (LEDGER_SPEC §3). ASK_INSTRUCTIONS is unchanged; schema-doc.txt's
+// "WHAT IS NOT READABLE" paragraph gained preview_snapshot_round and preview_snapshot_order,
+// the history copies served scored on /accuracy. The cache empties the same way (RUNBOOK §3.14).
 export const PROMPT_PREFIX_SHA256 =
-  "8787b34405febe63760607fe6b241bda23c303243a6cd95d5735b4e3c2b6623f";
+  "19dcb56e4badf1133bde9a343c13fa820c34eedac5ca0f914ae515e75183ee39";
 
 /** True when the assembled prefix still matches the committed hash. WP-7's CI check. */
 export function promptPrefixMatchesCommitted(): boolean {

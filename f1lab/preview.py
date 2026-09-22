@@ -769,6 +769,53 @@ def recompute_preview(conn, assumption_set_id: int) -> dict[str, int]:
 
 
 # ---------------------------------------------------------------------------
+# LEDGER_SPEC §2: the append-only copy behind /accuracy#ledger
+# ---------------------------------------------------------------------------
+
+def snapshot_sql() -> tuple[str, str]:
+    """The two INSERT ... SELECT statements that copy the current preview into the ledger.
+
+    Pure: the column lists are rendered from ``frames.EXPECTED_COLUMNS`` at call time, so
+    the copy follows the contract and never a hand-kept list. The key of both tables is the
+    preview's own ``computed_at`` (one value per recompute), copied from ``preview_round``
+    -- ``now()`` is never written and nothing is ever deleted, so a second run inserts
+    nothing and ``snapshot_at`` keeps the value of the row's first insert. The JOIN gives
+    each order row its round's ``computed_at``, which ``preview_finish_order`` lacks.
+    """
+    rnd = frames.EXPECTED_COLUMNS["preview_round"]
+    order = [c for c in frames.EXPECTED_COLUMNS["preview_finish_order"] if c not in ("year", "round")]
+    round_sql = (
+        f"INSERT INTO preview_snapshot_round ({', '.join(rnd)})\n"
+        f"SELECT {', '.join(rnd)} FROM preview_round\n"
+        "ON CONFLICT (year, round, computed_at) DO NOTHING"
+    )
+    order_sql = (
+        f"INSERT INTO preview_snapshot_order (year, round, computed_at, {', '.join(order)})\n"
+        f"SELECT o.year, o.round, r.computed_at, {', '.join('o.' + c for c in order)}\n"
+        "FROM preview_finish_order o JOIN preview_round r USING (year, round)\n"
+        "ON CONFLICT (year, round, computed_at, driver_id) DO NOTHING"
+    )
+    return round_sql, order_sql
+
+
+def snapshot_preview(conn) -> dict:
+    """Run both copies on the caller's connection; the caller owns the transaction.
+
+    Returns ``{"round": n, "order": m, "computed_at": max_or_None}`` -- the rows inserted by
+    each statement and the newest ``computed_at`` now on record (None on an empty ledger).
+    """
+    round_sql, order_sql = snapshot_sql()
+    with conn.cursor() as cur:
+        cur.execute(round_sql)
+        n_round = int(cur.rowcount)
+        cur.execute(order_sql)
+        n_order = int(cur.rowcount)
+        cur.execute("SELECT max(computed_at) FROM preview_snapshot_round")
+        newest = cur.fetchone()[0]
+    return {"round": n_round, "order": n_order, "computed_at": newest}
+
+
+# ---------------------------------------------------------------------------
 # §5.5 the two run-end analytics_status keys
 # ---------------------------------------------------------------------------
 

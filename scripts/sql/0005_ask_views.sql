@@ -16,6 +16,8 @@
 --   lap_telemetry          10 Hz channel arrays, ~626 values per column per row. The planner prices unnest() at 10 rows: a query over these reads 2.2M samples while reporting a total cost of ~1,800, so MAX_PLAN_COST and MAX_PLAN_ROWS cannot see it (measured: 53,240 estimated against 3,332,582 actual, 62.6x under). A single SELECT of one array column also blows the response byte cap. The answerable half is ask.lap_telemetry_summary and ask.lap_corner_speeds, which are honest scalar rows.
 --   mode2_fit_run          Fit internals; invites the model to answer a fan's question with a diagnostic.
 --   mode2_row_audit        Per-row residuals and exclusion reasons; same reason as mode2_fit_run.
+--   preview_snapshot_order History copies of preview_round / preview_finish_order, served scored on /accuracy; raw rows invite quoting a stale preview as today's (LEDGER_SPEC §3).
+--   preview_snapshot_round History copies of preview_round / preview_finish_order, served scored on /accuracy; raw rows invite quoting a stale preview as today's (LEDGER_SPEC §3).
 --   race_report            Generated prose must not be laundered back in as data. Reports are served by the precomputed page path only.
 --   session_ingests        Same error column plus warnings[] — raw exception text leaks module paths and filesystem layout. Replaced by the curated ask.session_health and ask.data_coverage.
 --   wp_model_artifact      1.4 MB of pickled scikit-learn bytea. Useless to a fan, a liability in a browser, and a single SELECT blows the response budget.

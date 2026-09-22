@@ -82,7 +82,8 @@ WHOLE_TABLES = frozenset({
     'mode2_car_hazard', 'mode2_car_rating', 'mode2_career_season', 'mode2_component',
     'mode2_counterfactual', 'mode2_driver_contrast', 'mode2_driver_rating',
     'mode2_driver_rating_history', 'mode2_driver_skill', 'mode2_fit_run', 'mode2_points_calib',
-    'preview_backtest', 'preview_finish_order', 'preview_round', 'season_quali_h2h', 'seasons',
+    'preview_backtest', 'preview_finish_order', 'preview_round', 'preview_snapshot_order',
+    'preview_snapshot_round', 'season_quali_h2h', 'seasons',
     'sim_circuit_hazard', 'teammate_h2h', 'teams', 'title_clinch', 'title_odds', 'wp_metrics',
     'wp_model_artifact', 'wp_reliability_bin', 'wp_run',
 })

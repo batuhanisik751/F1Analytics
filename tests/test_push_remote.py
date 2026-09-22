@@ -93,6 +93,13 @@ def test_whole_tables_all_lack_a_session_id_and_the_split_is_disjoint():
     assert pr.RELEASE_TABLE not in pr.WHOLE_TABLES | pr.EXCLUDE_TABLES
 
 
+def test_preview_snapshot_tables_are_pushed_whole():
+    """LEDGER_SPEC §3: the two ledger tables carry no `session_id`, so they cross as whole
+    tables (per-pk hash diff, upsert of new keys only) and never as an exclusion or a stub."""
+    assert {"preview_snapshot_round", "preview_snapshot_order"} <= pr.WHOLE_TABLES
+    assert not ({"preview_snapshot_round", "preview_snapshot_order"} & pr.EXCLUDE_TABLES)
+
+
 def test_credential_file_must_be_mode_600(tmp_path: Path):
     f = tmp_path / "remote.env"
     f.write_text("REMOTE_DATABASE_URL=postgres://f1_push:secret@db.example/f1\n")

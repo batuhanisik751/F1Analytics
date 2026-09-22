@@ -28,6 +28,7 @@ The production credentials are read from `~/.config/f1analytics/remote.env` (mod
 nowhere else; without that file the run is local-only and says so. `--no-push` keeps a run
 local, `--push-only` skips ingest and derive
 and pushes what is local now, `--dry-run` prints the push plan and writes nothing anywhere.
+`--snapshot-only` copies the current preview into the ledger tables and exits (LEDGER_SPEC §2).
 
 Exit codes: 0 nothing to do or everything succeeded; 1 something failed (details in the log);
 2 refused to start (another writer, or the lock is held).
@@ -47,6 +48,8 @@ import urllib.error
 import urllib.parse
 import urllib.request
 from pathlib import Path
+
+import psycopg
 
 ROOT = Path(__file__).resolve().parents[1]
 PY = str(ROOT / ".venv" / "bin" / "python")
@@ -251,6 +254,44 @@ def _revalidate_step(failures: list[str], new_sessions: list[int], dry_run: bool
     _write_last_revalidate("failed", reason, host)
 
 
+def _snapshot_step(label: str, deferred: list[str],
+                   connect=psycopg.connect) -> None:
+    """Steps 0 / 1b / the backfill: copy the current preview into the ledger (LEDGER_SPEC §2).
+
+    Its own connection, its own transaction, closed in `finally`; it runs strictly before or
+    after the ingest subprocess, never beside the DELETE in `recompute_preview`. Nothing here
+    may stop the night: every exception is caught, logged with the password redacted and
+    appended to `deferred`, which `main()` folds into `failures` only after `_push_step` has
+    returned -- so the push is never gated on the copy, and a failed copy still ends the
+    run with exit 1 and its reason in the done line. `connect` is injectable for the tests.
+    """
+    from f1lab import preview
+    from scripts.push_remote import redact
+    conn = None
+    try:
+        conn = connect(DSN)
+        with conn.transaction():
+            with conn.cursor() as cur:
+                cur.execute("SET LOCAL lock_timeout = '5s'")
+                cur.execute("SET LOCAL statement_timeout = '60s'")
+            counts = preview.snapshot_preview(conn)
+        if counts["round"] or counts["order"]:
+            log.info("snapshot(%s): +%d round, +%d order rows (computed_at max=%s)", label,
+                     counts["round"], counts["order"], counts["computed_at"])
+        else:
+            log.info("snapshot(%s): nothing new", label)
+    except Exception as e:
+        msg = f"{type(e).__name__}: {redact(e)}"
+        log.error("snapshot(%s): FAILED %s", label, msg)
+        deferred.append(f"snapshot({label}) failed: {msg}")
+    finally:
+        if conn is not None:
+            try:
+                conn.close()
+            except Exception:
+                pass
+
+
 def _push_step(a, failures: list[str], new_sessions: list[int]) -> None:
     """Step 4: publish the corpus to production; step 5: commit what the push changed.
 
@@ -324,6 +365,9 @@ def main(argv: list[str] | None = None) -> int:
                     help="ingest and verify only; do not touch production")
     ap.add_argument("--push-only", action="store_true",
                     help="skip ingest/derive; diff-and-push what is local now")
+    ap.add_argument("--snapshot-only", action="store_true",
+                    help="copy the current preview into the ledger tables, then exit; "
+                         "no ingest, no telemetry, no push")
     a = ap.parse_args(argv)
 
     logging.basicConfig(level=logging.INFO, stream=sys.stdout,
@@ -349,7 +393,14 @@ def main(argv: list[str] | None = None) -> int:
     os.close(fd)
 
     try:
-        import psycopg
+        deferred: list[str] = []          # snapshot failures, folded in after the push
+        if a.snapshot_only:
+            log.info("snapshot-only: ingest, telemetry and the push are skipped")
+            _snapshot_step("backfill", deferred)
+            log.info("=== done in %.0fs: %s ===", (dt.datetime.now() - started).total_seconds(),
+                     "OK" if not deferred else "FAILURES: " + "; ".join(deferred))
+            return 1 if deferred else 0
+
         from f1lab.telemetry import trail_census_by_session
         conn = psycopg.connect(DSN)
         before_census = trail_census_by_session(conn)
@@ -358,6 +409,10 @@ def main(argv: list[str] | None = None) -> int:
         conn.rollback()
 
         failures: list[str] = []
+        # 0. Copy whatever preview exists before the ingest can recompute it (LEDGER_SPEC §2).
+        # Never under --dry-run (writes nothing) or --push-only.
+        if not a.dry_run and not a.push_only:
+            _snapshot_step("before", deferred)
 
         if a.dry_run:
             log.info("dry run: %d telemetried sessions, %d in the census baseline",
@@ -384,6 +439,9 @@ def main(argv: list[str] | None = None) -> int:
         # 1. Ingest. Idempotent: already-stored sessions are skipped, failed ones retried.
         rc, tail = _run([PY, "-m", "f1lab.ingest", "--season", str(a.season),
                          "--dsn", DSN, "--sleep", "2"], "ingest")
+        # 1b. Copy the fresh recompute, whatever the ingest's rc (a partial ingest still
+        # recomputes the companion). The ingest subprocess has exited: no concurrent writer.
+        _snapshot_step("after", deferred)
         if rc != 0:
             failures.append(f"ingest exited {rc}")
         for line in tail.splitlines():
@@ -431,6 +489,8 @@ def main(argv: list[str] | None = None) -> int:
         # 4-5. Publish, then keep the repo consistent. Still inside the lock: the push and
         # the ingest share it so there is one writer on both ends.
         _push_step(a, failures, new_sessions=new)
+        # The push was gated on `failures` alone; only now does a failed copy count.
+        failures.extend(deferred)
 
         log.info("=== done in %.0fs: %s ===", (dt.datetime.now() - started).total_seconds(),
                  "OK" if not failures else "FAILURES: " + "; ".join(failures))

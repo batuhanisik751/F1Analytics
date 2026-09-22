@@ -18,10 +18,12 @@ schema: ask
 role: f1_ask
 
 # --------------------------------------------------------------------------------------
-# The nine GRANT-level exclusions. These get NO view, so f1_ask holds no grant that could
+# The twelve GRANT-level exclusions. These get NO view, so f1_ask holds no grant that could
 # reach them: `permission denied`, not a prompt instruction (§1.2). Seven are sensitive
-# (PII, fit internals, pickled bytes); the last two are the v1.7 telemetry pair, excluded
-# for a measured planner reason rather than a privacy one (TELEMETRY_SPEC §2.6, T6).
+# (PII, fit internals, pickled bytes); the v1.7 telemetry pair is excluded for a measured
+# planner reason rather than a privacy one (TELEMETRY_SPEC §2.6, T6); data_release is push
+# bookkeeping (v1.11); the v1.12 preview-snapshot pair is excluded so a stale preview cannot
+# be quoted as today's (LEDGER_SPEC §3).
 # --------------------------------------------------------------------------------------
 exclude_tables:
   ingest_runs: >-
@@ -55,6 +57,12 @@ exclude_tables:
     ask.lap_corner_speeds, which are honest scalar rows.
   circuit_layout: >-
     Rendering geometry (rotation, reference session). Answers no question a fan asks.
+  preview_snapshot_round: >-
+    History copies of preview_round / preview_finish_order, served scored on /accuracy; raw
+    rows invite quoting a stale preview as today's (LEDGER_SPEC §3).
+  preview_snapshot_order: >-
+    History copies of preview_round / preview_finish_order, served scored on /accuracy; raw
+    rows invite quoting a stale preview as today's (LEDGER_SPEC §3).
 
 # --------------------------------------------------------------------------------------
 # The three Mode 3 tables. Excluded for a different reason, and listed separately so the
@@ -542,7 +550,8 @@ prose:
   non_grants: |
     WHAT IS NOT READABLE
     `ingest_runs`, `session_ingests`, `wp_model_artifact`, `wp_run`, `mode2_fit_run`,
-    `mode2_row_audit`, `lap_exclusion_report`, `lap_telemetry`, `circuit_layout`, `data_release`, the ask
+    `mode2_row_audit`, `lap_exclusion_report`, `lap_telemetry`, `circuit_layout`, `data_release`,
+    `preview_snapshot_round`, `preview_snapshot_order`, the ask
     query log, the answer cache and the stored race reports have no view and no grant. Querying them fails with permission
     denied; asking for them is never the right move. For a data-quality or coverage
     question use `ask.session_health` and `ask.data_coverage`. For the clean-lap story use

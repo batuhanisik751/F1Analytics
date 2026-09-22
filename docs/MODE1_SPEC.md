@@ -949,7 +949,8 @@ sessions at this circuit, greyed below three sessions. It is **history**, it sit
 apart from and above the forecast, it feeds **nothing**, and it does not change a single
 number in §2 or §3. In particular it does not move §2.2's 0.653 ceiling — a future round has
 no qualifying time any more than it has a grid. There is still no `/preview/...` route; the
-panel lives inside the branch described below.
+panel lives inside the branch described below. The per-round history of these previews (the
+snapshot tables and the ledger section on `/accuracy`) is specified in `docs/LEDGER_SPEC.md`.
 
 ### 3.1 Route: extend `/race/[year]/[round]`, do not add `/preview/...`
 

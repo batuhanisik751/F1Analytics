@@ -376,6 +376,74 @@ export const previewBacktest = pgTable(
   ],
 );
 
+// LEDGER_SPEC §1: the preview ledger. Each nightly recompute of preview_round /
+// preview_finish_order is copied here keyed by the preview's own computed_at, so history
+// survives the DELETE in recompute_preview. Builders are re-declared, not spread: a spread
+// would carry .defaultNow() onto computedAt (which must always be the copied value) and the
+// .references() shorthand onto assumptionSetId (the id is a copied fact, not a constraint).
+// No FK to events either: a renumber must not cascade-delete history.
+export const previewSnapshotRound = pgTable(
+  "preview_snapshot_round",
+  {
+    year: integer("year").notNull(),
+    round: integer("round").notNull(),
+    assumptionSetId: integer("assumption_set_id").notNull(),
+    circuitKey: integer("circuit_key"),
+    circuitMatch: text("circuit_match").notNull(),
+    circuitRaces: integer("circuit_races").notNull().default(0),
+    expectedTotalLaps: integer("expected_total_laps"),
+    pSafetyCar: doublePrecision("p_safety_car"),
+    scHazardShrunk: doublePrecision("sc_hazard_shrunk"),
+    pVsc: doublePrecision("p_vsc"),
+    expectedPitLossS: doublePrecision("expected_pit_loss_s"),
+    pitLossBandS: doublePrecision("pit_loss_band_s"),
+    odi: doublePrecision("odi"),
+    odiLo: doublePrecision("odi_lo"),
+    odiHi: doublePrecision("odi_hi"),
+    backtestSpearman: doublePrecision("backtest_spearman"),
+    backtestGridSpearman: doublePrecision("backtest_grid_spearman"),
+    backtestCoverage: doublePrecision("backtest_coverage"),
+    backtestRaces: integer("backtest_races"),
+    locoBrier: doublePrecision("loco_brier"),
+    computedAt: timestamp("computed_at", { withTimezone: true, mode: "string" }).notNull(),
+    snapshotAt: timestamp("snapshot_at", { withTimezone: true, mode: "string" })
+      .notNull()
+      .defaultNow(),
+  },
+  (t) => [primaryKey({ columns: [t.year, t.round, t.computedAt] })],
+);
+
+export const previewSnapshotOrder = pgTable(
+  "preview_snapshot_order",
+  {
+    year: integer("year").notNull(),
+    round: integer("round").notNull(),
+    computedAt: timestamp("computed_at", { withTimezone: true, mode: "string" }).notNull(),
+    assumptionSetId: integer("assumption_set_id").notNull(),
+    driverId: text("driver_id").notNull(),
+    expectedPosition: doublePrecision("expected_position").notNull(),
+    posP10: integer("pos_p10").notNull(),
+    posP90: integer("pos_p90").notNull(),
+    pWin: doublePrecision("p_win").notNull(),
+    pPodium: doublePrecision("p_podium").notNull(),
+    pPoints: doublePrecision("p_points").notNull(),
+    theta: doublePrecision("theta").notNull(),
+    dnfRate: doublePrecision("dnf_rate").notNull(),
+    draws: integer("draws").notNull(),
+    snapshotAt: timestamp("snapshot_at", { withTimezone: true, mode: "string" })
+      .notNull()
+      .defaultNow(),
+  },
+  (t) => [
+    primaryKey({ columns: [t.year, t.round, t.computedAt, t.driverId] }),
+    foreignKey({
+      columns: [t.year, t.round, t.computedAt],
+      foreignColumns: [previewSnapshotRound.year, previewSnapshotRound.round, previewSnapshotRound.computedAt],
+      name: "preview_snapshot_order_round_fk",
+    }).onDelete("cascade"),
+  ],
+);
+
 // --- §5.4 Race moments and optimal stint (the two per-session tables) -------
 
 export const raceMoment = pgTable(

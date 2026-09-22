@@ -107,7 +107,7 @@ const ALL: Record<string, string> = Object.fromEntries(
 );
 
 test("every export is covered by the sweep", () => {
-  assert.equal(Object.keys(ALL).length, 21);
+  assert.equal(Object.keys(ALL).length, 27);
 });
 
 // Spec-listed unchanged strings whose only digits define a scale, not a measurement:
@@ -158,4 +158,44 @@ test("cAcc10 names the verdict; cAcc10Narrow does not", () => {
   assert.match(C.cAcc10("{w}", "{lo}", "{hi}", "{s}"), /vacuous/);
   assert.doesNotMatch(C.cAcc10Narrow("{w}", "{lo}", "{hi}", "{s}"), /vacuous/);
   assert.match(C.C_ACC_13_NAIVE, /wider than it needs to be, not sharper/);
+});
+
+// --- 4. LEDGER_SPEC §4 — the preview ledger, byte-for-byte ----------------------------
+
+test("ledger fixed strings are byte-for-byte", () => {
+  assert.equal(
+    C.C_LED_1,
+    "These are the previews as they stood before each race, copied the night they were computed and never edited afterwards. A preview computed after a race had started is kept in the record but is never scored here.",
+  );
+  assert.equal(
+    C.C_LED_3,
+    "The backtest rows elsewhere on this page are predictions for races that were already stored, scored out of fold. Each row here was written down before its race and cannot have seen it; the claimed figures beside it are what that same preview said about itself.",
+  );
+  assert.equal(
+    C.C_LED_EMPTY_NONE,
+    "The record has not received its first copy yet. It is written the night the next update runs.",
+  );
+  assert.equal(
+    C.C_LED_4,
+    "Title chances after each round, recomputed from the stored results up to that round with the current model. These are not the figures as first published: a model change rewrites every column. The range beside each figure is its uncertainty, and a figure marked prior belongs to a driver with no completed race at that point, so it rests on the prior rather than on results.",
+  );
+});
+
+test("ledger templates are byte-for-byte around marker slots", () => {
+  assert.equal(
+    C.cLed2("{races}", "{first}"),
+    "{races} on record since {first}. The first copy was taken by hand from a preview computed before the copying step existed; every later copy is written the night it is made. One race is an anecdote, and this table only starts to mean something once it is long enough to disagree with the backtest above.",
+  );
+  assert.equal(
+    C.cLedEmpty("{previews}"),
+    "No race has been run since the record began. {previews} on record, waiting for the race.",
+  );
+});
+
+test("the ledger never claims a sealed record, a publication record, or that one row is evidence", () => {
+  const all = [C.C_LED_1, C.cLed2("{r}", "{f}"), C.C_LED_3, C.cLedEmpty("{p}"), C.C_LED_EMPTY_NONE, C.C_LED_4].join(" ");
+  assert.doesNotMatch(all, /sealed|provable|hash/i);
+  assert.match(C.C_LED_4, /not the figures as first published/);
+  assert.match(C.cLed2("{r}", "{f}"), /One race is an anecdote/);
+  assert.match(C.C_LED_1, /never scored here/);
 });

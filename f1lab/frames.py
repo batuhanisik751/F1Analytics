@@ -561,6 +561,17 @@ TABLE_COLUMNS: dict[str, list[tuple[str, str]]] = {
     ],
 }
 
+# LEDGER_SPEC §1: the preview ledger tables (migration 0012). Derived from the two preview
+# entries above so EXPECTED_COLUMNS lists them and assert_schema owns them. Neither is in
+# RACE_TABLE_ORDER / SPRINT_TABLE_ORDER: they are keyed by (year, round, computed_at), not
+# per-session. Python never issues their DDL; it only INSERT ... SELECTs into them.
+TABLE_COLUMNS["preview_snapshot_round"] = TABLE_COLUMNS["preview_round"] + [("snapshot_at", "timestamptz")]
+TABLE_COLUMNS["preview_snapshot_order"] = (
+    [("year", "int"), ("round", "int"), ("computed_at", "timestamptz")]
+    + [c for c in TABLE_COLUMNS["preview_finish_order"] if c[0] not in ("year", "round")]
+    + [("snapshot_at", "timestamptz")]
+)
+
 EXPECTED_COLUMNS: dict[str, list[str]] = {t: [c for c, _ in cols] for t, cols in TABLE_COLUMNS.items()}
 
 # Per-session child tables in FK (COPY) order. delete_session_children uses the reverse.

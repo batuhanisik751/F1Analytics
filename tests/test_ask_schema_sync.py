@@ -129,11 +129,16 @@ def test_check_mode_agrees(generated):
 
 # v1.11: nine -> ten with data_release, the production-push bookkeeping table (excluded: the
 # footer reads it directly and it is operational, not a fact about a race).
-def test_ten_grant_level_exclusions_are_objects_in_no_artifact(manifest, sql, doc, objects):
-    """Seven sensitive tables (§1.2) plus the two v1.7 telemetry exclusions (TELEMETRY_SPEC T6)."""
+# v1.12: ten -> twelve with preview_snapshot_round and preview_snapshot_order, the history
+# copies served scored on /accuracy (LEDGER_SPEC §3: raw rows invite quoting a stale preview
+# as today's).
+def test_twelve_grant_level_exclusions_are_objects_in_no_artifact(manifest, sql, doc, objects):
+    """Seven sensitive tables (§1.2), the two v1.7 telemetry exclusions (TELEMETRY_SPEC T6),
+    data_release (v1.11) and the two v1.12 preview-snapshot copies (LEDGER_SPEC §3)."""
     excluded = sorted(manifest["exclude_tables"])
-    assert len(excluded) == 10, excluded
+    assert len(excluded) == 12, excluded
     assert {"lap_telemetry", "circuit_layout"} <= set(excluded)
+    assert {"preview_snapshot_round", "preview_snapshot_order"} <= set(excluded)
     for table in excluded:
         assert f"ask.{table}" not in objects, f"{table} is in the validator's allowlist"
         assert f"VIEW ask.{table} AS" not in sql, f"{table} has a view"

@@ -9,6 +9,7 @@ import assert from "node:assert/strict";
 import { sql } from "drizzle-orm";
 import { db, pool } from "../db/client";
 import * as accuracy from "@/lib/queries/accuracy";
+import * as ledger from "@/lib/queries/ledger";
 import * as driver from "@/lib/queries/driver";
 import * as mode2 from "@/lib/queries/mode2";
 import * as preview from "@/lib/queries/preview";
@@ -61,6 +62,10 @@ function entriesFor(ids: Awaited<ReturnType<typeof fixtureIds>>): Entry[] {
     ["accuracy.getReliability", accuracy.getReliability, []],
     ["accuracy.getIntervalCoverage", accuracy.getIntervalCoverage, []],
     ["accuracy.getCoverageBySeason", accuracy.getCoverageBySeason, []],
+    ["accuracy.getIntervalSharpness", accuracy.getIntervalSharpness, []],
+    ["accuracy.getPointsBand", accuracy.getPointsBand, []],
+    ["ledger.getPreviewLedger", ledger.getPreviewLedger, [2026]],
+    ["ledger.getTitleOddsLine", ledger.getTitleOddsLine, [2026]],
     ["driver.resolveDriver", driver.resolveDriver, [DRIVER_CODE, YEAR]],
     ["driver.getDriverSeason", driver.getDriverSeason, [driverId, YEAR]],
     ["mode2.getFitMeta", mode2.getFitMeta, []],

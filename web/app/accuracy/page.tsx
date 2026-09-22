@@ -17,6 +17,7 @@ import EmptyState from "@/components/ui/EmptyState";
 import ReliabilityChart from "@/components/charts/ReliabilityChart";
 import RangeComparatorTable from "@/components/accuracy/RangeComparatorTable";
 import PointsBandSection from "@/components/accuracy/PointsBandSection";
+import LedgerSection from "@/components/accuracy/LedgerSection";
 import {
   getSkill,
   getReliability,
@@ -25,6 +26,7 @@ import {
   getIntervalSharpness,
   getPointsBand,
 } from "@/lib/queries/accuracy";
+import { getPreviewLedger, getTitleOddsLine } from "@/lib/queries/ledger";
 import * as C from "@/lib/accuracy/captions";
 
 export const dynamic = "force-dynamic";
@@ -49,13 +51,17 @@ const scopeLabel = (s: string) =>
   SCOPE_LABEL[s] ?? (s.startsWith("year:") ? `${s.slice(5)} season only` : s);
 
 export default async function AccuracyPage(): Promise<React.JSX.Element> {
-  const [skill, reliability, coverage, bySeason, sharpness, pointsBand] = await Promise.all([
+  // LEDGER_SPEC §4 — the record covers the season in progress; the page is force-dynamic.
+  const ledgerYear = new Date().getUTCFullYear();
+  const [skill, reliability, coverage, bySeason, sharpness, pointsBand, ledger, titleLine] = await Promise.all([
     getSkill(),
     getReliability("loco"),
     getIntervalCoverage(),
     getCoverageBySeason(),
     getIntervalSharpness(),
     getPointsBand(),
+    getPreviewLedger(ledgerYear),
+    getTitleOddsLine(ledgerYear),
   ]);
 
   // "plain" is the shipped variant; isotonic is the calibrated alternative kept for comparison.
@@ -308,6 +314,8 @@ export default async function AccuracyPage(): Promise<React.JSX.Element> {
       </Section>
 
       <PointsBandSection seasons={pointsBand} />
+
+      <LedgerSection ledger={ledger} titleLine={titleLine} />
 
       <Section id="limits" title="What these scores do not say">
         <p className="max-w-3xl text-sm leading-relaxed text-muted">
