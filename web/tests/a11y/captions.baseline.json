@@ -1656,6 +1656,116 @@
       "route": "/race/2026/13/telemetry",
       "capturedAt": "2026-09-17",
       "text": "Computed by f1lab from FastF1 timing data. Every number depends on stated assumptions; each race page lists them."
+    },
+    {
+      "route": "/",
+      "capturedAt": "2026-09-22",
+      "text": "What is on this weekend, and whether the title is still alive — read from rows the nightly job has already loaded.",
+      "changed": {
+        "spec": "IDEAS_2026-09 §1 #1",
+        "owner": "WP-STRIP",
+        "verdict": "new string, pinned by lib/home/captions.test.ts",
+        "why": "New in v1.12 (IDEAS_2026-09 §1 #1, the home 'This week' strip). This string did not exist before this release, so there is no pre-release DOM to preserve it against; it is frozen instead by lib/home/captions.test.ts, which pins the template byte-for-byte and fills every number, name and date from the database at render time. Recorded here as rendered on 2026-09-22 (after round 14, next race R15), so it is a snapshot of the slots on that day, not a literal the page must keep."
+      }
+    },
+    {
+      "route": "/",
+      "capturedAt": "2026-09-22",
+      "text": "Round 15, the Azerbaijan Grand Prix, on 26 Sept 2026.",
+      "changed": {
+        "spec": "IDEAS_2026-09 §1 #1",
+        "owner": "WP-STRIP",
+        "verdict": "new string, pinned by lib/home/captions.test.ts",
+        "why": "New in v1.12 (IDEAS_2026-09 §1 #1, the home 'This week' strip). This string did not exist before this release, so there is no pre-release DOM to preserve it against; it is frozen instead by lib/home/captions.test.ts, which pins the template byte-for-byte and fills every number, name and date from the database at render time. Recorded here as rendered on 2026-09-22 (after round 14, next race R15), so it is a snapshot of the slots on that day, not a literal the page must keep."
+      }
+    },
+    {
+      "route": "/",
+      "capturedAt": "2026-09-22",
+      "text": "Kimi Antonelli, then George Russell and Lando Norris — the preview order for this round.",
+      "changed": {
+        "spec": "IDEAS_2026-09 §1 #1",
+        "owner": "WP-STRIP",
+        "verdict": "new string, pinned by lib/home/captions.test.ts",
+        "why": "New in v1.12 (IDEAS_2026-09 §1 #1, the home 'This week' strip). This string did not exist before this release, so there is no pre-release DOM to preserve it against; it is frozen instead by lib/home/captions.test.ts, which pins the template byte-for-byte and fills every number, name and date from the database at render time. Recorded here as rendered on 2026-09-22 (after round 14, next race R15), so it is a snapshot of the slots on that day, not a literal the page must keep."
+      }
+    },
+    {
+      "route": "/",
+      "capturedAt": "2026-09-22",
+      "text": "This order is a weaker guide than the starting grid will be (0.60 against 0.76 rank correlation in the backtest), so it says who is favoured before qualifying, never a predicted finish.",
+      "changed": {
+        "spec": "IDEAS_2026-09 §1 #1",
+        "owner": "WP-STRIP",
+        "verdict": "new string, pinned by lib/home/captions.test.ts",
+        "why": "New in v1.12 (IDEAS_2026-09 §1 #1, the home 'This week' strip). This string did not exist before this release, so there is no pre-release DOM to preserve it against; it is frozen instead by lib/home/captions.test.ts, which pins the template byte-for-byte and fills every number, name and date from the database at render time. Recorded here as rendered on 2026-09-22 (after round 14, next race R15), so it is a snapshot of the slots on that day, not a literal the page must keep."
+      }
+    },
+    {
+      "route": "/",
+      "capturedAt": "2026-09-22",
+      "text": "After round 14, Kimi Antonelli leads the title odds with a 98 % chance, in a range of 88 % to 100 %, from 20,000 simulated seasons. A forecast, with a band.",
+      "changed": {
+        "spec": "IDEAS_2026-09 §1 #1",
+        "owner": "WP-STRIP",
+        "verdict": "new string, pinned by lib/home/captions.test.ts",
+        "why": "New in v1.12 (IDEAS_2026-09 §1 #1, the home 'This week' strip). This string did not exist before this release, so there is no pre-release DOM to preserve it against; it is frozen instead by lib/home/captions.test.ts, which pins the template byte-for-byte and fills every number, name and date from the database at render time. Recorded here as rendered on 2026-09-22 (after round 14, next race R15), so it is a snapshot of the slots on that day, not a literal the page must keep."
+      }
+    },
+    {
+      "route": "/",
+      "capturedAt": "2026-09-22",
+      "text": "Championship points: 292, 81 clear of George Russell. Points scored so far, not a forecast.",
+      "changed": {
+        "spec": "IDEAS_2026-09 §1 #1",
+        "owner": "WP-STRIP",
+        "verdict": "new string, pinned by lib/home/captions.test.ts",
+        "why": "New in v1.12 (IDEAS_2026-09 §1 #1, the home 'This week' strip). This string did not exist before this release, so there is no pre-release DOM to preserve it against; it is frozen instead by lib/home/captions.test.ts, which pins the template byte-for-byte and fills every number, name and date from the database at render time. Recorded here as rendered on 2026-09-22 (after round 14, next race R15), so it is a snapshot of the slots on that day, not a literal the page must keep."
+      }
+    },
+    {
+      "route": "/",
+      "capturedAt": "2026-09-22",
+      "text": "9 of 23 drivers can still win the title on the arithmetic; 14 cannot.",
+      "changed": {
+        "spec": "IDEAS_2026-09 §1 #1",
+        "owner": "WP-STRIP",
+        "verdict": "new string, pinned by lib/home/captions.test.ts",
+        "why": "New in v1.12 (IDEAS_2026-09 §1 #1, the home 'This week' strip). This string did not exist before this release, so there is no pre-release DOM to preserve it against; it is frozen instead by lib/home/captions.test.ts, which pins the template byte-for-byte and fills every number, name and date from the database at render time. Recorded here as rendered on 2026-09-22 (after round 14, next race R15), so it is a snapshot of the slots on that day, not a literal the page must keep."
+      }
+    },
+    {
+      "route": "/",
+      "capturedAt": "2026-09-22",
+      "text": "The earliest the title can be settled is round 17, the Singapore Grand Prix.",
+      "changed": {
+        "spec": "IDEAS_2026-09 §1 #1",
+        "owner": "WP-STRIP",
+        "verdict": "new string, pinned by lib/home/captions.test.ts",
+        "why": "New in v1.12 (IDEAS_2026-09 §1 #1, the home 'This week' strip). This string did not exist before this release, so there is no pre-release DOM to preserve it against; it is frozen instead by lib/home/captions.test.ts, which pins the template byte-for-byte and fills every number, name and date from the database at render time. Recorded here as rendered on 2026-09-22 (after round 14, next race R15), so it is a snapshot of the slots on that day, not a literal the page must keep."
+      }
+    },
+    {
+      "route": "/",
+      "capturedAt": "2026-09-22",
+      "text": "The race page for the Azerbaijan Grand Prix appears once the nightly push has run; the footer's Data as of line shows when that was.",
+      "changed": {
+        "spec": "IDEAS_2026-09 §1 #1",
+        "owner": "WP-STRIP",
+        "verdict": "new string, pinned by lib/home/captions.test.ts",
+        "why": "New in v1.12 (IDEAS_2026-09 §1 #1, the home 'This week' strip). This string did not exist before this release, so there is no pre-release DOM to preserve it against; it is frozen instead by lib/home/captions.test.ts, which pins the template byte-for-byte and fills every number, name and date from the database at render time. Recorded here as rendered on 2026-09-22 (after round 14, next race R15), so it is a snapshot of the slots on that day, not a literal the page must keep."
+      }
+    },
+    {
+      "route": "/",
+      "capturedAt": "2026-09-22",
+      "text": "R15 Azerbaijan Grand Prix raced on 26 Sept 2026 and is not loaded yet.",
+      "changed": {
+        "spec": "IDEAS_2026-09 §1 #6",
+        "owner": "WP-STRIP",
+        "verdict": "new conditional string, pinned by lib/home/captions.test.ts",
+        "why": "New in v1.12 (IDEAS_2026-09 §1 #6, stale-data honesty). This sentence renders in the footer and the home strip only when the latest past round has no loaded race session, so it is not on screen on a normal night and cannot be asserted present; lib/home/captions.test.ts pins its exact form 'R{round} {event} raced on {date} and is not loaded yet.' and exercises the query-layer decision against a fake today. Recorded with the slots R15 would fill on 27 Sept 2026."
+      }
     }
   ]
 }

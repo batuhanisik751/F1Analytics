@@ -1,7 +1,9 @@
 import type { Metadata } from "next";
 import { Titillium_Web, Geist_Mono } from "next/font/google";
 import Nav from "@/components/ui/Nav";
-import { formatPushedAt, getLatestRelease } from "@/lib/queries/release";
+import { C_NOT_LOADED, fill } from "@/lib/home/captions";
+import { fmtDate } from "@/lib/format";
+import { formatPushedAt, getLatestRelease, getStaleRound } from "@/lib/queries/release";
 import "./globals.css";
 
 // Titillium Web was Formula 1's own typeface from 2014–2017 and is the closest free
@@ -73,16 +75,33 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
 // number-heavy on purpose: the caption baseline (tests/a11y) freezes wordy sentences, and a
 // line that changes every night must never be one of them. With no `data_release` row yet
 // (local dev, a fresh Neon project) it says so in one neutral clause and never throws.
+//
+// IDEAS_2026-09 §1 #6 — and the stale-data guard beside it: when the latest past round has no
+// loaded race session, one sentence (lib/home/captions.ts C_NOT_LOADED, shared with the home
+// strip) says so, rather than letting "Data as of" imply the previous round is current.
 async function Freshness(): Promise<React.JSX.Element> {
-  const rel = await getLatestRelease();
+  const [rel, stale] = await Promise.all([getLatestRelease(), getStaleRound()]);
+  const staleLine = stale ? (
+    <p role="status" className="mt-1 font-medium text-fg">
+      {fill(C_NOT_LOADED, { round: stale.round, event: stale.eventName, date: fmtDate(stale.eventDate) })}
+    </p>
+  ) : null;
   if (rel === null) {
-    return <p className="mt-1 tnum">Data as of: no push recorded yet.</p>;
+    return (
+      <>
+        <p className="mt-1 tnum">Data as of: no push recorded yet.</p>
+        {staleLine}
+      </>
+    );
   }
   const rows = rel.rowsPushed.toLocaleString("en-GB");
   return (
-    <p className="mt-1 tnum">
-      Data as of {formatPushedAt(rel.pushedAt)} · last push {rel.sessionsPushed} session
-      {rel.sessionsPushed === 1 ? "" : "s"}, {rows} rows
-    </p>
+    <>
+      <p className="mt-1 tnum">
+        Data as of {formatPushedAt(rel.pushedAt)} · last push {rel.sessionsPushed} session
+        {rel.sessionsPushed === 1 ? "" : "s"}, {rows} rows
+      </p>
+      {staleLine}
+    </>
   );
 }

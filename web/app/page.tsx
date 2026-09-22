@@ -7,12 +7,14 @@
 import type { Metadata } from "next";
 import LatestRaceHero from "@/components/home/LatestRaceHero";
 import StandingsSnapshot from "@/components/home/StandingsSnapshot";
+import ThisWeekStrip from "@/components/home/ThisWeekStrip";
 import WhatThisShows from "@/components/home/WhatThisShows";
 import RaceList from "@/components/season/RaceList";
 import EmptyState from "@/components/ui/EmptyState";
 import PageHeader from "@/components/ui/PageHeader";
 import Section from "@/components/ui/Section";
 import SeasonSwitcher from "@/components/ui/SeasonSwitcher";
+import { STRIP_CAPTION, STRIP_TITLE } from "@/lib/home/captions";
 import { getHome } from "@/lib/queries/home";
 
 export const dynamic = "force-dynamic";
@@ -58,7 +60,7 @@ export default async function HomePage(): Promise<React.JSX.Element> {
     );
   }
 
-  const { year, seasons, latest, completed, afterRound, drivers, constructors } = home;
+  const { year, seasons, latest, completed, afterRound, drivers, constructors, thisWeek } = home;
   const raceWord = completed.length === 1 ? "race" : "races";
 
   return (
@@ -69,6 +71,13 @@ export default async function HomePage(): Promise<React.JSX.Element> {
         meta={`${year} season · ${completed.length} ${raceWord} analysed`}
         actions={<SeasonSwitcher seasons={seasons} current={year} />}
       />
+
+      {/* IDEAS_2026-09 §1 #1 — the strip sits above "Start here": a returning fan's first
+          question is what is on this weekend, and §1 #6's guard line must be the first thing on
+          the page the night the nightly job fails. Never collapsible (§0). */}
+      <Section title={STRIP_TITLE} caption={STRIP_CAPTION}>
+        <ThisWeekStrip year={year} week={thisWeek} />
+      </Section>
 
       <Section
         title="Start here"
