@@ -4,7 +4,7 @@ Status: FINAL. This document is the contract between independent implementation 
 Implementers will not see the proposals or discussion that produced it; everything they
 need is here. Where the text says MUST, deviation breaks another package.
 
-Project root: `/Users/batuhanisik/Desktop/Projects/F1Analytics` (referred to as `<root>` below).
+Project root: `<repo root>` (referred to as `<root>` below).
 
 ---
 

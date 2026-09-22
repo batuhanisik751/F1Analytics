@@ -2,11 +2,23 @@
 
 [![CI](https://github.com/batuhanisik751/F1Analytics/actions/workflows/ci.yml/badge.svg)](https://github.com/batuhanisik751/F1Analytics/actions/workflows/ci.yml)
 
+**Live site: https://f1-analytics-lac.vercel.app** · **Status: complete** (22 September 2026 — see [Status](#status)).
+
 A read-only Formula 1 statistics site over precomputed Postgres tables. Python (`f1lab`)
 pulls timing data through [FastF1](https://github.com/theOehrly/Fast-F1), cleans it, and
-computes every analytic at ingest time; a Next.js app renders four pages by selecting rows.
-Nothing is computed on request beyond formatting and sorting, and every number on the site
-is shown next to the assumptions it depends on.
+computes every analytic at ingest time; a Next.js app renders the pages by selecting rows,
+with every read cached at the query layer and purged when new data lands. Nothing is
+computed on request beyond counting, formatting and sorting, and every number on the site is
+shown next to the assumptions it depends on — including, on its own page, how often the
+site's forecasts have been wrong.
+
+Three seasons (2024–2026), 178 sessions, 92,963 laps, 76 tables, 13 migrations, 17 specs.
+The numbers a sceptic will look for first: the win-probability model removes 15.8 % of the
+grid-position baseline's error out of sample (33.4 % in sample, shown for contrast); its
+finishing-position ranges contained the finish 94.7 % of the time by being 15 places wide on a
+20-car grid, and a grid slot ±7 places with no model scores better; the end-of-season points
+range held 14 % of first-quarter projections in 2024 against 80 % promised. All three are on
+[`/accuracy`](https://f1-analytics-lac.vercel.app/accuracy), in the site's own words.
 
 It grew out of a single-race notebook (`notebooks/01_one_race.ipynb`, still runnable) whose
 pipeline is now run for every race of 2024, 2025 and 2026 and stored with full provenance.
@@ -24,18 +36,24 @@ make ingest SEASON=2025                         # then SEASON=2026, SEASON=2024
 make web                                        # http://localhost:3000
 ```
 
+Without `make`: `docker compose up -d`, `npm --prefix web ci && npm --prefix web run db:migrate`,
+`.venv/bin/python -m f1lab.ingest --season 2025`, `npm --prefix web run dev`. The ingest needs the
+FastF1 cache (`cache/`, ~10 GB for three seasons); it sleeps between loads and stops cleanly on a
+rate limit.
+
 ## The pages
 
 | Route | What it shows |
 |---|---|
-| `/` | The latest ingested race (podium, the site's own *fastest race pace* driver and the runner-up gap), a standings snapshot (top 8 drivers, all constructors), and the season's completed races newest first with winner, fastest-pace driver and a *pace ≠ winner* marker. |
+| `/` | **This week** first: the next race with its date, the title fight (the leader's simulated odds *with their band*, championship points and the simulated expected points kept on separate lines, how many drivers can still win on the arithmetic, the earliest clinch round) and the pre-qualifying favourites labelled as the weaker guide they are. Then the latest ingested race (podium, the site's own *fastest race pace* driver and the runner-up gap), a standings snapshot, and the season's completed races newest first with winner, fastest-pace driver and a *pace ≠ winner* marker. If the latest race has run and the nightly load has not, the strip and the footer say so in one sentence rather than presenting the previous round as current. |
 | `/season/[year]` | Drivers and constructors standings after the last ingested round (sprint points shown separately); simulated title odds per driver after every round, with a bootstrap band; the exact magic numbers — points still available, the leader's margin, who is mathematically eliminated — in their own section, because arithmetic and a forecast must not read as one thing; and the full race list — pending rounds muted, failed ingests marked *data unavailable*, sprint weekends flagged. |
 | `/race/[year]/[round]` | Result → pace → strategy → why → trust: classification; fuel-corrected race-pace box plot and table with a *stable* mark from the sensitivity analysis; tyre-strategy gantt in finishing order; degradation scatter with pooled per-compound slopes and per-stint fits (weak ones tagged *not a finding*); the strategy simulator (v1.1, below); race trace (gap to leader per lap with SC/VSC/red bands); teammate head-to-head bars; the fuel-constant sensitivity table; what the lap cleaning threw away; and the exact modelling assumptions the numbers were computed under. A per-lap win-probability river with its reliability curve and Brier baseline underneath, rule-detected race moments marked on the trace, and an optimal-stint break-even in the degradation section (v1.2). **A round that has not been raced shows a weekend preview on the same URL** — safety-car probability, expected pit loss, overtaking difficulty and a predicted finishing order — so a link shared before the race keeps working after it. |
-| `/driver/[code]?season=YYYY` | Season summary tiles, pace rank and signed teammate gap by round, race-by-race table (mid-season team swaps highlighted), and one head-to-head card per teammate. Plus the v1.3 driver-vs-car slots: a driver rating with the car removed and its 5th–95th range, that rating re-fitted season by season, the four-skill panel in which two skills are measured and two are refused, the car-adjusted career, and the career-long team-mate table. |
+| `/driver/[code]?season=YYYY` | Season summary tiles, pace rank and signed teammate gap by round, race-by-race table (mid-season team swaps highlighted), and one head-to-head card per teammate. **Compare with** any other driver (`&vs=CODE`): the raw same-race ledger — qualified ahead, finished ahead, faster fuel-corrected pace, points — each over the races where both have that number, with "same car not implied" inside every sentence, beside the model's car-removed contrast with its range; the two are allowed to disagree, and when the model cannot call it (no shared car, a range that includes zero) the page says so. Plus the v1.3 driver-vs-car slots: a driver rating with the car removed and its 5th–95th range, that rating re-fitted season by season, the four-skill panel in which two skills are measured and two are refused, the car-adjusted career, and the career-long team-mate table. |
 | `/constructor`, `/constructor/[slug]` | Car pace per season with driver effects removed by the model rather than by averaging, in-season development as a single start-to-finish segment, and retirements per 1,000 racing laps split into a car part and a driver part — never called reliability, because the data record that a car stopped and never why. |
 | `/season/[year]/was-it-the-car` | The season's drivers split into the part of a lap attributable to the car and the part to the driver, with the boundary drawn as a blur as wide as the split is uncertain; the car:driver spread as an SD ratio with its own interval; and a counterfactual control that starts empty. |
 | `/race/[year]/[round]/telemetry` | **v1.7.** One lap per driver of 10 Hz car and position data: the circuit painted by speed, gear, throttle or brake; a two-driver delta trace showing where on the road one lap was quicker; speed, throttle-with-braking, gear and DRS on the same metres of road; and a corner-by-corner table of apex speed, minimum gear and braking point. The delta trace is aligned on chord distance along the (X, Y) trace and **prints its own closure error in milliseconds**, refusing to draw at all above 400 ms. It **exists only on qualifying and sprint-qualifying sessions** — a race lap gets the map, the stack and the corner card, and no cross-driver comparison, because traffic, fuel and tyre age are not controlled for. The tab is **absent, not empty**, on a session the telemetry pass has never run. |
-| `/ask` | **The one generated page.** You type a question in English; Claude writes **one read-only SQL SELECT** against a curated schema of 64 views, the server validates it with the real PostgreSQL parser and runs it as an unprivileged role under hard limits, and the rows are rendered as a table, a chart or a single figure. **The SQL is always shown**, next to a plain-English method line derived from the query's own syntax tree — *1 view · no clean-lap filter · 20 rows* — so a reader who does not read SQL still sees what was and was not filtered. The model never states a number: every figure is a cell that came out of Postgres, and there is no second call that summarises the rows. A generated answer never looks like a precomputed one (dashed accent border, a persistent *generated* badge, and a link to the proper page when there is one). |
+| `/accuracy` | **How right were we.** Every forecast the site makes, scored on races the model had never seen: the win-probability skill against a grid-position baseline (in-sample beside out-of-sample, so the flattery is visible), its calibration curve, the finishing-position ranges' coverage *beside their width* and against a no-model "grid slot ± 7" comparator, the end-of-season points ranges scored by quarter of the season for every finished season, and a ledger of the previews as they stood before each race, copied the night they were computed and scored once the race is in. It is unflattering on purpose. |
+| `/ask` | **The one generated page — switched off on the public site.** With a model key configured, you type a question in English and a hosted language model writes **one read-only SQL SELECT** against a curated schema of 64 views, the server validates it with the real PostgreSQL parser and runs it as an unprivileged role under hard limits, and the rows are rendered as a table, a chart or a single figure. **The SQL is always shown**, next to a plain-English method line derived from the query's own syntax tree — *1 view · no clean-lap filter · 20 rows* — so a reader who does not read SQL still sees what was and was not filtered. The model never states a number: every figure is a cell that came out of Postgres, and there is no second call that summarises the rows. A generated answer never looks like a precomputed one (dashed accent border, a persistent *generated* badge, and a link to the proper page when there is one). |
 
 Every section renders an empty state with the stored reason when an analytic could not be
 computed; pages 404 only when the season, race or driver itself does not exist.
@@ -104,8 +122,13 @@ on every run, then migrated, so a pull request's migration is exercised on real 
 The run ends with one line in the job summary, and it is the honest part:
 
 ```
-ran 681 of 961 (70.9%) — not run: 83 fixture-cache, 197 direct-cache
+ran 703 of 983 (71.5%) — not run: 83 fixture-cache, 197 direct-cache
 ```
+
+A push that touches only docs or web copy runs a *light* run (the 16-minute model tier is
+skipped and the summary says so, with a link to the last full run); the full run is forced by
+any change to the model, schema, scripts, tests or the query layer, and by a nightly schedule
+on `main`.
 
 The 280 not run need the 10 GB FastF1 cache on local disk — they re-ingest real sessions and
 take 25–40 minutes a file — and cannot run on a hosted runner. They are marked `cache` and run
@@ -115,6 +138,21 @@ a green run over nine files would be a lie by omission, and this project does no
 
 Nothing in CI needs a secret. The ask box is exercised in its key-absent state, which is also
 how production ships.
+
+## Running in production
+
+The public site is a Vercel deployment of `web/` reading a Neon Postgres through a role that
+holds `SELECT` and nothing else. Nothing computes on the server beyond counting rows: every
+query-layer read is cached under one tag, and the laptop's nightly job (`scripts/update_season.py`,
+a launchd agent at 03:20) ingests any new session, warms and derives telemetry, checks the
+telemetry corpus against a signed baseline, pushes the changed rows to Neon as a role that can
+write data but never DDL, calls a bearer-guarded route that expires the cache, copies the
+weekend preview into an append-only history so it can be scored after the race, and republishes
+the CI fixture. A step that fails is a failed night in the log and the exit code, never silent;
+a push that finds the schemas differ refuses rather than guesses. The migration ledger, the role
+grants and the push are proven before a race weekend by a dry run that names every row it would
+write. Credentials live in mode-600 files outside the repository and are read with Python, never
+sourced into a shell.
 
 ## The analytics and their caveats
 
@@ -141,8 +179,8 @@ notebook's ranking and the `rank@0.03` column of the sensitivity table).
    tagged *not a finding*.
 5. **Teammate gaps** — the cleanest driver signal available (same car), but a single race is
    a noisy, confounded observation (strategy, traffic, damage). Season head-to-heads pool
-   them naively; the real answer is a hierarchical driver-vs-car model, designed for but not
-   built (`docs/SPEC.md` §1.13).
+   them naively; the hierarchical driver-vs-car model (item 10) is the answer that removes the
+   car, and the two are shown side by side rather than reconciled.
 6. **Race trace** — gap = time the car completed lap N minus time the leader completed lap N.
    Lapped cars keep growing; red flags shift everyone equally; the y-axis is capped to keep a
    car parked through a red flag from flattening the chart.
@@ -237,6 +275,29 @@ notebook's ranking and the `rank@0.03` column of the sensitivity table).
    which driver is faster, which car is faster, how a stint degraded, or how much of a
    straight-line advantage was a tow.
 
+13. **Accuracy** (v1.12–v1.13, `web/lib/queries/accuracy*.ts`, contracts `docs/ACCURACY_SPEC.md`
+   and `docs/LEDGER_SPEC.md`) — the site's own record, scored read-only over stored forecasts
+   and outcomes. The win-probability skill is quoted out of sample beside in sample; the
+   finishing-position ranges' 94.7 % coverage is shown beside their mean width (15.1 places on
+   grids of 20–22) and against a no-model comparator, scored with an interval score that
+   charges width and misses together — the comparator wins, and the page says so; the
+   end-of-season points ranges are scored by quarter for every finished season (2024: the 80 %
+   range held 14.4 % of first-quarter projections; the case for a tighter early-season prior
+   and a DNF variance term, which is separate work); and every pre-race preview is copied the
+   night it is computed and scored once its race is in, so "what did you say last week" has an
+   answer that was written before the race. The rule for the 100 predictions with no classified
+   finish is stated above every coverage figure; the copy says n = 2 seasons, not thousands of
+   trials, and grades no driver.
+
+14. **Head-to-head** (v1.14, `web/lib/queries/h2h.ts`, contract `docs/H2H_SPEC.md`) — any two
+   drivers, from the driver page: the raw same-race ledger (car and driver together, each line
+   over its own denominator, qualifying position rather than grid because penalties are not
+   pace) beside the stored car-removed contrast oriented to the page's driver with its 5th–95th
+   range, labelled as pooled across every season the model has seen. A rule in the build forbids
+   subtracting two pace gaps or two ratings anywhere in this code; when the model cannot call the
+   pair — no shared car, a range that includes zero, no stored row — a computed sentence says so
+   instead of a number.
+
 Telemetry-grade lap data only exists from 2018, so anything built on tyre or sector data has
 a hard floor there. The driver-vs-car model is narrower still: it is fitted on 2024, 2025 and
 2026 race sessions only, so a rating is a position among those twenty-eight drivers under
@@ -252,10 +313,16 @@ tests/         pytest (`-m "not db"` runs from cache alone)
 notebooks/     01_one_race.ipynb — the original single-race analysis, unchanged
 scripts/       warm_cache.py — pre-download sessions · warm_telemetry.py — the v1.7 telemetry warm (~11 GB)
 web/           Next.js 16 + Drizzle; see web/README.md for scripts and conventions
+scripts/       update_season.py (the nightly job) · push_remote.py (laptop → Neon, refuses localhost and
+               schema drift) · publish_fixture.sh · neon_migrate.sh · neon_apply_0012.py · db_ask_verify.sh
+               gen_ask_schema.py · ci_coverage.py · com.f1analytics.update.plist (launchd)
 docs/          SPEC.md (v1 contract, §8 as built) · SIM_SPEC.md (v1.1) · MODE1_SPEC.md (v1.2, §11 as built)
                MODE2_SPEC.md (v1.3, §12 as built) · MODE3_SPEC.md (v1.4 ask box, §12 as built)
-               QUALI_SPEC.md (v1.6 qualifying, §10 as built) · TELEMETRY_SPEC.md (v1.7, §10 as built)
-               RUNBOOK.md (operations; §3.13–§3.14 are the telemetry warm and derive)
+               QUALI_SPEC.md (v1.6) · TELEMETRY_SPEC.md (v1.7) · GAPFILL_SPEC.md (v1.8) · UX_SPEC.md (v1.9)
+               OPS_SPEC.md (v1.10 going public; §10 as built) · REVALIDATE_SPEC.md (v1.11 cache)
+               ACCURACY_SPEC.md · LEDGER_SPEC.md · H2H_SPEC.md (v1.12–v1.14) · REPLICATION_SPEC.md (designed, refused)
+               IDEAS_2026-09.md (the research behind the last five releases, with what was rejected and why)
+               RUNBOOK.md (operations; §3 has every procedure, §9 the morning-after checks)
 Makefile       db · setup · migrate · ingest SEASON= · recompute · recompute-hazards · recompute-companion
                recompute-mode2 · ingest-quali · backfill-quali · verify-quali · web · build · test
                warm-telemetry · telemetry · telemetry-session SESSION_ID= · verify-telemetry (v1.7)
@@ -272,4 +339,28 @@ which is an unofficial endpoint. Cache aggressively and do not hammer it (the in
 between loads and stops cleanly on a rate limit).
 
 Formula 1 owns this data and its marks. Keep anything built on it non-commercial, and do
-not use F1 or team logos.
+not use F1 or team logos. The tables published as the CI fixture (a GitHub Release asset) and
+the numbers on the site are derived from that data for the same non-commercial, personal use.
+
+The code in this repository is released under the [MIT License](LICENSE). That licence covers
+the code only: the timing data, the tables derived from it and the numbers on the site remain
+Formula 1's, obtained through an unofficial package, for personal, non-commercial use.
+
+## Status
+
+Complete as of 22 September 2026: the three things the project set out to be — a race
+explorer, a race-day companion and a driver-vs-car model — are built, revised and scored on
+their own accuracy page; the site is public, cached, deployed on push and updated nightly by
+a job that checks its own work. Everything it claims is next to the assumption it depends on,
+and what it cannot measure is said in the same place.
+
+What it does not do, on purpose: rate drivers across eras; treat a pre-race preview as more
+than a weaker guide than the grid; call the McLaren and Aston Martin drivers' level, which the
+2024–2026 mobility graph cannot identify; summarise anything with a model at request time.
+
+What would change a claim rather than add a page, if the work continues: a tighter
+early-season prior and a DNF variance term in the title model (the 14 % finding above); storing
+two or three laps per driver-session so that per-driver technique skills can be tested for
+repeatability (`docs/REPLICATION_SPEC.md`, refused at one lap); and, less than either, a form
+guide over the last five rounds. The first race night to run entirely unattended is the one
+after this note.

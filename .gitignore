@@ -19,3 +19,4 @@ web/.next*/
 # editor and tooling config is excluded locally via .git/info/exclude, not here
 .env*
 !**/.env.example
+*.dump

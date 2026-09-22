@@ -659,7 +659,7 @@ if not a.no_push:
 `push_remote.py` (~250 lines, new): `EXCLUDE_TABLES`, `diff()`, `apply()` (one transaction),
 `verify()`, `--full`, `--sessions YEAR:ROUND`, `--verify-only`, `--dry-run`, a snapshot to
 `output/snapshots/` (last 7) before any run that will write. The tracked plist gains ONE
-`EnvironmentVariables` key, `HOME=/Users/batuhanisik`, and nothing else; `docs/RUNBOOK.md`
+`EnvironmentVariables` key, `HOME=<home>`, and nothing else; `docs/RUNBOOK.md`
 "Unattended updates" gains the push paragraph and the corrected cache-dependence sentence.
 `requirements-ci.txt` is `requirements.txt` minus jupyter/ipykernel/matplotlib.
 
@@ -833,6 +833,12 @@ Run 2 (`2566031`): `web` and `py-pure` green; `py-db` ran 369 tests on the resto
 every EST above: CI wall and billed minutes, `py-db-slow` on the runner, the initial load
 time to Neon, the first fortnight's CU-hours and egress, first-hit latency for `/` and the
 telemetry page.)
+
+### 10.7 Made public (2026-09-22)
+The repository went public on 22 September 2026 with a LICENSE file and the README's data-terms note. The
+"private repo" wording and the 2,000-minute Actions budget in §1, §5.2 and §8 describe the private period;
+GitHub does not meter Actions minutes on standard runners for public repositories, so the paths filter now
+saves wall time rather than budget. Personal machine details in docs were replaced by placeholders first.
 
 ### 10.6 The query-layer cache (as built, 2026-09-22)
 See docs/REVALIDATE_SPEC.md §9: built to that spec, proven on production with Neon's scan counters

@@ -285,7 +285,7 @@ not in the prompt — so a fully compromised model asking for them gets `permiss
 
 | Excluded | Why |
 |---|---|
-| `ingest_runs` | `hostname` is the owner's machine (`MacBook-Pro-98.local`, measured); `cli_args` carries local cache paths; `error` carries Python tracebacks with absolute `/Users/…` paths. The one real PII surface in this database. |
+| `ingest_runs` | `hostname` is the owner's machine (`<hostname>`, measured); `cli_args` carries local cache paths; `error` carries Python tracebacks with absolute `/Users/…` paths. The one real PII surface in this database. |
 | `session_ingests` | Same `error` column, plus `warnings[]` — raw exception text leaks module paths and filesystem layout. Replaced by the two curated views below, which carry the status information a fan legitimately needs and none of the text. |
 | `wp_model_artifact` | 1.4 MB of pickled scikit-learn `bytea`. Useless to a fan; handing pickles to a browser is a liability and a `SELECT artifact` blows the response budget. |
 | `wp_run`, `mode2_fit_run`, `mode2_row_audit` | Fit internals and per-row residuals. An honest answer built on them needs statistical caveats the ask box cannot give, and they invite the model to answer a fan's question with a diagnostic. |

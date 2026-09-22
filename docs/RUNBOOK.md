@@ -3,7 +3,7 @@
 How to bring the site up from nothing, keep it current, and change things safely.
 The contract behind every table, query and page is `docs/SPEC.md`; this file is the
 operational side only. Every command below runs from the project root
-(`/Users/batuhanisik/Desktop/Projects/F1Analytics`) unless it says otherwise, and every
+(`<repo root>`) unless it says otherwise, and every
 `make` target has its plain-command equivalent shown next to it.
 
 ## 0. Prerequisites
@@ -142,7 +142,7 @@ proves nothing that already existed moved, and refreshes the census baseline.
 Install it (macOS):
 
 ```bash
-cp scripts/com.f1analytics.update.plist ~/Library/LaunchAgents/
+sed "s#__HOME__#$HOME#g" scripts/com.f1analytics.update.plist > ~/Library/LaunchAgents/com.f1analytics.update.plist
 launchctl load ~/Library/LaunchAgents/com.f1analytics.update.plist
 ```
 
@@ -665,7 +665,7 @@ that look already-downloaded, and the symptom (unexplained parse errors) points 
 the cause. Check first:
 
 ```bash
-df -h /Users/batuhanisik/Desktop/Projects/F1Analytics   # want ≥ 15 GB Avail
+df -h <repo root>   # want ≥ 15 GB Avail
 du -sh cache                                            # 1.1 GB before the warm
 ```
 

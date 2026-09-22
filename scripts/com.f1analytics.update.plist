@@ -14,8 +14,9 @@
   unlikely to be busy. RunAtLoad is deliberately false -- loading the job should not kick off
   an ingest while you are working.
 
-  INSTALL (from the project root):
-      cp scripts/com.f1analytics.update.plist ~/Library/LaunchAgents/
+  INSTALL (from the project root; __HOME__ is substituted with your home directory, and the
+  project is expected at $HOME/Desktop/Projects/F1Analytics -- edit the paths if it lives elsewhere):
+      sed "s#__HOME__#$HOME#g" scripts/com.f1analytics.update.plist > ~/Library/LaunchAgents/com.f1analytics.update.plist
       launchctl load  ~/Library/LaunchAgents/com.f1analytics.update.plist
 
   CHECK / STOP:
@@ -34,14 +35,14 @@
 
   <key>ProgramArguments</key>
   <array>
-    <string>/Users/batuhanisik/Desktop/Projects/F1Analytics/.venv/bin/python</string>
-    <string>/Users/batuhanisik/Desktop/Projects/F1Analytics/scripts/update_season.py</string>
+    <string>__HOME__/Desktop/Projects/F1Analytics/.venv/bin/python</string>
+    <string>__HOME__/Desktop/Projects/F1Analytics/scripts/update_season.py</string>
     <string>--season</string>
     <string>2026</string>
   </array>
 
   <key>WorkingDirectory</key>
-  <string>/Users/batuhanisik/Desktop/Projects/F1Analytics</string>
+  <string>__HOME__/Desktop/Projects/F1Analytics</string>
 
   <!-- HOME is the only addition for the production push: the credential for the remote
        database is read from $HOME/.config/f1analytics/remote.env (mode 600) at run time and
@@ -49,9 +50,9 @@
   <key>EnvironmentVariables</key>
   <dict>
     <key>HOME</key>
-    <string>/Users/batuhanisik</string>
+    <string>__HOME__</string>
     <key>PYTHONPATH</key>
-    <string>/Users/batuhanisik/Desktop/Projects/F1Analytics</string>
+    <string>__HOME__/Desktop/Projects/F1Analytics</string>
     <key>DATABASE_URL</key>
     <string>postgres://f1:f1@localhost:5432/f1</string>
   </dict>
@@ -68,9 +69,9 @@
   <!-- Both streams go to one file so the log reads in order. The script appends a dated
        header per run, so this is a history rather than a snapshot. -->
   <key>StandardOutPath</key>
-  <string>/Users/batuhanisik/Desktop/Projects/F1Analytics/output/update_season.log</string>
+  <string>__HOME__/Desktop/Projects/F1Analytics/output/update_season.log</string>
   <key>StandardErrorPath</key>
-  <string>/Users/batuhanisik/Desktop/Projects/F1Analytics/output/update_season.log</string>
+  <string>__HOME__/Desktop/Projects/F1Analytics/output/update_season.log</string>
 
   <!-- A run that somehow hangs must not hold the lock forever and block every later run. -->
   <key>ExitTimeOut</key>

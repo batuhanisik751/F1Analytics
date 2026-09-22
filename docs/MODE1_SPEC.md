@@ -2155,7 +2155,7 @@ The new constants change the assumption hash, so **every season must be recomput
 once** after this lands or the pages will report mismatched assumption sets forever.
 
 ```bash
-cd /Users/batuhanisik/Desktop/Projects/F1Analytics
+cd <repo root>
 source .venv/bin/activate
 cd web && npx drizzle-kit migrate && cd ..
 python -m f1lab.ingest --check-schema
