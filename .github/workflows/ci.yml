@@ -12,6 +12,19 @@
 # Every skip is printed (-rs); a lost database is pytest.exit(3) (F1_REQUIRE_DB=1); a11y cannot
 # skip (A11Y_REQUIRE=1); every job has timeout-minutes: 20 so a cache-bound test that reaches
 # FastF1's network path goes red, never slow-green.
+#
+# The paths filter (OPS_SPEC §10.5, IDEAS_2026-09 §0). Measured: a full green run is ~10 min wall
+# and ~20-25 billed minutes, with py-db-slow the critical path; at ~7.5 pushes/hour the 2,000-minute
+# budget lasts one working day. So the `classify` job diffs the push (or PR) against its base ONCE,
+# up front, and the slow model tier (`py-db-slow`, 16 of the 16 minutes) runs only when that diff
+# touches model, schema, script, test or query-layer paths (the list is in `classify`). Everything
+# else is a "light" run: `web` + `py-pure` + `py-db` (the db tier and the a11y sweep still run,
+# ~7 min wall / ~8 billed). A schedule (nightly on main) or workflow_dispatch is ALWAYS full,
+# so main gets one full run a night whatever was pushed. The `coverage` job prints WHICH kind of
+# run this was and, on a light run, links the last full run on main — a skipped tier is printed,
+# never silent (§1.3 rule 3). It is `git diff --name-only`, not a third-party action: no extra
+# permission, no extra pin, and the fallback (any doubt about the base → full) is one shell line
+# you can read.
 
 name: ci
 
@@ -19,12 +32,20 @@ on:
   push:
     branches: [main]
   pull_request:
+  schedule:
+    # 09:30 UTC = 05:30 EDT: after the laptop's 03:20 local update_season.py has pushed (or not).
+    # Runs on main only (GitHub runs schedules on the default branch) and is always a full run.
+    - cron: "30 9 * * *"
+  workflow_dispatch:
 
 permissions:
   contents: read
 
+# A push mid-run CANCELS the run in progress for the same ref: that is what made 7 of the first 9
+# runs read as failed (they were cancelled by the next push, not red). The event name is part of
+# the group so the nightly schedule and a push at the same hour do not cancel each other.
 concurrency:
-  group: ci-${{ github.ref }}
+  group: ci-${{ github.event_name }}-${{ github.ref }}
   cancel-in-progress: true
 
 env:
@@ -35,6 +56,52 @@ env:
   PYTHON_VERSION: "3.13.5"
 
 jobs:
+  classify:
+    # Decides `mode` (full | light) for the whole run. Full when the event is a schedule or a
+    # dispatch, when the base commit is unknown (new branch, force push, first push), when the diff
+    # cannot be computed, or when any changed path matches the list below. Every other case is
+    # light. The decision and the matching files are printed to this job's summary.
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    outputs:
+      mode: ${{ steps.decide.outputs.mode }}
+      changed_db_code: ${{ steps.decide.outputs.changed_db_code }}
+      reason: ${{ steps.decide.outputs.reason }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Diff against the base and classify
+        id: decide
+        env:
+          EVENT: ${{ github.event_name }}
+          BASE: ${{ github.event_name == 'pull_request' && github.event.pull_request.base.sha || github.event.before }}
+          HEAD: ${{ github.sha }}
+          # Paths that mean "full run". Anything else (docs, README, web copy and components,
+          # captions, styles) is light. web/lib/queries and web/app/api stay here on purpose:
+          # a query-file rename is the case the filter must not miss.
+          FULL_PATHS: '^(f1lab/|db/|scripts/|tests/|web/lib/queries/|web/app/api/|web/drizzle/|web/db/|requirements[^/]*\.txt$|pyproject\.toml$|\.github/workflows/ci\.yml$|\.github/actions/)'
+        run: |
+          set -u
+          decide() {
+            { echo "mode=$1"; echo "changed_db_code=$2"; echo "reason=$3"; } >> "$GITHUB_OUTPUT"
+            { echo "## paths filter"; echo ""; echo "**$1 run** — $3"; echo ""; [ -n "${4:-}" ] && printf '```\n%s\n```\n' "$4"; } >> "$GITHUB_STEP_SUMMARY"
+            echo "paths filter: $1 run — $3"; exit 0
+          }
+          case "$EVENT" in
+            schedule|workflow_dispatch) decide full true "$EVENT trigger is always a full run" ;;
+          esac
+          if [ -z "$BASE" ] || [ "$BASE" = "0000000000000000000000000000000000000000" ]; then
+            decide full true "no base commit to diff against (new branch or first push)"
+          fi
+          git fetch --no-tags --depth=1 origin "$BASE" 2>/dev/null \
+            || decide full true "base $BASE is not fetchable (force push or rewritten history)"
+          files=$(git diff --name-only "$BASE" "$HEAD") \
+            || decide full true "git diff $BASE..$HEAD failed"
+          hits=$(printf '%s\n' "$files" | grep -E "$FULL_PATHS" || true)
+          if [ -n "$hits" ]; then
+            decide full true "changed paths match the full-run list" "$hits"
+          fi
+          decide light false "no model, schema, script or test change in $(printf '%s\n' "$files" | grep -c .) changed file(s)" "$files"
+
   web:
     runs-on: ubuntu-latest
     timeout-minutes: 20
@@ -93,6 +160,8 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 20
     needs: [web]                       # only for the .next artefact; py-pure stays parallel
+    # Runs on light AND full: 4.6 min, and it carries the a11y sweep, which is exactly what a
+    # components-only (light) change can break. Only py-db-slow is gated.
     services:
       postgres:
         image: postgres:16
@@ -171,6 +240,8 @@ jobs:
     # 20 was too tight: the job took 20:18 on one runner (cancelled) and 16:54 on another (green).
     # test_mode2_model bootstraps with 8 workers; on a 2-vCPU runner they oversubscribe the cores.
     timeout-minutes: 40
+    needs: [classify]
+    if: needs.classify.outputs.mode == 'full'   # light run: skipped, and coverage says so
     services:
       postgres:
         image: postgres:16
@@ -219,8 +290,18 @@ jobs:
   coverage:
     runs-on: ubuntu-latest
     timeout-minutes: 20
-    needs: [py-pure, py-db, py-db-slow]
+    needs: [classify, py-pure, py-db, py-db-slow]
+    # always(): a skipped or failed tier must still be COUNTED and PRINTED. On a full run the
+    # script prints the `ran N of T` line and fails below the floor; on a light run it prints
+    # `light run: the slow model tier skipped ...; last full run: <link>` and does not
+    # apply the floor. An empty or missing mode (classify failed or was cancelled) is read as full,
+    # which then fails on the missing db XML — never green over a tier that did not run.
     if: always()
+    permissions:
+      contents: read
+      actions: read                    # `gh run list` / runs API for the last-full-run link
+    env:
+      MODE: ${{ needs.classify.outputs.mode }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -232,10 +313,38 @@ jobs:
           path: out
           merge-multiple: true
       - run: ls -l out
-      - name: The number and the floor
+      - name: Last successful full run on main (light runs only; never fails)
+        id: lastfull
+        if: env.MODE == 'light'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set +e
+          url=""; note=""
+          # Newest first; a run is "full" when its py-db-slow job ran and succeeded (a light run's
+          # py-db-slow concludes "skipped"). At most 40 runs / 40 API calls, then "none found yet".
+          rows=$(gh run list --workflow ci.yml --branch main --status success --limit 40 \
+                   --json databaseId,url,headSha,createdAt,event \
+                   --jq '.[] | [.databaseId, .url, .headSha[0:7], .createdAt[0:10], .event] | @tsv' 2>/dev/null)
+          while IFS=$'\t' read -r id u sha day ev; do
+            [ -n "$id" ] || continue
+            slow=$(gh api "repos/$GITHUB_REPOSITORY/actions/runs/$id/jobs?per_page=50" \
+                     --jq '.jobs[] | select(.name == "py-db-slow") | .conclusion' 2>/dev/null)
+            if [ "$slow" = "success" ]; then url="$u"; note="run $id ($ev on $sha, $day)"; break; fi
+          done <<< "$rows"
+          echo "last full run: ${url:-none found yet} ${note}"
+          { echo "url=$url"; echo "note=$note"; } >> "$GITHUB_OUTPUT"
+          exit 0
+      - name: The number and the floor (full run) or the light line (light run)
+        env:
+          LAST_FULL_RUN: ${{ steps.lastfull.outputs.url }}
+          LAST_FULL_RUN_NOTE: ${{ steps.lastfull.outputs.note }}
         run: >-
           python scripts/ci_coverage.py out/*.xml
           --census tests/ci_census.json
           --pin tests/ci_fixture.txt
           --collected out/collected.txt
           --expect junit-pure.xml,junit-db.xml,junit-db-slow.xml,junit-a11y.xml
+          --mode "${MODE:-full}"
+          --last-full-run "$LAST_FULL_RUN"
+          --last-full-run-note "$LAST_FULL_RUN_NOTE"

@@ -829,3 +829,32 @@ Run 2 (`2566031`): `web` and `py-pure` green; `py-db` ran 369 tests on the resto
 every EST above: CI wall and billed minutes, `py-db-slow` on the runner, the initial load
 time to Neon, the first fortnight's CU-hours and egress, first-hit latency for `/` and the
 telemetry page.)
+
+### 10.5 The paths filter (as built, 2026-09-22)
+§1.2's T1 row said `py-db-slow` moves to `main`-only if it measured > 12 min; it measured 17 (then
+10 after the thread cap), and §0 of IDEAS_2026-09 measured the real cost: ~10 min wall / ~20–25
+billed per push, 7 of the first 9 runs cancelled by the next push. Built as the less blunt version
+of that fallback, in `.github/workflows/ci.yml`:
+- A `classify` job runs first (~10 s, `git diff --name-only` base..head; no third-party action, no
+  extra permission). A run is **full** when the event is `schedule` or `workflow_dispatch`, when the
+  base is unknown (new branch, force push, first push) or the diff fails, or when any changed path
+  matches `f1lab/`, `db/`, `scripts/`, `tests/`, `web/lib/queries/`, `web/app/api/`, `web/drizzle/`,
+  `web/db/`, `requirements*.txt`, `pyproject.toml`, `.github/workflows/ci.yml` or
+  `.github/actions/`. Every other change (docs, README, web copy, components, captions) is **light**.
+- Light: `web` + `py-pure` + `py-db`; only `py-db-slow` is skipped by `if:`. Run 7 measured the
+  jobs at web 1.9 / py-pure 1.1 / py-db 4.6 / py-db-slow 16.2 min, so the slow job is the whole
+  cost and `py-db` (which carries the a11y sweep) is cheap to keep. EST ~7 min wall / ~8 billed
+  (to be MEASURED on the first light run). Full: unchanged, all five jobs.
+- Nightly `schedule` at 09:30 UTC on `main` (after the laptop's 03:20 EDT push) is always full, so
+  a web-only change that breaks a model test is caught within a day. The concurrency group now
+  includes the event name so the nightly and a push do not cancel each other.
+- **Rule 3 stays true**: `coverage` runs `if: always()`. On a full run it prints the `ran N of T`
+  line and fails below the floor as before. On a light run it prints
+  `light run: the slow model tier skipped by the paths filter (no model, schema, script or test change) — ran N of T without it, floor not applied; last full run: <link>`
+  — the link is found with `gh run list` + the runs API (a run is "full" when its `py-db-slow`
+  job concluded `success`), degrading to `none found yet`, never failing. The count is printed,
+  the floor is not applied (it cannot be met without the slow tier); a slow XML that appears
+  anyway is a WARNING (filter and `if:` disagree). An empty `mode` (classify cancelled) is read
+  as full and fails on the missing XML.
+- The a11y sweep (107 checks) rides inside `py-db` and therefore runs on every push, light or
+  full; that is why `py-db` was kept out of the gate.

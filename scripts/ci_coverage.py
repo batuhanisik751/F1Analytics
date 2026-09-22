@@ -31,7 +31,10 @@ from dataclasses import dataclass, field
 from pathlib import Path
 
 DEFAULT_EXPECT = ("junit-pure.xml", "junit-db.xml", "junit-db-slow.xml", "junit-a11y.xml")
+LIGHT_EXPECT = ("junit-pure.xml", "junit-db.xml", "junit-a11y.xml")
 DB_GATE_PREFIX = "db marker:"
+LIGHT_LINE = "light run: the slow model tier skipped by the paths filter (no model, schema, script or test change) — ran {ran} of {total} without it, floor not applied; last full run: {last}"
+NONE_FOUND = "none found yet"
 
 
 @dataclass
@@ -95,7 +98,11 @@ def main(argv: list[str]) -> int:
     ap.add_argument("--pin", type=Path, default=None, help="tests/ci_fixture.txt (tag WARNING)")
     ap.add_argument("--collected", type=Path, default=None, help="pytest --collect-only output")
     ap.add_argument("--expect", default=",".join(DEFAULT_EXPECT), help="XML basenames that must exist")
+    ap.add_argument("--mode", default="full", help="full (default) or light: the paths filter skipped py-db-slow")
+    ap.add_argument("--last-full-run", default="", help="light: URL of the last successful full run on main ('' = none found yet)")
+    ap.add_argument("--last-full-run-note", default="", help="light: short label for that run (id, sha, date)")
     args = ap.parse_args(argv)
+    light = (args.mode or "full").strip().lower() == "light"
 
     census = json.loads(args.census.read_text(encoding="utf-8"))
     reason_fixture = census["skip_reasons"]["fixture_cache"]
@@ -106,6 +113,14 @@ def main(argv: list[str]) -> int:
 
     by_name = {p.name: p for p in args.xml}
     expected = [n for n in args.expect.split(",") if n]
+    if light:
+        # The slow tier was skipped on purpose; pure, db and a11y are still owed. A slow XML that
+        # turns up anyway means the filter and the job's `if:` disagree — say so, loudly.
+        skipped_tiers = [n for n in expected if n not in LIGHT_EXPECT]
+        for n in skipped_tiers:
+            if n in by_name:
+                warnings.append(f"light run but `{n}` was uploaded — the paths filter and the job `if:` disagree; check ci.yml")
+        expected = [n for n in expected if n in LIGHT_EXPECT]
     for name in expected:
         if name not in by_name:
             failures.append(f"missing XML `{name}` — its job did not upload one (failed, cancelled or timed out?)")
@@ -137,9 +152,19 @@ def main(argv: list[str]) -> int:
         total = collected
     direct_cache = max(total - collected_xml, 0) + marker_skips
     pct = 100.0 * ran / total if total else 0.0
-    line = f"ran {ran} of {total} ({pct:.1f}%) — not run: {fixture_cache} fixture-cache, {direct_cache} direct-cache"
-    if ran < floor:
-        failures.append(f"ran {ran} is below the committed floor {floor} (tests/ci_census.json ran_floor)")
+    if light:
+        # The count is printed (pure + db ran) but the floor is not applied: it is a full-run
+        # promise and cannot be met without the slow tier. The link says where the last real
+        # number is.
+        last = args.last_full_run.strip()
+        note = args.last_full_run_note.strip()
+        if last:
+            last = f"[{note or last}]({last})"
+        line = LIGHT_LINE.format(ran=ran, total=total, last=last or NONE_FOUND)
+    else:
+        line = f"ran {ran} of {total} ({pct:.1f}%) — not run: {fixture_cache} fixture-cache, {direct_cache} direct-cache"
+        if ran < floor:
+            failures.append(f"ran {ran} is below the committed floor {floor} (tests/ci_census.json ran_floor)")
 
     for t in a11y:
         if t.tests == 0:
@@ -158,7 +183,12 @@ def main(argv: list[str]) -> int:
     for t in tallies.values():
         out.append(f"| {t.name} | {t.tests} | {t.ran} | {t.passed} | {t.failed} | {t.errors} | {t.skipped} |")
     out.append("")
-    out.append(f"floor {floor}; a11y " + ", ".join(f"{t.tests} tests / {t.skipped} skipped" for t in a11y) if a11y else f"floor {floor}; a11y: no XML")
+    if light:
+        slow_paths = ", ".join(census.get("tiers", {}).get("py-db-slow", {}).get("paths", []) or ["tests/test_mode2_model.py"])
+        out.append(f"not run this time: py-db-slow ({slow_paths}); the nightly schedule on main runs it regardless. "
+                   "floor not applied on a light run.")
+    else:
+        out.append(f"floor {floor}; a11y " + ", ".join(f"{t.tests} tests / {t.skipped} skipped" for t in a11y) if a11y else f"floor {floor}; a11y: no XML")
     out += [f"- WARNING: {w}" for w in warnings]
     out += [f"- FAIL: {f}" for f in failures]
     out.append("- RESULT: " + ("FAIL" if failures else "OK"))
