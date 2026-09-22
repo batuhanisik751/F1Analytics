@@ -193,4 +193,7 @@ per season, open), the extended per-season interval table (closed), "Every round
   small number-to-word helper in PointsBandSection. The per-round table carries its own caption "Final-points range
   scored after every round". The digit sweep exempts C_ACC_2 and C_ACC_4 by name (definitional "0" and "30 %").
   Nothing in §7's "cut if late" list was cut. The deprecated C_ACC_8 alias was removed once the page used cAcc8.
-- Production:
+- Production: live 40 s after the push of 4ada882 (2026-09-22). From outside, every sentence carries its measured fill:
+  cAcc9 685 / 100 / 585 / 80.9 %; cAcc10 15.1 places, 20–22 cars, 77 %; cAcc12 15.9 vs 14.0 on 585 with C_ACC_13_NAIVE;
+  cAcc16 2024 14.4 % / 80.4 / 88.7 % / 9.0 and 2025 50.0 % / 46.3 / 86.7 % / 9.4; cAcc17 "two". TTFB 0.27 s then 0.20 s
+  (query layer cached, REVALIDATE_SPEC). The per-round ledger (IDEAS §2a) and the Mode-1 change stay open.
