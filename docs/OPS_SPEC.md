@@ -848,8 +848,11 @@ of that fallback, in `.github/workflows/ci.yml`:
   `.github/actions/`. Every other change (docs, README, web copy, components, captions) is **light**.
 - Light: `web` + `py-pure` + `py-db`; only `py-db-slow` is skipped by `if:`. Run 7 measured the
   jobs at web 1.9 / py-pure 1.1 / py-db 4.6 / py-db-slow 16.2 min, so the slow job is the whole
-  cost and `py-db` (which carries the a11y sweep) is cheap to keep. EST ~7 min wall / ~8 billed
-  (to be MEASURED on the first light run). Full: unchanged, all five jobs.
+  cost and `py-db` (which carries the a11y sweep) is cheap to keep. MEASURED on the first light run
+  (35756702233, docs-only push 1044be3, 2026-09-22): **6.7 min wall / ~7.6 billed** (classify 0.1, web 1.6,
+  py-pure 1.1, py-db 4.5, coverage 0.3; slow skipped), against 17–18 wall / ~25 billed for a full run
+  the same hour. The light line printed the count (673 of 972) and linked the last full run, found
+  through the job token. Full: unchanged, all five jobs.
 - Nightly `schedule` at 09:30 UTC on `main` (after the laptop's 03:20 EDT push) is always full, so
   a web-only change that breaks a model test is caught within a day. The concurrency group now
   includes the event name so the nightly and a push do not cancel each other.
