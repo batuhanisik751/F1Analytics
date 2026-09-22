@@ -35,6 +35,7 @@ Findings from reading the running app on 2026-09-17, not from inspecting source.
 | `/race/.../telemetry` | Lap A and Lap B are rendered as **two flat lists of 22 drivers = 44 rows of chrome** before any content. |
 | `/season/[year]/was-it-the-car` | The island explanation is repeated **verbatim per affected team** — two near-identical 90-word paragraphs, then a third that restates both. |
 | `/driver/[code]` | Seven skill blocks, each with a long caption, plus a ratings-over-time explainer, all expanded. |
+| `/driver/[code]?vs=CODE` | Adds one section, "Compared with {B}", entered through a "Compare with" picker (GET form, no client JS) and rendered between the season summary and the Mode 2 slots; `vs` absent shows the picker alone. Contract: `docs/H2H_SPEC.md` §1. |
 
 ## 1.2 Numbers a fan cannot read
 

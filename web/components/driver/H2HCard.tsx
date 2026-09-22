@@ -68,6 +68,11 @@ export default function H2HCard({ row, code, year }: H2HCardProps): React.JSX.El
         </div>
         <span className="text-xs text-muted">
           {t.teamName} · {row.racesPaired} {row.racesPaired === 1 ? "race" : "races"} paired
+          {" · "}
+          {/* H2H_SPEC §1 — entry to the "Compared with" section: qualifying, finishes, pace, points and the car-removed view. */}
+          <a href={`/driver/${code}?season=${year}&vs=${t.code}#h2h`} className="underline decoration-grid underline-offset-2 hover:text-accent">
+            Compare all races
+          </a>
         </span>
       </header>
 

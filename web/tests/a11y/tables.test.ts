@@ -25,6 +25,7 @@ const UNLABELLED_SCROLLERS: Record<string, number> = {
   "/constructor": 0,
   "/constructor/mclaren": 0,
   "/driver/VER": 0,
+  "/driver/VER?season=2026&vs=NOR": 0,
   "/season/2026": 0,
   "/season/2026/was-it-the-car": 0,
   "/race/2026/13": 0,
@@ -33,6 +34,7 @@ const UNLABELLED_SCROLLERS: Record<string, number> = {
 
 // §4.5 also wants every table named. Four are not: WP-1 (home), WP-5 (season) and WP-3 (race).
 const TABLES_WITHOUT_A_NAME: Record<string, number> = {
+  "/driver/VER?season=2026&vs=NOR": 0,
   "/": 1,
   "/season/2026": 1,
   "/race/2026/13": 2,

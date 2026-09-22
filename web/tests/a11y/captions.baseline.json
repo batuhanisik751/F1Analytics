@@ -1942,6 +1942,94 @@
         "verdict": "new string, pinned by lib/accuracy/captions.test.ts",
         "why": "New in the preview-ledger revision (LEDGER_SPEC §4). No pre-release DOM captured this string on /accuracy, so it is frozen by lib/accuracy/captions.test.ts, which pins it byte-for-byte; hand-typed here on 2026-09-22 ahead of the regenerate-baseline run, which must only add /accuracy entries. The empty states and the cLed2 line are conditional on the record, so only one of them is in the DOM at a time."
       }
+    },
+    {
+      "route": "/driver/VER?season=2026&vs=NOR",
+      "capturedAt": "2026-09-22",
+      "text": "In 2026 Verstappen and Norris started the same race 14 times. Each line below counts only the races where both have that number, so the denominators differ. These lines compare car and driver together; they do not say who is the better driver.",
+      "changed": {
+        "spec": "H2H_SPEC §4 (C_H2H_1)",
+        "owner": "WP-COPY",
+        "verdict": "new string, pinned by lib/driver/h2hCaptions.test.ts",
+        "why": "New in the head-to-head revision (H2H_SPEC §4). No pre-release DOM captured this string, so it is frozen by lib/driver/h2hCaptions.test.ts, which pins the template byte-for-byte; hand-typed here on 2026-09-22 from the spec's own fills ahead of the regenerate-baseline run, which must only add entries for this route. Every number in it is a slot filled from the database at render time, so the figures here are a measured expectation, not a literal in code. Text recorded as rendered on the route (column A is the page's driver, so the sentences are Verstappen-oriented here)."
+      }
+    },
+    {
+      "route": "/driver/VER?season=2026&vs=NOR",
+      "capturedAt": "2026-09-22",
+      "text": "Verstappen ahead in 4 of 10 shared races, same car not implied.",
+      "changed": {
+        "spec": "H2H_SPEC §4 (C_H2H_2, qualifying row)",
+        "owner": "WP-COPY",
+        "verdict": "new string, pinned by lib/driver/h2hCaptions.test.ts",
+        "why": "New in the head-to-head revision (H2H_SPEC §4). No pre-release DOM captured this string, so it is frozen by lib/driver/h2hCaptions.test.ts, which pins the template byte-for-byte; hand-typed here on 2026-09-22 from the spec's own fills ahead of the regenerate-baseline run, which must only add entries for this route. Every number in it is a slot filled from the database at render time, so the figures here are a measured expectation, not a literal in code. Text recorded as rendered on the route (column A is the page's driver, so the sentences are Verstappen-oriented here)."
+      }
+    },
+    {
+      "route": "/driver/VER?season=2026&vs=NOR",
+      "capturedAt": "2026-09-22",
+      "text": "Verstappen ahead in 5 of 11 shared races, same car not implied.",
+      "changed": {
+        "spec": "H2H_SPEC §4 (C_H2H_2, finish row)",
+        "owner": "WP-COPY",
+        "verdict": "new string, pinned by lib/driver/h2hCaptions.test.ts",
+        "why": "New in the head-to-head revision (H2H_SPEC §4). No pre-release DOM captured this string, so it is frozen by lib/driver/h2hCaptions.test.ts, which pins the template byte-for-byte; hand-typed here on 2026-09-22 from the spec's own fills ahead of the regenerate-baseline run, which must only add entries for this route. Every number in it is a slot filled from the database at render time, so the figures here are a measured expectation, not a literal in code. Text recorded as rendered on the route (column A is the page's driver, so the sentences are Verstappen-oriented here)."
+      }
+    },
+    {
+      "route": "/driver/VER?season=2026&vs=NOR",
+      "capturedAt": "2026-09-22",
+      "text": "Verstappen ahead in 5 of 13 shared races, same car not implied.",
+      "changed": {
+        "spec": "H2H_SPEC §4 (C_H2H_2, pace row)",
+        "owner": "WP-COPY",
+        "verdict": "new string, pinned by lib/driver/h2hCaptions.test.ts",
+        "why": "New in the head-to-head revision (H2H_SPEC §4). No pre-release DOM captured this string, so it is frozen by lib/driver/h2hCaptions.test.ts, which pins the template byte-for-byte; hand-typed here on 2026-09-22 from the spec's own fills ahead of the regenerate-baseline run, which must only add entries for this route. Every number in it is a slot filled from the database at render time, so the figures here are a measured expectation, not a literal in code. Text recorded as rendered on the route (column A is the page's driver, so the sentences are Verstappen-oriented here)."
+      }
+    },
+    {
+      "route": "/driver/VER?season=2026&vs=NOR",
+      "capturedAt": "2026-09-22",
+      "text": "With the car taken out, the model puts Verstappen 0.54 pp of a lap faster than Norris, 5th–95th 0.18 to 0.90, across every season it has seen (44 races for Verstappen, 49 for Norris). It is not a 2026 number: the model is fitted once across seasons, never per season.",
+      "changed": {
+        "spec": "H2H_SPEC §4 (C_H2H_4)",
+        "owner": "WP-COPY",
+        "verdict": "new string, pinned by lib/driver/h2hCaptions.test.ts",
+        "why": "New in the head-to-head revision (H2H_SPEC §4). No pre-release DOM captured this string, so it is frozen by lib/driver/h2hCaptions.test.ts, which pins the template byte-for-byte; hand-typed here on 2026-09-22 from the spec's own fills ahead of the regenerate-baseline run, which must only add entries for this route. Every number in it is a slot filled from the database at render time, so the figures here are a measured expectation, not a literal in code. Text recorded as rendered on the route (column A is the page's driver, so the sentences are Verstappen-oriented here)."
+      }
+    },
+    {
+      "route": "/driver/VER?season=2026&vs=NOR",
+      "capturedAt": "2026-09-22",
+      "text": "The two answers are allowed to disagree: the first counts qualifying, finishes and pace in whatever car each drove; the second tries to take the car out. Neither is subtracted from the other.",
+      "changed": {
+        "spec": "H2H_SPEC §4 (C_H2H_5)",
+        "owner": "WP-COPY",
+        "verdict": "new string, pinned by lib/driver/h2hCaptions.test.ts",
+        "why": "New in the head-to-head revision (H2H_SPEC §4). No pre-release DOM captured this string, so it is frozen by lib/driver/h2hCaptions.test.ts, which pins the template byte-for-byte; hand-typed here on 2026-09-22 from the spec's own fills ahead of the regenerate-baseline run, which must only add entries for this route. Every number in it is a slot filled from the database at render time, so the figures here are a measured expectation, not a literal in code. Text recorded as rendered on the route (column A is the page's driver, so the sentences are Verstappen-oriented here)."
+      }
+    },
+    {
+      "route": "/driver/VER?season=2026&vs=NOR",
+      "capturedAt": "2026-09-22",
+      "text": "The model's side cannot be called here: the gap is assumed, not measured.",
+      "changed": {
+        "spec": "H2H_SPEC §4 (C_H2H_7)",
+        "owner": "WP-COPY",
+        "verdict": "new string, pinned by lib/driver/h2hCaptions.test.ts",
+        "why": "New in the head-to-head revision (H2H_SPEC §4). No pre-release DOM captured this string, so it is frozen by lib/driver/h2hCaptions.test.ts, which pins the template byte-for-byte; hand-typed here on 2026-09-22 from the spec's own fills ahead of the regenerate-baseline run, which must only add entries for this route. Every number in it is a slot filled from the database at render time, so the figures here are a measured expectation, not a literal in code. Text recorded as rendered on the route (column A is the page's driver, so the sentences are Verstappen-oriented here)."
+      }
+    },
+    {
+      "route": "/driver/VER?season=2026&vs=NOR",
+      "capturedAt": "2026-09-22",
+      "text": "2026 ledger: Norris ahead on pace in 6 of 11 shared races. Car removed: cannot be called.",
+      "changed": {
+        "spec": "H2H_SPEC §4 (C_H2H_8)",
+        "owner": "WP-COPY",
+        "verdict": "new string, pinned by lib/driver/h2hCaptions.test.ts",
+        "why": "New in the head-to-head revision (H2H_SPEC §4). No pre-release DOM captured this string, so it is frozen by lib/driver/h2hCaptions.test.ts, which pins the template byte-for-byte; hand-typed here on 2026-09-22 from the spec's own fills ahead of the regenerate-baseline run, which must only add entries for this route. Every number in it is a slot filled from the database at render time, so the figures here are a measured expectation, not a literal in code. Text recorded as rendered on the route (column A is the page's driver, so the sentences are Verstappen-oriented here)."
+      }
     }
   ]
 }

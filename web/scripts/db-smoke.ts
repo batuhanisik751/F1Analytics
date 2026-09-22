@@ -10,6 +10,7 @@ import { sql } from "drizzle-orm";
 import { db, pool } from "../db/client";
 import * as accuracy from "@/lib/queries/accuracy";
 import * as ledger from "@/lib/queries/ledger";
+import * as h2h from "@/lib/queries/h2h";
 import * as driver from "@/lib/queries/driver";
 import * as mode2 from "@/lib/queries/mode2";
 import * as preview from "@/lib/queries/preview";
@@ -66,6 +67,10 @@ function entriesFor(ids: Awaited<ReturnType<typeof fixtureIds>>): Entry[] {
     ["accuracy.getPointsBand", accuracy.getPointsBand, []],
     ["ledger.getPreviewLedger", ledger.getPreviewLedger, [2026]],
     ["ledger.getTitleOddsLine", ledger.getTitleOddsLine, [2026]],
+    ["h2h.getOpponents", h2h.getOpponents, [2026]],
+    ["h2h.resolveOpponent", h2h.resolveOpponent, [2026, "NOR"]],
+    ["h2h.getSeasonLedger", h2h.getSeasonLedger, [2026, "norris", "max_verstappen"]],
+    ["h2h.getPairContrast", h2h.getPairContrast, ["norris", "max_verstappen"]],
     ["driver.resolveDriver", driver.resolveDriver, [DRIVER_CODE, YEAR]],
     ["driver.getDriverSeason", driver.getDriverSeason, [driverId, YEAR]],
     ["mode2.getFitMeta", mode2.getFitMeta, []],

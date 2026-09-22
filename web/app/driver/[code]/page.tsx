@@ -7,6 +7,7 @@ import CareerH2HTable from "@/components/driver/CareerH2HTable";
 import DriverHeader from "@/components/driver/DriverHeader";
 import DriverResultsTable from "@/components/driver/DriverResultsTable";
 import H2HCard from "@/components/driver/H2HCard";
+import H2HSection, { surname } from "@/components/driver/H2HSection";
 import DriverQualiRecord from "@/components/quali/DriverQualiRecord";
 import QualiH2HCard from "@/components/quali/QualiH2HCard";
 import { C_QUALI_5, S_QUALI_5 } from "@/components/quali/captions";
@@ -19,6 +20,8 @@ import Disclosure from "@/components/ui/Disclosure";
 import EmptyState from "@/components/ui/EmptyState";
 import Section from "@/components/ui/Section";
 import { getDriverSeason, resolveDriver } from "@/lib/queries/driver";
+import { C_H2H_1, fill } from "@/lib/driver/h2hCaptions";
+import { getOpponents, getPairContrast, getSeasonLedger, resolveOpponent } from "@/lib/queries/h2h";
 import { getDriverQualiSeasons, getSeasonQualiH2H } from "@/lib/queries/quali";
 import {
   getCareerAdjusted,
@@ -38,17 +41,47 @@ function parseSeason(season: string | string[] | undefined): number | null {
   return typeof s === "string" && /^\d{4}$/.test(s) ? Number(s) : null;
 }
 
+/** H2H_SPEC §1 — `vs` is a code: upper-cased, one value, and never the page's own driver. */
+function parseVs(vs: string | string[] | undefined, code: string): string | null {
+  const s = Array.isArray(vs) ? vs[0] : vs;
+  if (typeof s !== "string" || !/^[A-Za-z]{2,4}$/.test(s)) return null;
+  const upper = s.toUpperCase();
+  return upper === code.toUpperCase() ? null : upper;
+}
+
+function queryString(season: string | string[] | undefined, vs: string | string[] | undefined): string {
+  const q = new URLSearchParams();
+  const s = Array.isArray(season) ? season[0] : season;
+  const v = Array.isArray(vs) ? vs[0] : vs;
+  if (typeof s === "string" && s !== "") q.set("season", s);
+  if (typeof v === "string" && v !== "") q.set("vs", v);
+  const out = q.toString();
+  return out ? `?${out}` : "";
+}
+
 export async function generateMetadata({
   params,
   searchParams,
 }: PageProps<"/driver/[code]">): Promise<Metadata> {
   const { code } = await params;
-  const { season } = await searchParams;
+  const { season, vs } = await searchParams;
   const year = parseSeason(season);
   const resolved = await resolveDriver(code, year);
   if (!resolved) return { title: code.toUpperCase() };
   const data = await getDriverSeason(resolved.driverId, resolved.year);
   if (!data) return { title: code.toUpperCase() };
+  // H2H_SPEC §1 — when `vs` resolves the share text carries the ledger caption and its caveat.
+  const vsCode = parseVs(vs, code);
+  const opponent = vsCode ? await resolveOpponent(resolved.year, vsCode) : null;
+  if (opponent) {
+    const ledger = await getSeasonLedger(resolved.year, resolved.driverId, opponent.driverId);
+    const a = surname(data.profile.fullName);
+    const b = surname(opponent.fullName);
+    return {
+      title: `${a} v ${b} ${data.year}`,
+      description: fill(C_H2H_1, { year: data.year, a, b, shared: ledger.shared }),
+    };
+  }
   return {
     title: `${data.profile.fullName} ${data.year}`,
     description: `${data.profile.fullName}'s ${data.year} season: fuel-corrected pace rank per round, teammate gaps and results.`,
@@ -60,13 +93,11 @@ export default async function DriverPage({
   searchParams,
 }: PageProps<"/driver/[code]">): Promise<React.JSX.Element> {
   const { code } = await params;
-  const { season } = await searchParams;
+  const { season, vs } = await searchParams;
 
-  // Lower-case codes redirect to upper-case (SPEC §4.4).
+  // Lower-case codes redirect to upper-case (SPEC §4.4); H2H_SPEC §1: the redirect carries `vs`.
   if (code !== code.toUpperCase()) {
-    const s = Array.isArray(season) ? season[0] : season;
-    const q = typeof s === "string" && s !== "" ? `?season=${encodeURIComponent(s)}` : "";
-    redirect(`/driver/${code.toUpperCase()}${q}`);
+    redirect(`/driver/${code.toUpperCase()}${queryString(season, vs)}`);
   }
 
   const year = parseSeason(season);
@@ -74,6 +105,20 @@ export default async function DriverPage({
   if (!resolved) notFound();
   const data = await getDriverSeason(resolved.driverId, resolved.year);
   if (!data) notFound();
+
+  // H2H_SPEC §1 — `vs` must resolve to a driver with a race start in this season.
+  const vsCode = parseVs(vs, code);
+  const [opponents, opponent] = await Promise.all([
+    getOpponents(resolved.year),
+    vsCode ? resolveOpponent(resolved.year, vsCode) : Promise.resolve(null),
+  ]);
+  const [ledger, contrast, opponentRating] = opponent
+    ? await Promise.all([
+        getSeasonLedger(resolved.year, resolved.driverId, opponent.driverId),
+        getPairContrast(resolved.driverId, opponent.driverId),
+        getDriverRating(opponent.driverId),
+      ])
+    : [null, null, null];
 
   // MODE2_SPEC §8.5 — the five v1.3 slots. Every query returns null/[] until the model
   // has been fitted, and every slot renders its own EmptyState for that (FD6).
@@ -124,6 +169,18 @@ export default async function DriverPage({
       >
         <SummaryTiles summary={summary} year={data.year} />
       </Section>
+
+      <H2HSection
+        code={profile.code}
+        year={data.year}
+        aFullName={profile.fullName}
+        opponents={opponents}
+        opponent={opponent}
+        ledger={ledger}
+        contrast={contrast}
+        ratingA={rating}
+        ratingB={opponentRating}
+      />
 
       <Section
         title="Driver rating, car removed"

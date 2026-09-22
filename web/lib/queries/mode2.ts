@@ -514,23 +514,31 @@ async function getTeammateContrastsRaw(driverId: string): Promise<ContrastRow[]>
       ),
     )
     .orderBy(desc(mode2DriverContrast.nSharedRaces), asc(mode2DriverContrast.driverB));
-  return rows.map((r) => {
-    const oriented: ContrastRow =
-      r.driverA === driverId
-        ? { ...r, kind: r.kind as ContrastRow["kind"] }
-        : {
-            ...r,
-            kind: r.kind as ContrastRow["kind"],
-            driverA: r.driverB,
-            driverB: r.driverA,
-            deltaPp: -r.deltaPp,
-            deltaLo: -r.deltaHi,
-            deltaHi: -r.deltaLo,
-          };
-    return oriented;
-  });
+  return rows.map((r) => orientContrast(r, driverId));
 }
 export const getTeammateContrasts = cached("mode2.getTeammateContrasts", getTeammateContrastsRaw);
+
+/** A stored contrast row as selected from `mode2_driver_contrast` (`kind` still the raw text). */
+export type StoredContrastRow = Omit<ContrastRow, "kind"> & { kind: string };
+
+/**
+ * Orient a stored contrast so that `driverA === driverId`. Where the stored row has this
+ * driver as B the sign of `deltaPp` is flipped and `deltaLo`/`deltaHi` are swapped and
+ * negated — a reflection of one stored estimate, not a new one; `deltaSe` is unchanged.
+ */
+export function orientContrast(r: StoredContrastRow, driverId: string): ContrastRow {
+  return r.driverA === driverId
+    ? { ...r, kind: r.kind as ContrastRow["kind"] }
+    : {
+        ...r,
+        kind: r.kind as ContrastRow["kind"],
+        driverA: r.driverB,
+        driverB: r.driverA,
+        deltaPp: -r.deltaPp,
+        deltaLo: -r.deltaHi,
+        deltaHi: -r.deltaLo,
+      };
+}
 
 /**
  * Car-adjusted career, one row per season the driver raced (§4.3). `basis` is carried

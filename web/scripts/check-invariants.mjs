@@ -261,8 +261,28 @@ for (const f of sources) {
   }
 }
 
+// --- 11. the two head-to-head answers are never subtracted --------------------------------
+//
+// H2H_SPEC §7 / §8 — the ledger carries counts only and the pooled contrast is the one stored
+// pp number. A difference of two ratings, or of two pace gaps, is a third number nobody fitted,
+// and it is exactly what a fan would read as "the driver gap". So `ratingPp` may not be an
+// operand of `-` or `+`, and `gapPct` may not be an operand of `-`, in the H2H components and
+// queries. Files that do not exist yet are skipped: absence is not a violation.
+const H2H_FILE = (path) =>
+  /^components\/driver\/H2H[^/]*\.tsx$/.test(path) || path === "lib/queries/h2h.ts" || path === "lib/driver/h2h.ts";
+for (const f of sources) {
+  if (!H2H_FILE(f.path)) continue;
+  const text = stripComments(read(f));
+  if (/ratingPp\s*[-+]/.test(text)) {
+    fail("h2h-no-subtraction", f.path, "ratingPp is an operand of - or +; ratings are shown on separate lines, never differenced");
+  }
+  if (/gapPct\s*-/.test(text)) {
+    fail("h2h-no-subtraction", f.path, "gapPct is an operand of -; the ledger carries counts, never a gap difference");
+  }
+}
+
 // --- report -----------------------------------------------------------------------------
-const RULES = 10;
+const RULES = 11;
 if (violations.length === 0) {
   console.log(`invariants ok — ${RULES} rules, ${sources.length} source files under web/`);
   process.exit(0);

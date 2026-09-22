@@ -18,6 +18,7 @@ export const ROUTES = [
   "/constructor",
   "/constructor/mclaren",
   "/driver/VER",
+  "/driver/VER?season=2026&vs=NOR",
   "/season/2026",
   "/season/2026/was-it-the-car",
   "/race/2026/13",
