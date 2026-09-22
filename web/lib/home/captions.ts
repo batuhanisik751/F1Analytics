@@ -28,6 +28,9 @@ export const C_TITLE_LEADER =
   "After round {afterRound}, {leader} leads the title odds with a {p} chance, in a range of {pLo} to {pHi}, from {draws} simulated seasons. A forecast, with a band.";
 export const C_TITLE_POINTS =
   "Championship points: {leaderPoints}, {margin} clear of {second}. Points scored so far, not a forecast.";
+/** title_odds.expected_points with its p10–p90 band; its own sentence, never added to the line above */
+export const C_TITLE_EXPECTED =
+  "Expected points at the end of the season: {expected}, in a range of {expectedLo} to {expectedHi}, from the same simulated seasons. A forecast, kept apart from the points scored above.";
 export const C_TITLE_ALIVE =
   "{alive} of {total} drivers can still win the title on the arithmetic; {eliminated} cannot.";
 export const C_TITLE_CLINCH =
@@ -65,6 +68,7 @@ export const HOME_COPY: Record<string, string> = {
   TITLE_LABEL,
   C_TITLE_LEADER,
   C_TITLE_POINTS,
+  C_TITLE_EXPECTED,
   C_TITLE_ALIVE,
   C_TITLE_CLINCH,
   C_TITLE_NO_CLINCH,

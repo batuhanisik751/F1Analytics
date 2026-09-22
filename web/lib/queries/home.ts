@@ -10,6 +10,7 @@ import {
   sessionEntries,
   sessionTeams,
   sessions,
+  titleOdds,
 } from "@/db/schema";
 import { getPreviewOrder, getPreviewRound } from "@/lib/queries/preview";
 import {
@@ -58,6 +59,8 @@ export type TitlePicture = {
   draws: number;
   /** championship points (title_clinch.points_now), never the simulated expectation */
   leaderPoints: number;
+  /** title_odds.expected_points for the odds leader after `afterRound`, with its p10–p90 band; its own line */
+  expected: { points: number; lo: number; hi: number } | null;
   second: { name: string; margin: number } | null;
   alive: number;
   total: number;
@@ -172,6 +175,11 @@ export async function getThisWeek(year: number, today: string = todayUtc()): Pro
     const afterRound = odds.rounds[last];
     const leaderRow = clinch.rows.find((r) => r.driverId === clinch.leader.driverId) ?? clinch.rows[0];
     const runnerUp = clinch.rows.find((r) => r.driverId !== leaderRow.driverId) ?? null;
+    const [exp] = await db
+      .select({ points: titleOdds.expectedPoints, lo: titleOdds.pointsP10, hi: titleOdds.pointsP90 })
+      .from(titleOdds)
+      .where(and(eq(titleOdds.year, year), eq(titleOdds.afterRound, afterRound), eq(titleOdds.driverId, lead.driverId)))
+      .limit(1);
     title = {
       afterRound,
       leader: lead.fullName,
@@ -180,6 +188,7 @@ export async function getThisWeek(year: number, today: string = todayUtc()): Pro
       pHi: lead.pHi[last],
       draws: odds.draws,
       leaderPoints: leaderRow.pointsNow,
+      expected: exp ? { points: exp.points, lo: exp.lo, hi: exp.hi } : null,
       second: runnerUp
         ? { name: runnerUp.fullName, margin: leaderRow.pointsNow - runnerUp.pointsNow }
         : null,

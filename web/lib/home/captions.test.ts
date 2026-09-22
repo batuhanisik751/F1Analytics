@@ -8,7 +8,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 
-import { HOME_COPY, C_NOT_LOADED, C_TITLE_LEADER, C_FAVOURED_LIMIT, fill, fmtProb } from "@/lib/home/captions";
+import { HOME_COPY, C_NOT_LOADED, C_TITLE_LEADER, C_TITLE_POINTS, C_TITLE_EXPECTED, C_FAVOURED_LIMIT, fill, fmtProb } from "@/lib/home/captions";
 import { staleRoundFrom, todayUtc, type EventLoadRow } from "@/lib/queries/release";
 import { nextEventFrom } from "@/lib/queries/home";
 
@@ -29,6 +29,8 @@ test("every home-strip string is byte-for-byte", () => {
       "After round {afterRound}, {leader} leads the title odds with a {p} chance, in a range of {pLo} to {pHi}, from {draws} simulated seasons. A forecast, with a band.",
     C_TITLE_POINTS:
       "Championship points: {leaderPoints}, {margin} clear of {second}. Points scored so far, not a forecast.",
+    C_TITLE_EXPECTED:
+      "Expected points at the end of the season: {expected}, in a range of {expectedLo} to {expectedHi}, from the same simulated seasons. A forecast, kept apart from the points scored above.",
     C_TITLE_ALIVE:
       "{alive} of {total} drivers can still win the title on the arithmetic; {eliminated} cannot.",
     C_TITLE_CLINCH: "The earliest the title can be settled is round {clinchRound}, the {clinchEvent}.",
@@ -73,6 +75,11 @@ test("no template holds a digit, a driver name or a month", () => {
 test("§1 #1 must-not: odds carry a band; favourites are 'favoured before qualifying'", () => {
   assert.match(C_TITLE_LEADER, /\{pLo\}/);
   assert.match(C_TITLE_LEADER, /\{pHi\}/);
+  // expected points carry their band and say what they are; the scored line says what it is not
+  assert.match(C_TITLE_EXPECTED, /\{expectedLo\}/);
+  assert.match(C_TITLE_EXPECTED, /\{expectedHi\}/);
+  assert.match(C_TITLE_EXPECTED, /A forecast/);
+  assert.match(C_TITLE_POINTS, /not a forecast/);
   assert.match(C_FAVOURED_LIMIT, /favoured before qualifying/);
   for (const [id, copy] of Object.entries(HOME_COPY)) {
     assert.doesNotMatch(copy, /will win|will finish|predicted to/i, `${id} predicts a result`);

@@ -20,6 +20,7 @@ import {
   C_TITLE_LEADER,
   C_TITLE_NONE,
   C_TITLE_NO_CLINCH,
+  C_TITLE_EXPECTED,
   C_TITLE_POINTS,
   FAVOURED_LABEL,
   NEXT_RACE_LABEL,
@@ -119,6 +120,15 @@ export default function ThisWeekStrip({ year, week }: ThisWeekStripProps): React
                     leaderPoints: title.leaderPoints,
                     margin: title.second.margin,
                     second: title.second.name,
+                  })}
+                </p>
+              ) : null}
+              {title.expected ? (
+                <p className="tnum mt-2 text-sm text-muted">
+                  {fill(C_TITLE_EXPECTED, {
+                    expected: Math.round(title.expected.points),
+                    expectedLo: Math.round(title.expected.lo),
+                    expectedHi: Math.round(title.expected.hi),
                   })}
                 </p>
               ) : null}

@@ -1766,6 +1766,17 @@
         "verdict": "new conditional string, pinned by lib/home/captions.test.ts",
         "why": "New in v1.12 (IDEAS_2026-09 §1 #6, stale-data honesty). This sentence renders in the footer and the home strip only when the latest past round has no loaded race session, so it is not on screen on a normal night and cannot be asserted present; lib/home/captions.test.ts pins its exact form 'R{round} {event} raced on {date} and is not loaded yet.' and exercises the query-layer decision against a fake today. Recorded with the slots R15 would fill on 27 Sept 2026."
       }
+    },
+    {
+      "route": "/",
+      "capturedAt": "2026-09-22",
+      "text": "Expected points at the end of the season: 378, in a range of 348 to 409, from the same simulated seasons. A forecast, kept apart from the points scored above.",
+      "changed": {
+        "spec": "IDEAS_2026-09 §1 #1",
+        "owner": "WP-STRIP",
+        "verdict": "new string, pinned by lib/home/captions.test.ts",
+        "why": "New in v1.12 (IDEAS_2026-09 §1 #1, the home 'This week' strip). This string did not exist before this release, so there is no pre-release DOM to preserve it against; it is frozen instead by lib/home/captions.test.ts, which pins the template byte-for-byte and fills every number, name and date from the database at render time. Added after the strip's first release, at the request that expected points be shown as their own labelled line with their p10–p90 band, never summed with the points scored. Recorded here as rendered on 2026-09-22 (after round 14, next race R15), so it is a snapshot of the slots on that day, not a literal the page must keep."
+      }
     }
   ]
 }
