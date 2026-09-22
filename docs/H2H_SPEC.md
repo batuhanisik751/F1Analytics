@@ -190,4 +190,7 @@
   the Q-only join), invariants 11 rules (rule 11 `h2h-no-subtraction`), a11y 115/115 with the new route, db-smoke
   67/67 (the four new reads included); rendered sentences checked on the dev server for VER/NOR, NOR/PIA and the
   picker-only state.
-- Production: pending at the time of writing.
+- Production: live 20 s after the push of de0c160. From outside, `/driver/VER?season=2026&vs=NOR` renders the lead
+  line, the Verstappen-oriented ledger sentences, the pooled-model sentence, the no-call sentence and the points line
+  exactly as on the dev server; `/driver/VER?season=2026` shows the picker alone; the title is "Verstappen v Norris
+  2026".
