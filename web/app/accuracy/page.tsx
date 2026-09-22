@@ -15,11 +15,15 @@ import DataTable from "@/components/ui/DataTable";
 import Disclosure from "@/components/ui/Disclosure";
 import EmptyState from "@/components/ui/EmptyState";
 import ReliabilityChart from "@/components/charts/ReliabilityChart";
+import RangeComparatorTable from "@/components/accuracy/RangeComparatorTable";
+import PointsBandSection from "@/components/accuracy/PointsBandSection";
 import {
   getSkill,
   getReliability,
   getIntervalCoverage,
   getCoverageBySeason,
+  getIntervalSharpness,
+  getPointsBand,
 } from "@/lib/queries/accuracy";
 import * as C from "@/lib/accuracy/captions";
 
@@ -45,16 +49,26 @@ const scopeLabel = (s: string) =>
   SCOPE_LABEL[s] ?? (s.startsWith("year:") ? `${s.slice(5)} season only` : s);
 
 export default async function AccuracyPage(): Promise<React.JSX.Element> {
-  const [skill, reliability, coverage, bySeason] = await Promise.all([
+  const [skill, reliability, coverage, bySeason, sharpness, pointsBand] = await Promise.all([
     getSkill(),
     getReliability("loco"),
     getIntervalCoverage(),
     getCoverageBySeason(),
+    getIntervalSharpness(),
+    getPointsBand(),
   ]);
 
   // "plain" is the shipped variant; isotonic is the calibrated alternative kept for comparison.
   const inSample = skill.find((s) => s.scope === "in_sample" && s.variant === "plain");
   const heldOut = skill.find((s) => s.scope === "loco" && s.variant === "plain");
+
+  // The first comparator (grid ± 7) is the one the prose argues against; the table shows all.
+  const naive = sharpness?.naive[0];
+  const sharpByYear = new Map((sharpness?.bySeason ?? []).map((s) => [s.year, s]));
+  // The seasons the scores span: every year any scoring query on this page returned.
+  const years = [...bySeason.map((r) => r.year), ...pointsBand.map((s) => s.year)];
+  const firstYear = years.length ? Math.min(...years) : null;
+  const lastYear = years.length ? Math.max(...years) : null;
 
   return (
     <div className="mx-auto w-full max-w-5xl px-4 py-8 sm:px-6">
@@ -156,12 +170,21 @@ export default async function AccuracyPage(): Promise<React.JSX.Element> {
         )}
       </Section>
 
-      <Section id="intervals" title="Did the range contain the answer?">
+      <Section
+        id="intervals"
+        title="Did the range contain the answer?"
+        caption={
+          sharpness
+            ? C.cAcc9(sharpness.total.toLocaleString(), sharpness.unscored.toLocaleString(),
+                      sharpness.scored.toLocaleString(), pct(sharpness.dnfAsMissPct))
+            : undefined
+        }
+      >
         {coverage === null ? (
           <EmptyState title="No scored previews">{C.C_ACC_EMPTY}</EmptyState>
         ) : (
           <>
-            <div className="grid gap-4 sm:grid-cols-3">
+            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
               <Metric
                 label="Range contained the finish"
                 value={pct(coverage.coveragePct)}
@@ -180,12 +203,43 @@ export default async function AccuracyPage(): Promise<React.JSX.Element> {
                 unit="places off, on average"
                 hint={`Median ${coverage.medianAbsError.toFixed(1)} places.`}
               />
+              {sharpness ? (
+                <Metric
+                  label="How wide the range was"
+                  value={sharpness.meanWidth.toFixed(1)}
+                  unit={`places, on grids of ${sharpness.gridLo}–${sharpness.gridHi} cars`}
+                  hint={`Low end to high end, averaged over every scored preview; narrowest ${sharpness.minWidth}, widest ${sharpness.maxWidth}.`}
+                />
+              ) : null}
             </div>
             <Caption>
               {C.cAcc5(pct(coverage.coveragePct), pct(coverage.nominalPct, 0),
                        coverage.predictions.toLocaleString())}
             </Caption>
             <Caption>{C.C_ACC_6}</Caption>
+            {sharpness ? (
+              <>
+                <Caption>
+                  {(sharpness.shareOfGrid * 100 >= 60 ? C.cAcc10 : C.cAcc10Narrow)(
+                    sharpness.meanWidth.toFixed(1), String(sharpness.gridLo),
+                    String(sharpness.gridHi), pct(sharpness.shareOfGrid * 100, 0))}
+                </Caption>
+                <Caption>{C.C_ACC_11}</Caption>
+                <RangeComparatorTable sharpness={sharpness} />
+                {naive ? (
+                  <>
+                    <Caption>
+                      {C.cAcc12(sharpness.winkler.toFixed(1), String(naive.k),
+                                naive.winkler.toFixed(1), sharpness.scored.toLocaleString())}{" "}
+                      {naive.winkler < sharpness.winkler ? C.C_ACC_13_NAIVE : C.C_ACC_13_MODEL}
+                    </Caption>
+                    <Caption>
+                      {C.cAcc14(naive.meanAbsError.toFixed(1), sharpness.meanAbsError.toFixed(1))}
+                    </Caption>
+                  </>
+                ) : null}
+              </>
+            ) : null}
 
             {bySeason.length > 0 ? (
               <Disclosure className="mt-4" summary={`Split by season — ${bySeason.length} seasons`}>
@@ -207,6 +261,42 @@ export default async function AccuracyPage(): Promise<React.JSX.Element> {
                       align: "right",
                       render: (r) => r.meanAbsError.toFixed(2),
                     },
+                    {
+                      key: "unscored",
+                      header: "Not classified",
+                      align: "right",
+                      render: (r) => sharpByYear.get(r.year)?.unscored ?? "—",
+                    },
+                    {
+                      key: "gridSize",
+                      header: "Grid cars",
+                      align: "right",
+                      render: (r) => sharpByYear.get(r.year)?.gridSize ?? "—",
+                    },
+                    {
+                      key: "meanWidth",
+                      header: "Range width",
+                      align: "right",
+                      render: (r) => sharpByYear.get(r.year)?.meanWidth.toFixed(1) ?? "—",
+                    },
+                    {
+                      key: "winkler",
+                      header: "Score",
+                      align: "right",
+                      render: (r) => sharpByYear.get(r.year)?.winkler.toFixed(1) ?? "—",
+                    },
+                    {
+                      key: "naiveCoverage",
+                      header: `Grid ± ${naive?.k ?? "k"} contained`,
+                      align: "right",
+                      render: (r) => pct(sharpByYear.get(r.year)?.naive[0]?.coveragePct),
+                    },
+                    {
+                      key: "naiveWinkler",
+                      header: `Grid ± ${naive?.k ?? "k"} score`,
+                      align: "right",
+                      render: (r) => sharpByYear.get(r.year)?.naive[0]?.winkler.toFixed(1) ?? "—",
+                    },
                   ]}
                   rowKey={(r) => String(r.year)}
                   rows={bySeason}
@@ -217,8 +307,14 @@ export default async function AccuracyPage(): Promise<React.JSX.Element> {
         )}
       </Section>
 
+      <PointsBandSection seasons={pointsBand} />
+
       <Section id="limits" title="What these scores do not say">
-        <p className="max-w-3xl text-sm leading-relaxed text-muted">{C.C_ACC_8}</p>
+        <p className="max-w-3xl text-sm leading-relaxed text-muted">
+          {firstYear !== null && lastYear !== null
+            ? C.cAcc8(String(firstYear), String(lastYear))
+            : C.C_ACC_EMPTY}
+        </p>
       </Section>
     </div>
   );

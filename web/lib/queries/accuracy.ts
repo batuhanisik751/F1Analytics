@@ -12,10 +12,19 @@
 // the bug that would make a page say "33% better than baseline" three times and mean nothing.
 // Every query below resolves the current run first, the same way mode2.ts resolves the current
 // fit, and filters on it.
-import { and, asc, desc, eq, isNotNull, sql } from "drizzle-orm";
+import { and, asc, desc, eq, isNotNull, lt, sql } from "drizzle-orm";
 import { db } from "@/db/client";
-import { previewBacktest, wpMetrics, wpReliabilityBin, wpRun } from "@/db/schema/companion";
+import { previewBacktest, titleOdds, wpMetrics, wpReliabilityBin, wpRun } from "@/db/schema/companion";
+import { events, sessions } from "@/db/schema/reference";
+import { driverStandings } from "@/db/schema/season";
+import { results } from "@/db/schema/session";
 import { cached } from "@/lib/cache";
+import {
+  scoreIntervals,
+  scorePointsBand,
+  type IntervalSharpness,
+  type PointsBandSeason,
+} from "@/lib/queries/accuracyScore";
 
 /** The scoring scope. `loco` = leave-one-circuit-out, the honest one. */
 export type Scope = "in_sample" | "loco" | "forward";
@@ -191,3 +200,88 @@ async function getCoverageBySeasonRaw(): Promise<
     .orderBy(asc(previewBacktest.year));
 }
 export const getCoverageBySeason = cached("accuracy.getCoverageBySeason", getCoverageBySeasonRaw);
+
+/**
+ * Interval sharpness (ACCURACY_SPEC §3): every out-of-fold preview row, INCLUDING the ones
+ * with no classified finish, joined to the driver's grid slot so the p10-p90 band can be
+ * scored against a band that needs no model at all (grid ± k). The SQL only fetches; the
+ * conventions belong to `scoreIntervals`. Grid size per season is the largest grid position
+ * seen in that season's races, so a 22-car grid is compared as one.
+ */
+async function getIntervalSharpnessRaw(): Promise<IntervalSharpness | null> {
+  const gridSizes = db
+    .select({
+      year: sessions.year,
+      gridSize: sql<number | null>`max(${results.gridPosition})::int`.as("grid_size"),
+    })
+    .from(results)
+    .innerJoin(sessions, eq(sessions.sessionId, results.sessionId))
+    .where(eq(sessions.kind, "R"))
+    .groupBy(sessions.year)
+    .as("grid_sizes");
+  const rows = await db
+    .select({
+      year: previewBacktest.year,
+      p10: previewBacktest.posP10,
+      p90: previewBacktest.posP90,
+      actual: previewBacktest.actualPosition,
+      expected: previewBacktest.expectedPosition,
+      grid: results.gridPosition,
+      gridSize: gridSizes.gridSize,
+    })
+    .from(previewBacktest)
+    .leftJoin(sessions, and(eq(sessions.year, previewBacktest.year),
+                            eq(sessions.round, previewBacktest.round),
+                            eq(sessions.kind, "R")))
+    .leftJoin(results, and(eq(results.sessionId, sessions.sessionId),
+                           eq(results.driverId, previewBacktest.driverId)))
+    .leftJoin(gridSizes, eq(gridSizes.year, previewBacktest.year))
+    .where(eq(previewBacktest.predKind, "oof"))
+    .orderBy(asc(previewBacktest.year), asc(previewBacktest.round), asc(previewBacktest.driverId));
+  if (rows.length === 0) return null;
+  return scoreIntervals(rows, { alpha: 0.2, ks: [7, 5] });
+}
+export const getIntervalSharpness = cached("accuracy.getIntervalSharpness", getIntervalSharpnessRaw);
+
+/**
+ * Points-band scoring (ACCURACY_SPEC §3): every title_odds projection of a FINISHED season,
+ * joined to the driver's final standings total. A season is finished when the last standings
+ * round equals the last scheduled round, so no year is named here and a season joins itself
+ * in when it ends. The final-round row is left out at the source; `scorePointsBand` does the
+ * rest and repeats that exclusion so the rule is testable without a database.
+ */
+async function getPointsBandRaw(): Promise<PointsBandSeason[]> {
+  const fin = db.$with("fin").as(
+    db.select({ year: driverStandings.year, fin: sql<number>`max(${driverStandings.afterRound})`.as("fin") })
+      .from(driverStandings)
+      .groupBy(driverStandings.year),
+  );
+  const sched = db.$with("sched").as(
+    db.select({ year: events.year, sched: sql<number>`max(${events.round})`.as("sched") })
+      .from(events)
+      .groupBy(events.year),
+  );
+  const rows = await db
+    .with(fin, sched)
+    .select({
+      year: titleOdds.year,
+      driverId: titleOdds.driverId,
+      afterRound: titleOdds.afterRound,
+      finalRound: fin.fin,
+      expectedPoints: titleOdds.expectedPoints,
+      p10: titleOdds.pointsP10,
+      p90: titleOdds.pointsP90,
+      isShrunk: titleOdds.isShrunkToPrior,
+      finalPoints: driverStandings.points,
+    })
+    .from(titleOdds)
+    .innerJoin(fin, eq(fin.year, titleOdds.year))
+    .innerJoin(sched, and(eq(sched.year, titleOdds.year), eq(sched.sched, fin.fin)))
+    .leftJoin(driverStandings, and(eq(driverStandings.year, titleOdds.year),
+                                   eq(driverStandings.afterRound, fin.fin),
+                                   eq(driverStandings.driverId, titleOdds.driverId)))
+    .where(lt(titleOdds.afterRound, fin.fin))
+    .orderBy(asc(titleOdds.year), asc(titleOdds.afterRound), asc(titleOdds.driverId));
+  return scorePointsBand(rows);
+}
+export const getPointsBand = cached("accuracy.getPointsBand", getPointsBandRaw);

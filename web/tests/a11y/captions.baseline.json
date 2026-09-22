@@ -1777,6 +1777,105 @@
         "verdict": "new string, pinned by lib/home/captions.test.ts",
         "why": "New in v1.12 (IDEAS_2026-09 §1 #1, the home 'This week' strip). This string did not exist before this release, so there is no pre-release DOM to preserve it against; it is frozen instead by lib/home/captions.test.ts, which pins the template byte-for-byte and fills every number, name and date from the database at render time. Added after the strip's first release, at the request that expected points be shown as their own labelled line with their p10–p90 band, never summed with the points scored. Recorded here as rendered on 2026-09-22 (after round 14, next race R15), so it is a snapshot of the slots on that day, not a literal the page must keep."
       }
+    },
+    {
+      "route": "/accuracy",
+      "capturedAt": "2026-09-22",
+      "text": "Every other page here tells you what happened. This one tells you how often we were wrong. The numbers below are scored against races the model had never seen — a model graded on races it trained on always looks better than it is, and both figures are shown so you can see the size of that flattery.",
+      "changed": {
+        "spec": "ACCURACY_SPEC §2 (C_ACC_1)",
+        "owner": "WP-COPY",
+        "verdict": "new or rewritten string, pinned by lib/accuracy/captions.test.ts",
+        "why": "New or rewritten in the /accuracy revision (ACCURACY_SPEC §2). No pre-release DOM captured this string on /accuracy, so it is frozen by lib/accuracy/captions.test.ts, which pins it byte-for-byte; hand-typed here on 2026-09-22 ahead of the regenerate-baseline run, which must only add /accuracy entries."
+      }
+    },
+    {
+      "route": "/accuracy",
+      "capturedAt": "2026-09-22",
+      "text": "Brier score measures a probability forecast: lower is better, and 0 would be perfect foresight. On its own it means very little, so each one is shown against a baseline that predicts from grid position alone. The percentage is how much of that baseline's error we remove.",
+      "changed": {
+        "spec": "ACCURACY_SPEC §2 (C_ACC_2)",
+        "owner": "WP-COPY",
+        "verdict": "new or rewritten string, pinned by lib/accuracy/captions.test.ts",
+        "why": "New or rewritten in the /accuracy revision (ACCURACY_SPEC §2). No pre-release DOM captured this string on /accuracy, so it is frozen by lib/accuracy/captions.test.ts, which pins it byte-for-byte; hand-typed here on 2026-09-22 ahead of the regenerate-baseline run, which must only add /accuracy entries."
+      }
+    },
+    {
+      "route": "/accuracy",
+      "capturedAt": "2026-09-22",
+      "text": "A forecast is calibrated when things it calls 30 % likely happen about 30 % of the time. Each dot is a bucket of predictions: where we put it on the horizontal axis, how often it actually happened on the vertical. The dashed line is perfect calibration. Bars are the range the observed rate could plausibly take given how few races sit in that bucket.",
+      "changed": {
+        "spec": "ACCURACY_SPEC §2 (C_ACC_4)",
+        "owner": "WP-COPY",
+        "verdict": "new or rewritten string, pinned by lib/accuracy/captions.test.ts",
+        "why": "New or rewritten in the /accuracy revision (ACCURACY_SPEC §2). No pre-release DOM captured this string on /accuracy, so it is frozen by lib/accuracy/captions.test.ts, which pins it byte-for-byte; hand-typed here on 2026-09-22 ahead of the regenerate-baseline run, which must only add /accuracy entries."
+      }
+    },
+    {
+      "route": "/accuracy",
+      "capturedAt": "2026-09-22",
+      "text": "Containing the answer more often than promised means the ranges are too wide: the model is less sure than it needs to be. Being wide enough to be right is not a virtue on its own, and the width beside this figure says how wide the ranges had to be. The dangerous direction is the other one — a range that misses more often than it claims tells you a prediction is firmer than the evidence behind it, and this one does not do that.",
+      "changed": {
+        "spec": "ACCURACY_SPEC §2 (C_ACC_6)",
+        "owner": "WP-COPY",
+        "verdict": "new or rewritten string, pinned by lib/accuracy/captions.test.ts",
+        "why": "New or rewritten in the /accuracy revision (ACCURACY_SPEC §2). No pre-release DOM captured this string on /accuracy, so it is frozen by lib/accuracy/captions.test.ts, which pins it byte-for-byte; hand-typed here on 2026-09-22 ahead of the regenerate-baseline run, which must only add /accuracy entries."
+      }
+    },
+    {
+      "route": "/accuracy",
+      "capturedAt": "2026-09-22",
+      "text": "Split by season, so you can see whether a miss is one unusual year or the method itself.",
+      "changed": {
+        "spec": "ACCURACY_SPEC §2 (C_ACC_7)",
+        "owner": "WP-COPY",
+        "verdict": "new or rewritten string, pinned by lib/accuracy/captions.test.ts",
+        "why": "New or rewritten in the /accuracy revision (ACCURACY_SPEC §2). No pre-release DOM captured this string on /accuracy, so it is frozen by lib/accuracy/captions.test.ts, which pins it byte-for-byte; hand-typed here on 2026-09-22 ahead of the regenerate-baseline run, which must only add /accuracy entries."
+      }
+    },
+    {
+      "route": "/accuracy",
+      "capturedAt": "2026-09-22",
+      "text": "One number scores width and misses together: the width of the range in places, plus ten places for every place the finish landed outside it, so lower is better. A range can contain the answer more often and still score worse, by being wider than it needs to be.",
+      "changed": {
+        "spec": "ACCURACY_SPEC §2 (C_ACC_11)",
+        "owner": "WP-COPY",
+        "verdict": "new or rewritten string, pinned by lib/accuracy/captions.test.ts",
+        "why": "New or rewritten in the /accuracy revision (ACCURACY_SPEC §2). No pre-release DOM captured this string on /accuracy, so it is frozen by lib/accuracy/captions.test.ts, which pins it byte-for-byte; hand-typed here on 2026-09-22 ahead of the regenerate-baseline run, which must only add /accuracy entries."
+      }
+    },
+    {
+      "route": "/accuracy",
+      "capturedAt": "2026-09-22",
+      "text": "The no-model range scores better. Our range is wider than it needs to be, not sharper than a grid slot.",
+      "changed": {
+        "spec": "ACCURACY_SPEC §2 (C_ACC_13_NAIVE)",
+        "owner": "WP-COPY",
+        "verdict": "new or rewritten string, pinned by lib/accuracy/captions.test.ts",
+        "why": "New or rewritten in the /accuracy revision (ACCURACY_SPEC §2). No pre-release DOM captured this string on /accuracy, so it is frozen by lib/accuracy/captions.test.ts, which pins it byte-for-byte; hand-typed here on 2026-09-22 ahead of the regenerate-baseline run, which must only add /accuracy entries."
+      }
+    },
+    {
+      "route": "/accuracy",
+      "capturedAt": "2026-09-22",
+      "text": "Each row pools every driver's projection made in that quarter and checks it against the points that driver actually finished on, including drivers who joined or left mid-season. A projection made from the prior alone, before a driver had raced, is kept and counted. The final-round row of a finished season is left out because it restates the result rather than forecasting it.",
+      "changed": {
+        "spec": "ACCURACY_SPEC §2 (C_ACC_18)",
+        "owner": "WP-COPY",
+        "verdict": "new or rewritten string, pinned by lib/accuracy/captions.test.ts",
+        "why": "New or rewritten in the /accuracy revision (ACCURACY_SPEC §2). No pre-release DOM captured this string on /accuracy, so it is frozen by lib/accuracy/captions.test.ts, which pins it byte-for-byte; hand-typed here on 2026-09-22 ahead of the regenerate-baseline run, which must only add /accuracy entries."
+      }
+    },
+    {
+      "route": "/accuracy",
+      "capturedAt": "2026-09-22",
+      "text": "No scored predictions yet. This page fills in once the model has been trained and the races it predicted have been run.",
+      "changed": {
+        "spec": "ACCURACY_SPEC §2 (C_ACC_EMPTY)",
+        "owner": "WP-COPY",
+        "verdict": "new or rewritten string, pinned by lib/accuracy/captions.test.ts",
+        "why": "New or rewritten in the /accuracy revision (ACCURACY_SPEC §2). No pre-release DOM captured this string on /accuracy, so it is frozen by lib/accuracy/captions.test.ts, which pins it byte-for-byte; hand-typed here on 2026-09-22 ahead of the regenerate-baseline run, which must only add /accuracy entries."
+      }
     }
   ]
 }

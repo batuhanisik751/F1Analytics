@@ -3039,6 +3039,55 @@ The band is ~130× wider than `mc_stderr`, which is the §2.4.1 point: the chart
 uncertainty, not draw noise. 2024 and 2025 both read `has_clinched` on the champion's row
 (max_verstappen after R22; norris after R24).
 
+#### 11.3.1 Points-band scoring on /accuracy (as built, 2026-09-22)
+
+The `title_odds` rows are now scored against final totals on `/accuracy`
+(`getPointsBand` in `web/lib/queries/accuracy.ts`, pure scoring in
+`web/lib/queries/accuracyScore.ts`; contract in `docs/ACCURACY_SPEC.md` §3). Conventions,
+so the numbers below can be reproduced:
+
+- **Finished season** ⇔ `max(driver_standings.after_round) = max(events.round)`, no year
+  literal: 2024 24 = 24, 2025 24 = 24, 2026 14 ≠ 23 and joins itself in when it ends.
+- The **final-round row is excluded** (`after_round < finalRound`): at that snapshot
+  p10 = p90 = the known total, and scoring it would inflate Q4.
+- **Quarter** = floor((r − 1) · 4 / R) + 1, so R = 24 gives rounds 1–6 / 7–12 / 13–18 /
+  19–23 (the 24th is the excluded final row).
+- Containment inclusive on [p10, p90]; MAE = |expected_points − final|; width = p90 − p10;
+  everything row-weighted over driver-rounds.
+- `is_shrunk` rows are **kept** and counted; rows with no final `driver_standings` total are
+  **dropped** and counted.
+
+Measured today, nominal 80 %:
+
+| season | quarter (rounds) | driver-rounds | held | MAE (pts) | width (pts) |
+|---|---|---|---|---|---|
+| 2024 (23 drivers, 495 rows, 0 shrunk, 0 dropped) | Q1 1–6 | 125 | **14.4 %** | 80.4 | 77.7 |
+| | Q2 7–12 | 126 | 39.7 % | 41.7 | 60.6 |
+| | Q3 13–18 | 129 | 55.0 % | 25.8 | 47.1 |
+| | Q4 19–23 | 115 | 88.7 % | 9.0 | 25.4 |
+| 2025 (21 drivers, 477 rows, 2 shrunk, 0 dropped) | Q1 1–6 | 120 | 50.0 % | 46.3 | 75.2 |
+| | Q2 7–12 | 126 | 57.1 % | 33.4 | 61.9 |
+| | Q3 13–18 | 126 | 54.0 % | 25.8 | 48.2 |
+| | Q4 19–23 | 105 | 86.7 % | 9.4 | 26.5 |
+
+Q1–Q3 reproduce IDEAS §1 #2 exactly; Q4 reads 88.7 / 86.7 rather than IDEAS' 90.6 / 88.9
+because of the excluded final-round row.
+
+The same revision scores the `preview_backtest` finishing-position intervals for sharpness
+beside the existing coverage. Conventions: scored = `actual_position` not null (585 of 685;
+the 100 unscored rows have no classified finishing position and are reported separately as
+DNF-as-miss); width = p90 − p10; containment inclusive; **Winkler score at α = 0.2** =
+width + 10 · max(p10 − a, 0) + 10 · max(a − p90, 0); share of grid = mean((width + 1) / G)
+with G the season's `max(grid_position)` (20 in 2025, 22 in 2026); the comparator is the
+**clipped grid band** [max(g − k, 1), min(g + k, G)] scored identically. Today (all scored
+rows): coverage 94.7 %, DNF-as-miss 80.9 %, mean width 15.09 (min 7, max 19), share of grid
+0.773, MAE 3.74, Winkler 15.86; grid ± 7: width 11.36, coverage 92.8 %, MAE 2.81, Winkler
+13.99; grid ± 5: 8.59 / 86.0 % / 2.81 / 13.58. The model's band is wider and scores worse
+than a grid slot ± 7 that needs no model.
+
+The 14.4 % Q1 figure for 2024 is the argument for a Mode-1 change — the theta prior and the
+DNF variance in the points simulation — and that is separate work, not part of this revision.
+
 ### 11.4 Overtaking difficulty, as built
 
 `circuit_odi` holds 24 circuits. Ordering and the headline claim reproduce; the absolute

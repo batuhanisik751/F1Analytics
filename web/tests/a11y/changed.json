@@ -79,5 +79,23 @@
       "verdict": "numbers refit",
       "why": "Same interval, refit since the 14 Sept capture: it now reads −1.712 % to −0.845 % under the label '90 % range (5th–95th percentile)'. The label and the caveat around it are intact."
     }
+  },
+  {
+    "startsWith": "Containing the answer more often than promised means the ranges are too wide",
+    "record": {
+      "spec": "ACCURACY_SPEC §2 / IDEAS §1 #5",
+      "owner": "WP-COPY",
+      "verdict": "rewritten in place, not deleted",
+      "why": "IDEAS §1 #5 forbids presenting under-confidence as a virtue. The first and last sentences of C_ACC_6 are byte-intact; the middle sentence 'That is the safer way to be wrong.' is replaced by 'Being wide enough to be right is not a virtue on its own, and the width beside this figure says how wide the ranges had to be.' so the copy points at the width figure instead of excusing it. Pinned by lib/accuracy/captions.test.ts."
+    }
+  },
+  {
+    "startsWith": "These scores cover the seasons in this database and nothing else",
+    "record": {
+      "spec": "ACCURACY_SPEC §2 / IDEAS §1 #5",
+      "owner": "WP-COPY",
+      "verdict": "rewritten in place, not deleted",
+      "why": "C_ACC_8 held the literal season span '2024–2026', which would silently go stale the first time a season was added to the database. It is now the template cAcc8(firstYear, lastYear), filled from the seasons the scoring query actually covers; every other word is byte-intact. Pinned by lib/accuracy/captions.test.ts."
+    }
   }
 ]
