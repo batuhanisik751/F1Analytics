@@ -831,6 +831,10 @@ every EST above: CI wall and billed minutes, `py-db-slow` on the runner, the ini
 time to Neon, the first fortnight's CU-hours and egress, first-hit latency for `/` and the
 telemetry page.)
 
+### 10.6 The query-layer cache (as built, 2026-09-22)
+See docs/REVALIDATE_SPEC.md §9: built to that spec, proven on production with Neon's scan counters
+(warm requests read nothing; the push hook forces one re-read). §5.1 row 3 is now built, not deferred.
+
 ### 10.5 The paths filter (as built, 2026-09-22)
 §1.2's T1 row said `py-db-slow` moves to `main`-only if it measured > 12 min; it measured 17 (then
 10 after the thread cap), and §0 of IDEAS_2026-09 measured the real cost: ~10 min wall / ~20–25

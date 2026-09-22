@@ -166,3 +166,22 @@ Vercel and the two `remote.env` lines, and touches Vercel)
 - **WP-DOCS**: `docs/OPS_SPEC.md` (§5.1 row 3 → 3600 s, decided, reason from §0), `docs/SPEC.md` (D20 → §0
   text verbatim), `docs/IDEAS_2026-09.md` (§1 #3 status: adopted, see REVALIDATE_SPEC).
 Order: WP-WEB and WP-PY in parallel; WP-DOCS after both; the orchestrator deploys, then runs §6 outside checks.
+
+## §9 As built (2026-09-22, commit 7c01909)
+- Built as §1–§8 with one addition: `getHome` (an exception) called three private helpers
+  (`getPodium`, `getRunnerUpPace`, `raceSessionId`) that still read the database per request; they are
+  now wrapped leaves (`home.<name>` keys, not exported). `season.ts` was wrapped by the orchestrator.
+- Local proof under `next start` against the Docker database (pg_stat_user_tables scans): `/` warm +0,
+  `/driver/ANT?season=2026` cold +271 / warm +0; bearer POST → 200; next `/` +176; then +0. The a11y
+  sweep (107) passes on the cached path. The cache is off under `next dev`, so this check needs a
+  production build; the preview tool starts `next dev` whatever launch entry is named — use
+  `next start -p 3001` from the shell and `A11Y_BASE_URL` for the sweep.
+- Production proof (Neon `pg_stat_user_tables` through the push role, the site public, no other writer):
+  `/` warm +0, +0; POST with the production bearer → 200; next `/` **+28**; then +0. Vercel's cache handler
+  honours `{ expire: 0 }` as a hard expiry — §6's fallback (`"max"` plus warm GETs) is not needed.
+  Route from outside: no header 401, wrong token 401, GET 405. Footer after the change renders
+  `Data as of 21 Sep 2026, 04:06 UTC · last push 178 sessions, 274,435 rows` from the ISO string.
+- TTFB from outside, warm Neon: before ~0.15–0.26 s, after ~0.17–0.28 s (unchanged — the function still
+  renders); cold before: 2.34 s. The cold-after number and the Neon compute-hours reading are the
+  §6 fortnight measurement, not yet taken. First `revalidate: OK` line expected in
+  `output/update_season.log` on the night of 2026-09-26/27.
