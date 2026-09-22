@@ -41,7 +41,7 @@ def test_expected_columns_cover_every_table_of_spec():
         # SIM_SPEC §2.1 / §2.3
         "sim_race_params", "sim_compound_params", "sim_driver_params", "sim_driver_compound", "sim_circuit_hazard",
         # v1.2 companion tables (MODE1_SPEC §5.5): 14 added, none removed.
-        "circuit_odi", "optimal_stint", "preview_backtest", "preview_finish_order", "preview_round",
+        "circuit_odi", "optimal_stint", "preview_backtest", "preview_finish_order", "preview_round", "preview_snapshot_order", "preview_snapshot_round",
         "race_moment", "title_clinch", "title_odds",
         "wp_lap_probability", "wp_metrics", "wp_model_artifact", "wp_reliability_bin", "wp_run", "wp_swing",
         # MODE2_SPEC §6.2 / §6.3: v1.3 appended exactly these twelve, none removed.
