@@ -141,5 +141,6 @@ Panel claims checked against the code: `_run` keeps a 4000-char tail (update_sea
   identical content; a content-hash dedupe is a follow-up, not a defect.
 - The pre-existing launcher failure (N6: `Operation not permitted` on `.venv/pyvenv.cfg` under launchd — macOS
   privacy protection on the Desktop folder) needs Full Disk Access for `/opt/miniconda3/bin/python3.13`; owner action.
-- N5/N7: pending at the time of writing (deploy of the page; the first race night).
+- N5: live on production 60 s after the push of eea45c9 — the section reads `cLedEmpty("9 previews")` from the
+  snapshot tables through `f1_web`, the title table renders by round. N7 (the first race night) pending.
 
