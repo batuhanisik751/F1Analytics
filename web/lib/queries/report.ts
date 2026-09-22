@@ -7,6 +7,7 @@
 import { and, eq } from "drizzle-orm";
 import { db } from "@/db/client";
 import { raceReport, sessionIngests } from "@/db/schema";
+import { cached } from "@/lib/cache";
 
 /** §6.1 status — the CHECK constraint's three values, nothing else. */
 export type RaceReportStatus = "ok" | "refused" | "skipped";
@@ -58,7 +59,7 @@ export type RaceReportView = {
  * Returns null when no row exists — which is the normal case for most races until a
  * keyed ingest has run. Callers must treat null as "no report", never as an error.
  */
-export async function getRaceReport(
+async function getRaceReportRaw(
   sessionId: number,
   assumptionSetId?: number | null,
 ): Promise<RaceReportView | null> {
@@ -107,6 +108,7 @@ export async function getRaceReport(
     generatedAt: toIso(r.generatedAt),
   };
 }
+export const getRaceReport = cached("report.getRaceReport", getRaceReportRaw);
 
 /** The assumption set this session's analytics were computed under, or null. */
 async function resolveAssumptionSetId(sessionId: number): Promise<number | null> {

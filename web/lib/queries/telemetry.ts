@@ -28,6 +28,7 @@ import {
 import type { LineStyle } from "@/lib/queries/shared";
 import { TEAM_FALLBACK } from "@/lib/theme";
 import { TRAIL_STATUSES, type TrailStatus } from "@/lib/telemetry/captions";
+import { cached } from "@/lib/cache";
 
 /** §5.6 — the five states of `analytics_status['telemetry']['state']`, plus "absent". */
 export type TelemetryState = "absent" | "ok" | "partial" | "none" | "failed" | "dropped";
@@ -92,7 +93,7 @@ function asKind(v: string): SessionKind {
  * there is one and the reason if there is not. Two pills on Q/SQ, one on R — the
  * caller decides, from `allowsCrossDriver`.
  */
-export async function listTelemetryLaps(sessionId: number): Promise<TelemetryPicker | null> {
+async function listTelemetryLapsRaw(sessionId: number): Promise<TelemetryPicker | null> {
   const head = await db
     .select({
       sessionId: sessions.sessionId,
@@ -199,6 +200,7 @@ export async function listTelemetryLaps(sessionId: number): Promise<TelemetryPic
     pills,
   };
 }
+export const listTelemetryLaps = cached("telemetry.listTelemetryLaps", listTelemetryLapsRaw);
 
 /** One stored lap: the arrays, the derived scalars, and the circuit it was set on. */
 export type StoredLapTelemetry = {
@@ -263,7 +265,7 @@ export type StoredLapTelemetry = {
 };
 
 /** §5.5 — one lap, one primary-key lookup. Whole-lap read; arrays are never sliced in SQL. */
-export async function getLapTelemetry(
+async function getLapTelemetryRaw(
   sessionId: number,
   driverId: string,
 ): Promise<StoredLapTelemetry | null> {
@@ -397,6 +399,7 @@ export async function getLapTelemetry(
     circuit,
   };
 }
+export const getLapTelemetry = cached("telemetry.getLapTelemetry", getLapTelemetryRaw);
 
 export type CornerSpeedRow = {
   driverId: string;
@@ -436,7 +439,7 @@ export type CornerSpeedRow = {
  * structural for the model. A `select()` would pull it into the page's props and leave
  * the restriction resting on nobody rendering it.
  */
-export async function getCornerSpeeds(
+async function getCornerSpeedsRaw(
   sessionId: number,
   driverIds: string[],
 ): Promise<CornerSpeedRow[]> {
@@ -493,6 +496,7 @@ export async function getCornerSpeeds(
     trailStatus: asTrailStatus(c.trailStatus),
   }));
 }
+export const getCornerSpeeds = cached("telemetry.getCornerSpeeds", getCornerSpeedsRaw);
 
 /**
  * Migration 0010's CHECK guarantees this, but a CHECK lives in the database and this is

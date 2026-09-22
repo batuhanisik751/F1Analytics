@@ -21,9 +21,12 @@ Since v1.11 the run ends by publishing (step 4): `scripts/push_remote.py` diffs 
 against the production database and applies the difference in one remote transaction, but
 only when every step above reported success -- a corpus the growth guard did not sign is never
 published. On a successful push that moved sessions, step 5 commits the census baseline and
-re-publishes the CI fixture so the tree is clean by morning. The production credential is read
-from `~/.config/f1analytics/remote.env` (mode 600) and nowhere else; without that file the run
-is local-only and says so. `--no-push` keeps a run local, `--push-only` skips ingest and derive
+re-publishes the CI fixture so the tree is clean by morning. Between the two, a successful push
+tells production to expire its query cache (`/api/revalidate`, REVALIDATE_SPEC §3); if that
+call fails the run exits 1 but the data is already right and the cache heals within an hour.
+The production credentials are read from `~/.config/f1analytics/remote.env` (mode 600) and
+nowhere else; without that file the run is local-only and says so. `--no-push` keeps a run
+local, `--push-only` skips ingest and derive
 and pushes what is local now, `--dry-run` prints the push plan and writes nothing anywhere.
 
 Exit codes: 0 nothing to do or everything succeeded; 1 something failed (details in the log);
@@ -39,6 +42,10 @@ import logging
 import os
 import subprocess
 import sys
+import time
+import urllib.error
+import urllib.parse
+import urllib.request
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -48,6 +55,11 @@ BASELINE = ROOT / "db" / "trail_census_baseline.json"
 DSN = os.environ.get("DATABASE_URL", "postgres://f1:f1@localhost:5432/f1")
 # The production credential (F6): read at run time, never stored anywhere else.
 REMOTE_ENV = Path.home() / ".config" / "f1analytics" / "remote.env"
+# The cache purge after a push (REVALIDATE_SPEC §3): where it went, and how the last one ended.
+LAST_REVALIDATE = ROOT / "output" / "last_revalidate.json"
+REVALIDATE_KEYS = ["REVALIDATE_URL", "REVALIDATE_SECRET"]
+REVALIDATE_TIMEOUT_S = 20
+REVALIDATE_RETRY_AFTER_S = 5
 
 log = logging.getLogger("update_season")
 
@@ -136,6 +148,109 @@ def _remote_dsn() -> str | None:
     return load_remote_dsn(REMOTE_ENV)
 
 
+class _NoRedirect(urllib.request.HTTPRedirectHandler):
+    """Refuse every 3xx: a followed redirect would re-send the bearer header as a GET."""
+
+    def redirect_request(self, req, fp, code, msg, headers, newurl):
+        return None
+
+
+def _opener() -> urllib.request.OpenerDirector:
+    return urllib.request.build_opener(_NoRedirect)
+
+
+def _http(opener, req: urllib.request.Request) -> tuple[str | None, bool]:
+    """One request. (None, False) on 200; else (reason, retryable): a URLError, a timeout or a
+    5xx is worth one more try (a cold start); a 4xx or a 3xx is an answer, not a fault."""
+    try:
+        with opener.open(req, timeout=REVALIDATE_TIMEOUT_S) as r:
+            if r.status == 200:
+                return None, False
+            return f"{r.status} {getattr(r, 'reason', '') or ''}".strip(), 500 <= r.status < 600
+    except urllib.error.HTTPError as e:
+        return f"{e.code} {e.reason}", 500 <= e.code < 600
+    except (urllib.error.URLError, OSError) as e:         # TimeoutError is an OSError
+        return type(e).__name__, True
+
+
+def _write_last_revalidate(status: str, reason: str, host: str | None) -> None:
+    LAST_REVALIDATE.parent.mkdir(exist_ok=True)
+    LAST_REVALIDATE.write_text(json.dumps({
+        "at": dt.datetime.now(dt.timezone.utc).isoformat(timespec="seconds"),
+        "status": status, "reason": reason, "host": host}, indent=1))
+
+
+def _previous_revalidate() -> dict | None:
+    try:
+        return json.loads(LAST_REVALIDATE.read_text()) if LAST_REVALIDATE.exists() else None
+    except (OSError, ValueError):
+        return None
+
+
+def _last_release_id() -> int | None:
+    from scripts.push_remote import LAST_PUSH
+    try:
+        return json.loads(LAST_PUSH.read_text()).get("release_id") if LAST_PUSH.exists() else None
+    except (OSError, ValueError):
+        return None
+
+
+def _revalidate_step(failures: list[str], new_sessions: list[int], dry_run: bool = False) -> None:
+    """Step 4b: tell production to expire its query cache, now that the corpus moved.
+
+    Runs only after a successful, non-dry push (REVALIDATE_SPEC §3). One POST to REVALIDATE_URL
+    with the last push's release_id, one retry after a cold start, then one smoke GET of the
+    origin. A failure is a line in `failures` (exit 1), never a stop: the data is already
+    right and the 3600 s expiry heals the cache by itself. The secret stays in this frame and
+    is never part of any string that is logged. `new_sessions` is accepted for symmetry with
+    `_push_step`; the request body carries only the release id.
+    """
+    from scripts.push_remote import read_remote_env
+    try:
+        creds = read_remote_env(REVALIDATE_KEYS, REMOTE_ENV)
+    except Exception as e:                      # a refusal on the credential file's mode/owner
+        log.error("revalidate: REFUSED: %s", e)
+        failures.append(f"revalidate: REFUSED: {e}")
+        return
+    url, secret = creds.get("REVALIDATE_URL"), creds.get("REVALIDATE_SECRET")
+    if not url or not secret:
+        log.info("revalidate: no REVALIDATE_URL -- skipped (local only)")
+        if not dry_run:
+            _write_last_revalidate("skipped", "no REVALIDATE_URL", None)
+        return
+    parts = urllib.parse.urlsplit(url)
+    host = parts.hostname or url
+    if dry_run:
+        log.info("revalidate: would POST %s", host)
+        return
+    prev = _previous_revalidate()
+    if prev and prev.get("status") == "failed":
+        log.info("revalidate: previous run FAILED (%s: %s)", prev.get("at"), prev.get("reason"))
+    rid = _last_release_id()
+    opener = _opener()
+    req = urllib.request.Request(
+        url, method="POST", data=json.dumps({"release_id": rid}).encode(),
+        headers={"Authorization": "Bearer " + secret, "Content-Type": "application/json"})
+    started = time.monotonic()
+    reason, retry = _http(opener, req)
+    if reason and retry:
+        log.info("revalidate: %s; retrying in %ds", reason, REVALIDATE_RETRY_AFTER_S)
+        time.sleep(REVALIDATE_RETRY_AFTER_S)
+        reason, _ = _http(opener, req)
+    if reason is None:
+        smoke = urllib.request.Request(f"{parts.scheme}://{parts.netloc}/", method="GET")
+        reason, _ = _http(opener, smoke)
+        reason = f"smoke GET {reason}" if reason else None
+    secs = time.monotonic() - started
+    if reason is None:
+        log.info("revalidate: OK %s release_id=%s in %.1fs", host, rid, secs)
+        _write_last_revalidate("ok", f"release_id={rid}", host)
+        return
+    log.error("revalidate: FAILED %s %s", host, reason)
+    failures.append(f"revalidate: {reason}")
+    _write_last_revalidate("failed", reason, host)
+
+
 def _push_step(a, failures: list[str], new_sessions: list[int]) -> None:
     """Step 4: publish the corpus to production; step 5: commit what the push changed.
 
@@ -166,8 +281,14 @@ def _push_step(a, failures: list[str], new_sessions: list[int]) -> None:
         if summary.startswith("FAILED"):
             log.error("PUSH FAILED")
         return
-    if a.dry_run or not summary.startswith("OK"):
+    if a.dry_run:
+        _revalidate_step(failures, new_sessions, dry_run=True)
         return
+    if not summary.startswith("OK"):
+        return
+    # 4b. Production's query cache still holds the numbers from before this push (3600 s at
+    # most); the hook expires them now. Its outcome never stops step 5.
+    _revalidate_step(failures, new_sessions)
     # 5. The baseline moved with the corpus and the CI fixture must follow it, tonight, so the
     # tree is clean by morning and CI never runs against a number the site no longer shows.
     what = f"round(s) {', '.join(map(str, new_sessions))}" if new_sessions else summary

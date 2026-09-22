@@ -4,6 +4,7 @@ import { and, desc, eq, gt, inArray } from "drizzle-orm";
 import { db } from "@/db/client";
 import { events, seasons, sessionIngests, sessions } from "@/db/schema";
 import type { ColourMap, LineStyle } from "@/lib/colours";
+import { cached } from "@/lib/cache";
 
 export type IngestStatus = "pending" | "ok" | "partial" | "failed";
 export type { LineStyle, ColourMap };
@@ -17,7 +18,7 @@ export type DriverRef = TeamRef & {
 export type RaceNavLink = { year: number; round: number; eventName: string };
 
 /** Years with `seasons.ingested_rounds > 0`, newest first. */
-export async function seasonsWithData(): Promise<number[]> {
+async function seasonsWithDataRaw(): Promise<number[]> {
   const rows = await db
     .select({ year: seasons.year })
     .from(seasons)
@@ -25,17 +26,19 @@ export async function seasonsWithData(): Promise<number[]> {
     .orderBy(desc(seasons.year));
   return rows.map((r) => r.year);
 }
+export const seasonsWithData = cached("shared.seasonsWithData", seasonsWithDataRaw);
 
-export async function latestSeasonWithData(): Promise<number | null> {
+async function latestSeasonWithDataRaw(): Promise<number | null> {
   const years = await seasonsWithData();
   return years[0] ?? null;
 }
+export const latestSeasonWithData = cached("shared.latestSeasonWithData", latestSeasonWithDataRaw);
 
 /**
  * The highest round whose RACE session has `session_ingests.status in ('ok','partial')`.
  * With `year` omitted, the latest such round across all seasons (year desc, round desc).
  */
-export async function getLatestRace(year?: number): Promise<RaceNavLink | null> {
+async function getLatestRaceRaw(year?: number): Promise<RaceNavLink | null> {
   const conditions = [
     eq(sessions.kind, "R"),
     inArray(sessionIngests.status, ["ok", "partial"]),
@@ -58,9 +61,10 @@ export async function getLatestRace(year?: number): Promise<RaceNavLink | null> 
     .limit(1);
   return rows[0] ?? null;
 }
+export const getLatestRace = cached("shared.getLatestRace", getLatestRaceRaw);
 
 /** `sessions.session_id` for (year, round, kind); kind defaults to 'R'. Null when no sessions row exists. */
-export async function sessionIdFor(
+async function sessionIdForRaw(
   year: number,
   round: number,
   kind: "R" | "S" = "R",
@@ -74,3 +78,4 @@ export async function sessionIdFor(
     .limit(1);
   return rows[0]?.sessionId ?? null;
 }
+export const sessionIdFor = cached("shared.sessionIdFor", sessionIdForRaw);

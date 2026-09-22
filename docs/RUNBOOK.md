@@ -1130,6 +1130,7 @@ Nothing to do by hand. When you want to know: `tail -3 output/update_season.log`
 | `push: REFUSED: ...` | credential mode, an unclassified table, or the lock | the message names the fix |
 | `PUSH FAILED: production is N session(s) behind` | three attempts could not reach or commit | nothing; the next night re-diffs from scratch |
 | `PUSH VERIFY FAILED: ...` | committed, but the read-back differed | the next night's diff repairs it; look if it repeats |
+| `revalidate: OK <host> release_id=N in 1.2s` / `revalidate: FAILED <host> <why>` | after a successful push, production was told to expire its query cache (§9.4) | OK: none. FAILED: the data is right and the cache heals within 3600 s; run §9.4 by hand if that is too long, and look if it repeats (`revalidate: previous run FAILED` names the last one) |
 
 Manual runs use the same lock, so they cannot collide with the scheduler:
 
@@ -1145,7 +1146,37 @@ Manual runs use the same lock, so they cannot collide with the scheduler:
 *before* merging the web code that needs it; the nightly job cannot migrate production
 because it holds only the `f1_push` credential (decision D4: the stall is loud, not silent).
 
-### 9.4 Rollback
+### 9.4 Revalidating production by hand
+
+The site caches every query for at most 3600 s (REVALIDATE_SPEC §1). Step 4b of the nightly
+run expires that cache the moment a push succeeds by POSTing to `/api/revalidate`; when that
+line reads `FAILED`, or a push was made with `scripts/push_remote.py` directly, do it by hand.
+The two values sit beside the push credential in `~/.config/f1analytics/remote.env`
+(`REVALIDATE_URL`, `REVALIDATE_SECRET`, same 0600 rule, §9.2). Read them from the file in
+the shell that runs the curl; never paste the secret on a command line or into a chat:
+
+```bash
+REVALIDATE_URL=$(sed -n 's/^REVALIDATE_URL=//p' ~/.config/f1analytics/remote.env | tr -d "'\"")
+REVALIDATE_SECRET=$(sed -n 's/^REVALIDATE_SECRET=//p' ~/.config/f1analytics/remote.env | tr -d "'\"")
+curl -sS -o - -w '\n%{http_code}\n' -X POST "$REVALIDATE_URL" \
+  -H "Authorization: Bearer $REVALIDATE_SECRET" -H "Content-Type: application/json" \
+  -d "{\"release_id\": $(sed -n 's/.*"release_id": *\([0-9]*\).*/\1/p' output/last_push.json)}"
+unset REVALIDATE_SECRET
+```
+
+| status | meaning | action |
+|---|---|---|
+| `200 {"ok":true,"tag":"data","expire":0,...}` | every cached query is a hard miss on its next read; the next page view recomputes from the pushed data | none; `--dry-run` of `update_season.py` prints `revalidate: would POST <host>` if you want to see the target first |
+| `401 {"code":"unauthorized"}` | the header does not match the secret Vercel holds | compare `remote.env` with the value in the Vercel project settings (Production only, never Preview); re-enter it there with `vercel env add`, never on a command line |
+| `503 {"code":"off"}` | `REVALIDATE_SECRET` is unset in Vercel or shorter than 32 chars: the route is off | provision it (`openssl rand -hex 32`), redeploy; until then the 3600 s expiry is the only invalidator |
+
+Anything else (a 405 is a GET; a 3xx means the URL is not the deployment itself; a 500 is
+logged on the Vercel side as `revalidate: <message>`) is worth a look at the URL before the
+secret. The nightly hook refuses redirects for the same reason: a followed 3xx would re-send
+the bearer header as a GET. `output/last_revalidate.json` records the last outcome
+(`status` ok/failed/skipped, `reason`, `host`, `at`).
+
+### 9.5 Rollback
 
 Every writing run first dumps this machine to `output/snapshots/f1-YYYYMMDD.dump` (last 7).
 To roll production back to a snapshot, restore it **locally** and let the diff converge:
@@ -1166,7 +1197,7 @@ local data first if the removal is meant to stick. Production has no state of it
 `ask_query_log` and `ask_answer_cache`, which the push never touches, so nothing is lost by
 converging it to a local snapshot.
 
-### 9.5 Two facts about production worth remembering
+### 9.6 Two facts about production worth remembering
 
 - The ask box's per-IP token bucket lives in the memory of one Vercel function instance, so
   it is pacing only, never a control: a second instance has its own bucket. The controls are

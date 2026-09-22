@@ -11,6 +11,7 @@
 // D1 caveat that outlives this file: `laps` is no longer race-only. Nothing in this
 // module reads `laps`; anything that does must filter by sessions.kind.
 import { and, asc, eq, inArray, sql } from "drizzle-orm";
+import { cached } from "@/lib/cache";
 import { db } from "@/db/client";
 import {
   drivers,
@@ -227,7 +228,7 @@ export function segmentRepairsFrom(warnings: string[] | null | undefined): numbe
 // ---------------------------------------------------------------------------
 
 /** Both qualifying sessions of a round, Q first. Empty array when neither is ingested. */
-export async function getQualiForRound(year: number, round: number): Promise<QualiSession[]> {
+async function getQualiForRoundRaw(year: number, round: number): Promise<QualiSession[]> {
   const heads = await db
     .select({
       sessionId: sessions.sessionId,
@@ -289,6 +290,7 @@ export async function getQualiForRound(year: number, round: number): Promise<Qua
     };
   });
 }
+export const getQualiForRound = cached("quali.getQualiForRound", getQualiForRoundRaw);
 
 /** §3.3 joined to the session's own entry/team rows, position order, for several sessions. */
 async function qualiRowsFor(
@@ -391,7 +393,7 @@ async function segmentBestsFor(
 // ---------------------------------------------------------------------------
 
 /** §3.4 for one session, driver then segment. Empty on a `partial` session (D8 gate). */
-export async function getQualiSegments(sessionId: number): Promise<QualiSegmentRow[]> {
+async function getQualiSegmentsRaw(sessionId: number): Promise<QualiSegmentRow[]> {
   const rows = await db
     .select({
       driverId: qualiSegmentTimes.driverId,
@@ -456,9 +458,10 @@ export async function getQualiSegments(sessionId: number): Promise<QualiSegmentR
     verified: r.verified,
   }));
 }
+export const getQualiSegments = cached("quali.getQualiSegments", getQualiSegmentsRaw);
 
 /** §3.5 for one session. `driver_a` is stored as the QUICKER driver; order is not changed here. */
-export async function getQualiTeammates(sessionId: number): Promise<QualiH2HRow[]> {
+async function getQualiTeammatesRaw(sessionId: number): Promise<QualiH2HRow[]> {
   const entryA = sessionEntries;
   const rows = await db
     .select({
@@ -517,6 +520,7 @@ export async function getQualiTeammates(sessionId: number): Promise<QualiH2HRow[
     sessionSdS: r.sessionSdS,
   }));
 }
+export const getQualiTeammates = cached("quali.getQualiTeammates", getQualiTeammatesRaw);
 
 async function codeMap(sessionId: number): Promise<Map<string, string>> {
   const rows = await db
@@ -530,7 +534,7 @@ async function codeMap(sessionId: number): Promise<Map<string, string>> {
 // §4.7 qualified versus started — derived, never stored, never called a penalty
 // ---------------------------------------------------------------------------
 
-export async function getQualiToGrid(year: number, round: number): Promise<QualiToGridRow[]> {
+async function getQualiToGridRaw(year: number, round: number): Promise<QualiToGridRow[]> {
   const qs = sql`(SELECT session_id FROM sessions WHERE year = ${year} AND round = ${round} AND kind = 'Q')`;
   const rs = sql`(SELECT session_id FROM sessions WHERE year = ${year} AND round = ${round} AND kind = 'R')`;
   const rows = await db
@@ -572,6 +576,7 @@ export async function getQualiToGrid(year: number, round: number): Promise<Quali
     placesMoved: r.gridPosition! - r.qualiPosition,
   }));
 }
+export const getQualiToGrid = cached("quali.getQualiToGrid", getQualiToGridRaw);
 
 // ---------------------------------------------------------------------------
 // §6.5 season head-to-head. The Wilson interval is computed HERE and never stored.
@@ -589,7 +594,7 @@ export function wilson(wins: number, n: number, z = 1.96): [number, number] {
 /** §6.5's greyed threshold: under five sessions the record is not shown as a record. */
 export const SEASON_H2H_MIN_SESSIONS = 5;
 
-export async function getSeasonQualiH2H(year: number): Promise<SeasonQualiH2HRow[]> {
+async function getSeasonQualiH2HRaw(year: number): Promise<SeasonQualiH2HRow[]> {
   const rows = await db
     .select({
       teamId: seasonQualiH2h.teamId,
@@ -642,6 +647,7 @@ export async function getSeasonQualiH2H(year: number): Promise<SeasonQualiH2HRow
   );
   return out;
 }
+export const getSeasonQualiH2H = cached("quali.getSeasonQualiH2H", getSeasonQualiH2HRaw);
 
 /** Latest-round team name and colour per team across a season's qualifying sessions. */
 async function seasonTeams(year: number): Promise<Map<string, { name: string; colour: string }>> {
@@ -682,7 +688,7 @@ async function seasonCodes(year: number): Promise<Map<string, string>> {
 // §6.5 driver page — one row per season and kind. No pooled career figure (§4.3).
 // ---------------------------------------------------------------------------
 
-export async function getDriverQualiSeasons(driverId: string): Promise<DriverQualiSeason[]> {
+async function getDriverQualiSeasonsRaw(driverId: string): Promise<DriverQualiSeason[]> {
   // D9: the aggregate is on PERCENT, and only on the same-segment gap — the TV gap
   // charges a Q1 driver for a greener track (§4.1), so it is never averaged.
   const rows = await db
@@ -713,6 +719,7 @@ export async function getDriverQualiSeasons(driverId: string): Promise<DriverQua
     bestGapToPoleCommonPct: r.bestGapToPoleCommonPct,
   }));
 }
+export const getDriverQualiSeasons = cached("quali.getDriverQualiSeasons", getDriverQualiSeasonsRaw);
 
 // ---------------------------------------------------------------------------
 // §6.4 weekend preview panel — history only, never an input to the forecast (§5.5).
@@ -726,7 +733,7 @@ export const CIRCUIT_HISTORY_MIN_SESSIONS = 3;
  * `events.circuit_key`, an integer (db/schema/reference.ts). The key is taken, and the
  * discrepancy is reported rather than papered over with a lookup by name.
  */
-export async function getCircuitQualiHistory(
+async function getCircuitQualiHistoryRaw(
   circuitKey: number,
   driverIds: string[],
   /** The round being previewed, so its own session can never count as "previous". */
@@ -770,6 +777,7 @@ export async function getCircuitQualiHistory(
         (a.medianGapToPoleCommonPct ?? Infinity) - (b.medianGapToPoleCommonPct ?? Infinity),
     );
 }
+export const getCircuitQualiHistory = cached("quali.getCircuitQualiHistory", getCircuitQualiHistoryRaw);
 
 /** Latest code and most recent qualifying team colour for a set of drivers. */
 async function driverMeta(
@@ -829,7 +837,7 @@ export type SeasonPoleRow = {
  * em dash where a round has no Q session, so rounds WITHOUT a qualifying session are
  * returned too, with every pole field null.
  */
-export async function getSeasonPoles(year: number): Promise<SeasonPoleRow[]> {
+async function getSeasonPolesRaw(year: number): Promise<SeasonPoleRow[]> {
   const rows = await db
     .select({
       round: sessions.round,
@@ -873,3 +881,4 @@ export async function getSeasonPoles(year: number): Promise<SeasonPoleRow[]> {
     bestS: r.bestS,
   }));
 }
+export const getSeasonPoles = cached("quali.getSeasonPoles", getSeasonPolesRaw);

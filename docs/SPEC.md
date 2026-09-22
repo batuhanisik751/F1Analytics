@@ -1539,7 +1539,7 @@ badge on `/season` and `/driver`, resolved by `--force` re-ingest of the season.
 | D17 | No test parses `0000_init.sql`; the contract test uses `information_schema`. | Would break as soon as a `0001` migration exists. |
 | D18 | `results.result_time_s` stored verbatim with the semantics in §0.3; displayed as a gap only for `status == 'Finished'`. | Lapped rows are not gaps to the winner (verified). |
 | D19 | One env var name, `DATABASE_URL`, on both sides. | One fewer thing to get wrong in the runbook. |
-| D20 | `force-dynamic` on all pages; `cacheComponents` off. | Data changes only at ingest; local reads are single-digit ms; nothing here blocks enabling caching later. |
+| D20 | `force-dynamic` on all pages; `cacheComponents` off; every `lib/queries` read is cached under tag `data` for at most 3600 s and recomputed on the first request after the nightly push calls `/api/revalidate`. The footer names the push the numbers come from. | Data changes only at the push; the guard sentence's date side is computed per request; only `/api/ask` and `/api/revalidate` bypass. (revised 2026-09-22, docs/REVALIDATE_SPEC.md) |
 | D21 | Standings tie-break by full countback (P1 count, P2 count, ...) rather than wins/podiums only. | Cheap in pandas and matches the sporting regulations. |
 | D22 | `passes_rules` / `is_outlier` / `is_representative` column names in `laps`. | Avoids re-using `is_clean` with a different meaning than `clean.py`. |
 

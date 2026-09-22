@@ -25,6 +25,7 @@ import {
   type LineStyle,
   type TeamRef,
 } from "@/lib/queries/shared";
+import { cached } from "@/lib/cache";
 
 export type DriverProfile = {
   driverId: string;
@@ -126,7 +127,7 @@ async function seasonsWithRaceEntries(driverId: string): Promise<number[]> {
  * (defaulting to the latest season with data), falling back to `drivers.latest_code`.
  * The returned year is the requested one, else the driver's latest season with race entries.
  */
-export async function resolveDriver(
+async function resolveDriverRaw(
   code: string,
   year: number | null,
 ): Promise<{ driverId: string; year: number } | null> {
@@ -161,9 +162,10 @@ export async function resolveDriver(
   if (latest === undefined) return null;
   return { driverId, year: latest };
 }
+export const resolveDriver = cached("driver.resolveDriver", resolveDriverRaw);
 
 /** Null only when the `drivers` row is missing; an empty season renders with empty sections. */
-export async function getDriverSeason(
+async function getDriverSeasonRaw(
   driverId: string,
   year: number,
 ): Promise<DriverSeason | null> {
@@ -450,3 +452,4 @@ export async function getDriverSeason(
     h2h,
   };
 }
+export const getDriverSeason = cached("driver.getDriverSeason", getDriverSeasonRaw);

@@ -424,7 +424,7 @@ Mitigations, cheapest first:
 |---|---|---|---|---|
 | 1 | `app/loading.tsx` skeleton shell (title, nav, "loading the timing data…") | $0, ~20 lines | frame paints in ~200 ms; content streams when Neon wakes | **day one** (WP-5) |
 | 2 | `Data as of <pushed_at>` footer (§3.4) | $0 | the wait reads as honest, not broken | day one |
-| 3 | `export const revalidate = 600` on the data pages (`/api/ask` stays `no-store`), or Cache Components `cacheLife("hours")` | $0 | repeat views within 10 min never touch Neon; also the fix for the egress cliff | **after the first fortnight's Neon reading** shows > 20 CU-h or > 1 GB egress; it changes the sentence "every route is force-dynamic" to "recomputed within 10 min of a push", which is a deliberate contract change, not a default |
+| 3 | every `lib/queries` read cached under tag `data` for 3600 s (`/api/ask` stays `no-store`), purged by the push hook `/api/revalidate` | $0 | repeat views within the hour never touch Neon; also the fix for the egress cliff | **decided 2026-09-22, built — docs/REVALIDATE_SPEC.md.** 3600 s rather than 600 s because the hook is the invalidator and the timer only bounds a missed hook, while 600 s keeps Neon awake ~144×/day per entry under a crawler; it changes the sentence "every route is force-dynamic" to "recomputed on the first request after a push", a deliberate contract change recorded as SPEC D20 |
 | 4 | keep-alive pinger every 4 min | "$0" | none: 0.25 CU x 744 h = 186 CU-h vs 100 free → Neon suspends the project ~day 16 | **rejected** |
 | 5 | Vercel Cron keep-warm | — | Hobby crons run once per day | useless |
 | 6 | Neon Launch, scale-to-zero off | 0.25 CU x 744 h x $0.106 ≈ **$19–20** | no Neon cold start | not for a hobby site |
@@ -707,7 +707,8 @@ Nothing in WP-1..7 needs Neon or Vercel; nothing in CI needs a secret.
 4. **Neon free-tier cliffs via crawlers.** Public + `force-dynamic` + 5 min autosuspend: a
    polite crawler can keep compute awake all day (100 CU-h) or loop the 71 telemetry pages
    (5 GB egress). Both fail safe (suspend, not bill). Order: `robots.txt` day one → measure a
-   fortnight → `revalidate = 600` on the data pages. Never a keep-alive.
+   fortnight → the query-layer cache (3600 s, purged by the push hook; docs/REVALIDATE_SPEC.md,
+   built 2026-09-22). Never a keep-alive.
 5. **Fixture staleness and the nightly commit.** A migration merged without re-publishing is
    caught by `assert-not-newer`/`assert-at-head`; a DATA change a test asserts on is not — CI
    goes red on a true-but-stale number, and `update_season.py` step 5 now commits + re-publishes

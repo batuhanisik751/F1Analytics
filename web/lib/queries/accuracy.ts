@@ -15,6 +15,7 @@
 import { and, asc, desc, eq, isNotNull, sql } from "drizzle-orm";
 import { db } from "@/db/client";
 import { previewBacktest, wpMetrics, wpReliabilityBin, wpRun } from "@/db/schema/companion";
+import { cached } from "@/lib/cache";
 
 /** The scoring scope. `loco` = leave-one-circuit-out, the honest one. */
 export type Scope = "in_sample" | "loco" | "forward";
@@ -76,7 +77,7 @@ async function currentRun(): Promise<{ assumptionSetId: number } | null> {
  * data it has already seen, and reporting only the first number is how a project flatters
  * itself. Both ship, and the page leads with the smaller one.
  */
-export async function getSkill(): Promise<SkillRow[]> {
+async function getSkillRaw(): Promise<SkillRow[]> {
   const run = await currentRun();
   if (!run) return [];
   const rows = await db
@@ -111,9 +112,10 @@ export async function getSkill(): Promise<SkillRow[]> {
   }
   return out;
 }
+export const getSkill = cached("accuracy.getSkill", getSkillRaw);
 
 /** The calibration curve for one scope: what we said, against what happened. */
-export async function getReliability(scope: Scope = "loco"): Promise<ReliabilityRow[]> {
+async function getReliabilityRaw(scope: Scope = "loco"): Promise<ReliabilityRow[]> {
   const run = await currentRun();
   if (!run) return [];
   const rows = await db
@@ -133,6 +135,7 @@ export async function getReliability(scope: Scope = "loco"): Promise<Reliability
     .orderBy(asc(wpReliabilityBin.binIndex));
   return rows.filter((r) => r.nRows > 0);
 }
+export const getReliability = cached("accuracy.getReliability", getReliabilityRaw);
 
 /**
  * Race-preview accuracy: did the p10-p90 band actually contain the finish?
@@ -146,7 +149,7 @@ export async function getReliability(scope: Scope = "loco"): Promise<Reliability
  * `pred_kind = 'oof'` only: in-sample predictions would score the model on races it trained
  * on, which is the flattering number this page exists to avoid.
  */
-export async function getIntervalCoverage(): Promise<IntervalCoverage | null> {
+async function getIntervalCoverageRaw(): Promise<IntervalCoverage | null> {
   const rows = await db
     .select({
       predictions: sql<number>`count(*)::int`,
@@ -168,9 +171,10 @@ export async function getIntervalCoverage(): Promise<IntervalCoverage | null> {
     medianAbsError: r.medianAbs,
   };
 }
+export const getIntervalCoverage = cached("accuracy.getIntervalCoverage", getIntervalCoverageRaw);
 
 /** Per-season coverage, so a reader can see whether the miss is one bad year or the method. */
-export async function getCoverageBySeason(): Promise<
+async function getCoverageBySeasonRaw(): Promise<
   { year: number; predictions: number; coveragePct: number; meanAbsError: number }[]
 > {
   return db
@@ -186,3 +190,4 @@ export async function getCoverageBySeason(): Promise<
     .groupBy(previewBacktest.year)
     .orderBy(asc(previewBacktest.year));
 }
+export const getCoverageBySeason = cached("accuracy.getCoverageBySeason", getCoverageBySeasonRaw);

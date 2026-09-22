@@ -16,6 +16,7 @@ import {
 } from "@/db/schema";
 import { TEAM_FALLBACK } from "@/lib/theme";
 import type { DriverRef, LineStyle } from "@/lib/queries/shared";
+import { cached } from "@/lib/cache";
 
 export type CircuitMatch = "native" | "location" | "alias" | "none";
 
@@ -66,7 +67,7 @@ function asCircuitMatch(v: string | null | undefined): CircuitMatch {
  * when the circuit resolved, to `circuits.short_name`. `null` when the round has no
  * `preview_round` row (the preview has not been recomputed for it yet).
  */
-export async function getPreviewRound(
+async function getPreviewRoundRaw(
   year: number,
   round: number,
 ): Promise<PreviewRound | null> {
@@ -111,6 +112,7 @@ export async function getPreviewRound(
     locoBrier: r.locoBrier ?? null,
   };
 }
+export const getPreviewRound = cached("preview.getPreviewRound", getPreviewRoundRaw);
 
 /**
  * The most recent `session_entries` row of the season for each driver, as a DriverRef.
@@ -161,7 +163,7 @@ async function loadSeasonDriverRefs(year: number): Promise<Map<string, DriverRef
  * first. `[]` when the round has no `preview_finish_order` rows. A driver with no
  * `session_entries` row anywhere in the season still appears, with the fallback colour.
  */
-export async function getPreviewOrder(
+async function getPreviewOrderRaw(
   year: number,
   round: number,
 ): Promise<PreviewOrderRow[]> {
@@ -208,12 +210,13 @@ export async function getPreviewOrder(
     pPoints: r.pPoints,
   }));
 }
+export const getPreviewOrder = cached("preview.getPreviewOrder", getPreviewOrderRaw);
 
 /**
  * §7.2 / §7.3 — every circuit that has an overtaking difficulty index, easiest first,
  * for the fixed 0–100 strip. `[]` when `circuit_odi` is empty.
  */
-export async function getOdiStrip(): Promise<OdiTick[]> {
+async function getOdiStripRaw(): Promise<OdiTick[]> {
   const rows = await db
     .select({
       circuitKey: circuitOdi.circuitKey,
@@ -225,3 +228,4 @@ export async function getOdiStrip(): Promise<OdiTick[]> {
     .orderBy(asc(circuitOdi.odi), asc(circuits.shortName));
   return rows.map((r) => ({ circuitKey: r.circuitKey, shortName: r.shortName, odi: r.odi }));
 }
+export const getOdiStrip = cached("preview.getOdiStrip", getOdiStripRaw);

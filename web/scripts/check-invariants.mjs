@@ -98,14 +98,19 @@ for (const f of sources) {
   }
 }
 
-// --- 4. exactly one POST route ----------------------------------------------------------
+// --- 4. exactly two POST routes ---------------------------------------------------------
+//
+// REVALIDATE_SPEC §2: `app/api/revalidate/route.ts` is the nightly push's cache hook — bearer
+// secret, no database, no model. It is the ONLY other POST; the ask route is still the only
+// one that may hold a model secret, and rules 1-3 keep saying so.
+const POST_ALLOWED = new Set(["app/api/ask/route.ts", "app/api/revalidate/route.ts"]);
 for (const f of sources) {
   if (!f.path.startsWith("app/")) continue;
-  if (f.path === "app/api/ask/route.ts") continue;
+  if (POST_ALLOWED.has(f.path)) continue;
   if (/\.test\.tsx?$/.test(f.path)) continue;
   const text = stripComments(read(f));
   if (/export\s+(async\s+)?function\s+POST\b/.test(text) || /export\s+const\s+POST\b/.test(text)) {
-    fail("second-post", f.path, "exports POST; /api/ask is the only route in this app");
+    fail("second-post", f.path, "exports POST; /api/ask and /api/revalidate are the only routes in this app");
   }
 }
 
@@ -223,8 +228,41 @@ for (const f of files) {
   }
 }
 
+// --- 10. every query-layer read is cached --------------------------------------------------
+//
+// REVALIDATE_SPEC §1 / §6 — each read in lib/queries is `export const X = cached("<m>.<X>", XRaw)`
+// so the nightly push can expire all of it with one tag. An `export async function` there is a
+// read the hook cannot reach, unless it is one of the three clock-reading composers that stay
+// plain by design. The key must be the module's own basename and the export's own name, or
+// two functions can share a cache entry. And the superuser pool (`@/db/client`) may be imported
+// only where a read is defined, never from a page or a component.
+const UNCACHED_ALLOWED = new Set(["home.ts:getHome", "home.ts:getThisWeek", "release.ts:getStaleRound"]);
+const CLIENT_ALLOWED_PREFIXES = ["lib/queries/", "lib/ask/", "scripts/", "db/"];
+
+for (const f of sources) {
+  const inQueries = /^lib\/queries\/[^/]+\.ts$/.test(f.path) && !/\.test\.ts$/.test(f.path);
+  const text = stripComments(read(f));
+  if (inQueries) {
+    const mod = f.path.split("/").pop().replace(/\.ts$/, "");
+    for (const m of text.matchAll(/export\s+async\s+function\s+([A-Za-z0-9_$]+)/g)) {
+      if (UNCACHED_ALLOWED.has(`${mod}.ts:${m[1]}`)) continue;
+      fail("queries-cached", f.path, `export async function ${m[1]} is not wrapped in cached()`);
+    }
+    for (const m of text.matchAll(/export\s+const\s+([A-Za-z0-9_$]+)\s*=\s*cached\(\s*["']([^"']*)["']/g)) {
+      const [, name, key] = m;
+      if (key !== `${mod}.${name}`) {
+        fail("queries-cached", f.path, `cached("${key}") for ${name}; the key must be "${module}.${name}"`);
+      }
+    }
+  }
+  const importsClient = /\bimport\s+(?!type\s)[^;]*?from\s+["']@\/db\/client["']/.test(text);
+  if (importsClient && !CLIENT_ALLOWED_PREFIXES.some((p) => f.path.startsWith(p))) {
+    fail("queries-cached", f.path, "value-imports @/db/client outside lib/queries/, lib/ask/, scripts/, db/");
+  }
+}
+
 // --- report -----------------------------------------------------------------------------
-const RULES = 9;
+const RULES = 10;
 if (violations.length === 0) {
   console.log(`invariants ok — ${RULES} rules, ${sources.length} source files under web/`);
   process.exit(0);

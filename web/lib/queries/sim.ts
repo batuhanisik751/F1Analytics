@@ -23,6 +23,7 @@ import {
 } from "@/db/schema";
 import { COMPOUND_FALLBACK } from "@/lib/theme";
 import type { DriverRef, LineStyle } from "@/lib/queries/shared";
+import { cached } from "@/lib/cache";
 
 export type SimCompound = {
   compound: string;                 // upper-case; only parameterised compounds appear
@@ -228,7 +229,7 @@ function buildActual(
 }
 
 /** §4 — the one query of the simulator: the whole per-race model as a JSON payload. */
-export async function getSimModel(sessionId: number): Promise<SimPayload> {
+async function getSimModelRaw(sessionId: number): Promise<SimPayload> {
   const raceRows = await db
     .select({ race: simRaceParams, params: assumptionSets.params })
     .from(simRaceParams)
@@ -501,3 +502,4 @@ export async function getSimModel(sessionId: number): Promise<SimPayload> {
   };
   return { status: "ok", model };
 }
+export const getSimModel = cached("sim.getSimModel", getSimModelRaw);

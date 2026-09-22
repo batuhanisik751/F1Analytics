@@ -3,6 +3,7 @@
 // fastest-pace runner-up), and the standings snapshot. Null when no season has data.
 import { and, asc, eq, inArray } from "drizzle-orm";
 import { db } from "@/db/client";
+import { cached } from "@/lib/cache";
 import {
   drivers,
   paceRanking,
@@ -98,7 +99,7 @@ export function nextEventFrom(rows: EventLoadRow[], today: string): NextEvent | 
 const TOP_DRIVERS = 8;
 
 /** Positions 1–3 of the race session's results, in order, as DriverRefs of that session. */
-async function getPodium(sessionId: number): Promise<DriverRef[]> {
+async function getPodiumRaw(sessionId: number): Promise<DriverRef[]> {
   const rows = await db
     .select({
       driverId: results.driverId,
@@ -123,9 +124,10 @@ async function getPodium(sessionId: number): Promise<DriverRef[]> {
     .orderBy(asc(results.position));
   return rows.map(driverRefOrNull).filter((r): r is DriverRef => r !== null);
 }
+const getPodium = cached("home.getPodium", getPodiumRaw);
 
 /** pace_ranking rank 2 of the race session: `{ code, gapS }` (gap to rank 1), or null. */
-async function getRunnerUpPace(sessionId: number): Promise<{ code: string; gapS: number } | null> {
+async function getRunnerUpPaceRaw(sessionId: number): Promise<{ code: string; gapS: number } | null> {
   const rows = await db
     .select({ code: sessionEntries.code, gapS: paceRanking.gapS })
     .from(paceRanking)
@@ -140,8 +142,9 @@ async function getRunnerUpPace(sessionId: number): Promise<{ code: string; gapS:
     .limit(1);
   return rows[0] ?? null;
 }
+const getRunnerUpPace = cached("home.getRunnerUpPace", getRunnerUpPaceRaw);
 
-async function raceSessionId(year: number, round: number): Promise<number | null> {
+async function raceSessionIdRaw(year: number, round: number): Promise<number | null> {
   const rows = await db
     .select({ sessionId: sessions.sessionId })
     .from(sessions)
@@ -149,6 +152,22 @@ async function raceSessionId(year: number, round: number): Promise<number | null
     .limit(1);
   return rows[0]?.sessionId ?? null;
 }
+const raceSessionId = cached("home.raceSessionId", raceSessionIdRaw);
+
+/** The leader's expected-points band from `title_odds` after `afterRound`; null when the row is missing. */
+async function getLeaderExpectedPointsRaw(
+  year: number,
+  afterRound: number,
+  driverId: string,
+): Promise<{ points: number; lo: number; hi: number } | null> {
+  const [exp] = await db
+    .select({ points: titleOdds.expectedPoints, lo: titleOdds.pointsP10, hi: titleOdds.pointsP90 })
+    .from(titleOdds)
+    .where(and(eq(titleOdds.year, year), eq(titleOdds.afterRound, afterRound), eq(titleOdds.driverId, driverId)))
+    .limit(1);
+  return exp ? { points: exp.points, lo: exp.lo, hi: exp.hi } : null;
+}
+export const getLeaderExpectedPoints = cached("home.getLeaderExpectedPoints", getLeaderExpectedPointsRaw);
 
 /**
  * §1 #1 / #6 — one pass over `events`, then the title tables and the next round's preview,
@@ -175,11 +194,7 @@ export async function getThisWeek(year: number, today: string = todayUtc()): Pro
     const afterRound = odds.rounds[last];
     const leaderRow = clinch.rows.find((r) => r.driverId === clinch.leader.driverId) ?? clinch.rows[0];
     const runnerUp = clinch.rows.find((r) => r.driverId !== leaderRow.driverId) ?? null;
-    const [exp] = await db
-      .select({ points: titleOdds.expectedPoints, lo: titleOdds.pointsP10, hi: titleOdds.pointsP90 })
-      .from(titleOdds)
-      .where(and(eq(titleOdds.year, year), eq(titleOdds.afterRound, afterRound), eq(titleOdds.driverId, lead.driverId)))
-      .limit(1);
+    const exp = await getLeaderExpectedPoints(year, afterRound, lead.driverId);
     title = {
       afterRound,
       leader: lead.fullName,
@@ -188,7 +203,7 @@ export async function getThisWeek(year: number, today: string = todayUtc()): Pro
       pHi: lead.pHi[last],
       draws: odds.draws,
       leaderPoints: leaderRow.pointsNow,
-      expected: exp ? { points: exp.points, lo: exp.lo, hi: exp.hi } : null,
+      expected: exp,
       second: runnerUp
         ? { name: runnerUp.fullName, margin: leaderRow.pointsNow - runnerUp.pointsNow }
         : null,

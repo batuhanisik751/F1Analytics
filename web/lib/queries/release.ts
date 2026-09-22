@@ -11,16 +11,18 @@
 import { and, asc, eq, inArray } from "drizzle-orm";
 import { db, pool } from "@/db/client";
 import { events, sessionIngests, sessions } from "@/db/schema";
+import { cached } from "@/lib/cache";
 
 export type DataRelease = {
   releaseId: number;
-  pushedAt: Date;
+  /** ISO 8601, UTC. A string, not a Date: the cached value round-trips through JSON (REVALIDATE_SPEC §5). */
+  pushedAt: string;
   sessionsPushed: number;
   rowsPushed: number;
 };
 
 /** The newest `data_release` row, or null when there is none or it cannot be read. */
-export async function getLatestRelease(): Promise<DataRelease | null> {
+async function getLatestReleaseRaw(): Promise<DataRelease | null> {
   try {
     const { rows } = await pool.query<{
       release_id: number;
@@ -35,7 +37,7 @@ export async function getLatestRelease(): Promise<DataRelease | null> {
     if (!r) return null;
     return {
       releaseId: Number(r.release_id),
-      pushedAt: r.pushed_at,
+      pushedAt: r.pushed_at.toISOString(),
       sessionsPushed: Number(r.sessions_pushed),
       rowsPushed: Number(r.rows_pushed),
     };
@@ -49,10 +51,12 @@ export async function getLatestRelease(): Promise<DataRelease | null> {
     return null;
   }
 }
+export const getLatestRelease = cached("release.getLatestRelease", getLatestReleaseRaw);
 
 /** `Data as of 19 Sep 2026, 03:20 UTC` — fixed format, UTC, so the same row renders the same
  *  string on every machine and the a11y baseline never depends on a locale. */
-export function formatPushedAt(d: Date): string {
+export function formatPushedAt(iso: string): string {
+  const d = new Date(iso);
   const day = d.getUTCDate();
   const mon = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"][
     d.getUTCMonth()
@@ -86,7 +90,7 @@ export function todayUtc(now: Date = new Date()): string {
 }
 
 /** Every event with whether its race session is loaded, oldest first. `[]` if unreadable. */
-export async function getEventLoadRows(): Promise<EventLoadRow[]> {
+async function getEventLoadRowsRaw(): Promise<EventLoadRow[]> {
   try {
     const rows = await db
       .select({
@@ -121,6 +125,7 @@ export async function getEventLoadRows(): Promise<EventLoadRow[]> {
     return [];
   }
 }
+export const getEventLoadRows = cached("release.getEventLoadRows", getEventLoadRowsRaw);
 
 /**
  * Pure: the latest event strictly before `today` when its race session is NOT loaded; null

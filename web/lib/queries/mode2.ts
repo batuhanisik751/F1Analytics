@@ -5,6 +5,7 @@
 // exists for that. `basis` is never dropped from a row type: a `by-analogy` row must be
 // renderable in a different visual grammar from a measured one (§8.4).
 import { and, asc, desc, eq, inArray, or, sql } from "drizzle-orm";
+import { cached } from "@/lib/cache";
 import { db } from "@/db/client";
 import {
   mode2CarHazard,
@@ -198,7 +199,7 @@ async function currentFit(): Promise<{ fitId: number } | null> {
 const asAnchor = (v: string): AnchorClass => v as AnchorClass;
 const asBasis = (v: string): Basis => v as Basis;
 
-export async function getFitMeta(): Promise<FitMeta | null> {
+async function getFitMetaRaw(): Promise<FitMeta | null> {
   const rows = await db
     .select()
     .from(mode2FitRun)
@@ -232,6 +233,7 @@ export async function getFitMeta(): Promise<FitMeta | null> {
     floatingDrivers: floating.flatMap((c) => c.driverIds).sort(),
   };
 }
+export const getFitMeta = cached("mode2.getFitMeta", getFitMetaRaw);
 
 // --- §8.5 driver page -------------------------------------------------------
 
@@ -268,7 +270,7 @@ const toDriverRating = (r: RawDriverRating): DriverRating => ({
   basis: asBasis(r.basis),
 });
 
-export async function getDriverRating(driverId: string): Promise<DriverRating | null> {
+async function getDriverRatingRaw(driverId: string): Promise<DriverRating | null> {
   const fit = await currentFit();
   if (!fit) return null;
   const rows = await db
@@ -291,6 +293,7 @@ export async function getDriverRating(driverId: string): Promise<DriverRating | 
   const row = rows[0];
   return row ? toDriverRating(row) : null;
 }
+export const getDriverRating = cached("mode2.getDriverRating", getDriverRatingRaw);
 
 /**
  * Every driver in the same component as `driverId`, INCLUDING him, ordered by
@@ -301,7 +304,7 @@ export async function getDriverRating(driverId: string): Promise<DriverRating | 
  * grid-wide ordering and the chart never needs the §8.4 separator on a driver page.
  * Returns [] when there is no fit or the driver is not in it (FD6).
  */
-export async function getComponentPeers(driverId: string): Promise<DriverRating[]> {
+async function getComponentPeersRaw(driverId: string): Promise<DriverRating[]> {
   const fit = await currentFit();
   if (!fit) return [];
   const self = await getDriverRating(driverId);
@@ -325,8 +328,9 @@ export async function getComponentPeers(driverId: string): Promise<DriverRating[
     .orderBy(asc(mode2DriverRating.rankInComponent), asc(mode2DriverRating.driverId));
   return rows.map(toDriverRating);
 }
+export const getComponentPeers = cached("mode2.getComponentPeers", getComponentPeersRaw);
 
-export async function getRatingHistory(driverId: string): Promise<RatingHistoryPoint[]> {
+async function getRatingHistoryRaw(driverId: string): Promise<RatingHistoryPoint[]> {
   const fit = await currentFit();
   if (!fit) return [];
   const rows = await db
@@ -348,6 +352,7 @@ export async function getRatingHistory(driverId: string): Promise<RatingHistoryP
     .orderBy(asc(mode2DriverRatingHistory.throughYear));
   return rows;
 }
+export const getRatingHistory = cached("mode2.getRatingHistory", getRatingHistoryRaw);
 
 /**
  * All seven §5.1 skills, measured and refused alike, in `SKILL_ORDER`: Race pace,
@@ -359,7 +364,7 @@ export async function getRatingHistory(driverId: string): Promise<RatingHistoryP
  */
 
 
-export async function getDriverSkills(driverId: string): Promise<SkillRow[]> {
+async function getDriverSkillsRaw(driverId: string): Promise<SkillRow[]> {
   const fit = await currentFit();
   if (!fit) return [];
   const rows = await db
@@ -387,6 +392,7 @@ export async function getDriverSkills(driverId: string): Promise<SkillRow[]> {
     }))
     .sort((a, b) => SKILL_ORDER.indexOf(a.skill) - SKILL_ORDER.indexOf(b.skill));
 }
+export const getDriverSkills = cached("mode2.getDriverSkills", getDriverSkillsRaw);
 
 /**
  * The §5.1 caption slots, all of them `count(*)` off the CURRENT fit — never a literal
@@ -411,7 +417,7 @@ export type QualiPanelMeta = {
   corrOneLapGrid: number | null;
 };
 
-export async function getQualiPanelMeta(): Promise<QualiPanelMeta | null> {
+async function getQualiPanelMetaRaw(): Promise<QualiPanelMeta | null> {
   const fit = await currentFit();
   if (!fit) return null;
 
@@ -468,6 +474,7 @@ export async function getQualiPanelMeta(): Promise<QualiPanelMeta | null> {
     corrOneLapGrid: corrRows[0]?.corrOneLapGrid ?? null,
   };
 }
+export const getQualiPanelMeta = cached("mode2.getQualiPanelMeta", getQualiPanelMetaRaw);
 
 /**
  * Career team-mate contrasts involving `driverId` (§2.5 — a proper quadratic form
@@ -479,7 +486,7 @@ export async function getQualiPanelMeta(): Promise<QualiPanelMeta | null> {
  * is unchanged. `kind` is always `'teammate'` here; `sameComponent` is carried through
  * so the UI can apply the §8.4 separator, and is `true` for every team-mate pair.
  */
-export async function getTeammateContrasts(driverId: string): Promise<ContrastRow[]> {
+async function getTeammateContrastsRaw(driverId: string): Promise<ContrastRow[]> {
   const fit = await currentFit();
   if (!fit) return [];
   const rows = await db
@@ -523,13 +530,14 @@ export async function getTeammateContrasts(driverId: string): Promise<ContrastRo
     return oriented;
   });
 }
+export const getTeammateContrasts = cached("mode2.getTeammateContrasts", getTeammateContrastsRaw);
 
 /**
  * Car-adjusted career, one row per season the driver raced (§4.3). `basis` is carried
  * through: a `by-analogy` season rests on the pooling prior for a floating component
  * (§1.4) and must be marked differently from a measured one.
  */
-export async function getCareerAdjusted(driverId: string): Promise<CareerSeasonRow[]> {
+async function getCareerAdjustedRaw(driverId: string): Promise<CareerSeasonRow[]> {
   const fit = await currentFit();
   if (!fit) return [];
   const rows = await db
@@ -567,6 +575,7 @@ export async function getCareerAdjusted(driverId: string): Promise<CareerSeasonR
     anchorClass: asAnchor(r.anchorClass),
   }));
 }
+export const getCareerAdjusted = cached("mode2.getCareerAdjusted", getCareerAdjustedRaw);
 
 // --- §5 constructor surface -------------------------------------------------
 
@@ -578,7 +587,7 @@ export async function getCareerAdjusted(driverId: string): Promise<CareerSeasonR
  * grey. `years` are the seasons the team actually appears in, so the page resolves and
  * renders empty states even before the mode2 fit exists (FD6).
  */
-export async function resolveConstructor(
+async function resolveConstructorRaw(
   slug: string,
   year?: number,
 ): Promise<{ teamId: string; name: string; colour: string; years: number[] } | null> {
@@ -618,6 +627,7 @@ export async function resolveConstructor(
     years,
   };
 }
+export const resolveConstructor = cached("mode2.resolveConstructor", resolveConstructorRaw);
 
 const carRatingSelection = {
   teamId: mode2CarRating.teamId,
@@ -640,7 +650,7 @@ type RawCarRating = { basis: string } & Omit<CarRatingRow, "basis">;
 const toCarRating = (r: RawCarRating): CarRatingRow => ({ ...r, basis: asBasis(r.basis) });
 
 /** Every car of one season, best first by `rank_in_season` (a within-season rank, §6.1). */
-export async function getConstructorIndex(year: number): Promise<CarRatingRow[]> {
+async function getConstructorIndexRaw(year: number): Promise<CarRatingRow[]> {
   const fit = await currentFit();
   if (!fit) return [];
   const rows = await db
@@ -650,9 +660,10 @@ export async function getConstructorIndex(year: number): Promise<CarRatingRow[]>
     .orderBy(asc(mode2CarRating.rankInSeason), asc(mode2CarRating.teamId));
   return rows.map(toCarRating);
 }
+export const getConstructorIndex = cached("mode2.getConstructorIndex", getConstructorIndexRaw);
 
 /** One constructor across the 2024-26 window, oldest season first. */
-export async function getCarRatings(teamId: string): Promise<CarRatingRow[]> {
+async function getCarRatingsRaw(teamId: string): Promise<CarRatingRow[]> {
   const fit = await currentFit();
   if (!fit) return [];
   const rows = await db
@@ -662,13 +673,14 @@ export async function getCarRatings(teamId: string): Promise<CarRatingRow[]> {
     .orderBy(asc(mode2CarRating.year));
   return rows.map(toCarRating);
 }
+export const getCarRatings = cached("mode2.getCarRatings", getCarRatingsRaw);
 
 /**
  * The §5.2 in-season development segments for one season: the same `CarRatingRow`s,
  * ordered by the slope so the steepest developer reads first. `slopeSignificant === false`
  * rows are returned too — the chart renders them at low opacity rather than hiding them.
  */
-export async function getDevelopment(year: number): Promise<CarRatingRow[]> {
+async function getDevelopmentRaw(year: number): Promise<CarRatingRow[]> {
   const fit = await currentFit();
   if (!fit) return [];
   const rows = await db
@@ -678,6 +690,7 @@ export async function getDevelopment(year: number): Promise<CarRatingRow[]> {
     .orderBy(asc(mode2CarRating.slopePp), asc(mode2CarRating.teamId));
   return rows.map(toCarRating);
 }
+export const getDevelopment = cached("mode2.getDevelopment", getDevelopmentRaw);
 
 /**
  * Every car-season in the fit, oldest first. The §5.2 multiplicity line ("{nSignificant}
@@ -685,7 +698,7 @@ export async function getDevelopment(year: number): Promise<CarRatingRow[]> {
  * over the seasons one constructor happened to race gives the wrong denominator for a team
  * that appeared in a single year. One round trip instead of one per season.
  */
-export async function getAllCarRatings(): Promise<CarRatingRow[]> {
+async function getAllCarRatingsRaw(): Promise<CarRatingRow[]> {
   const fit = await currentFit();
   if (!fit) return [];
   const rows = await db
@@ -695,13 +708,14 @@ export async function getAllCarRatings(): Promise<CarRatingRow[]> {
     .orderBy(asc(mode2CarRating.year), asc(mode2CarRating.rankInSeason), asc(mode2CarRating.teamId));
   return rows.map(toCarRating);
 }
+export const getAllCarRatings = cached("mode2.getAllCarRatings", getAllCarRatingsRaw);
 
 /**
  * Retirement hazard per 1,000 racing laps for one constructor, oldest season first
  * (§5.3 — "retirements", never "reliability"). `sufficient=false` seasons are returned
  * so the page can say the exposure was too thin rather than silently dropping a year.
  */
-export async function getHazards(teamId: string): Promise<HazardRow[]> {
+async function getHazardsRaw(teamId: string): Promise<HazardRow[]> {
   const fit = await currentFit();
   if (!fit) return [];
   return await db
@@ -723,6 +737,7 @@ export async function getHazards(teamId: string): Promise<HazardRow[]> {
     .where(and(eq(mode2CarHazard.fitId, fit.fitId), eq(mode2CarHazard.teamId, teamId)))
     .orderBy(asc(mode2CarHazard.year));
 }
+export const getHazards = cached("mode2.getHazards", getHazardsRaw);
 
 // --- §8.6 "Was it the car?" -------------------------------------------------
 
@@ -739,7 +754,7 @@ export async function getHazards(teamId: string): Promise<HazardRow[]> {
  * ordering is allowed here, and only here, because the §8.4 separator between components
  * is what makes it honest (§8.2).
  */
-export async function getSeasonDecomposition(
+async function getSeasonDecompositionRaw(
   year: number,
 ): Promise<{ rating: DriverRating; car: CarRatingRow; observedPace: number }[]> {
   const fit = await currentFit();
@@ -791,6 +806,7 @@ export async function getSeasonDecomposition(
   }
   return await assembleDecomposition(fit.fitId, year, byDriver);
 }
+export const getSeasonDecomposition = cached("mode2.getSeasonDecomposition", getSeasonDecompositionRaw);
 
 /** Second half of `getSeasonDecomposition`: join the ratings and the cars. */
 async function assembleDecomposition(
@@ -857,7 +873,7 @@ async function assembleDecomposition(
  * §8.4 separator. The interval is already widened by the measured interaction term in
  * Python — do not widen it again in the UI.
  */
-export async function getCounterfactuals(
+async function getCounterfactualsRaw(
   year: number,
   driverId: string,
 ): Promise<CounterfactualRow[]> {
@@ -892,3 +908,4 @@ export async function getCounterfactuals(
     .orderBy(desc(mode2Counterfactual.pointsP50), asc(mode2Counterfactual.teamId));
   return rows.map((r) => ({ ...r, basis: asBasis(r.basis) }));
 }
+export const getCounterfactuals = cached("mode2.getCounterfactuals", getCounterfactualsRaw);

@@ -2,6 +2,7 @@
 // Read-only selects over the frozen schema; every row is a plain JSON-serialisable object.
 import { and, asc, desc, eq, gt } from "drizzle-orm";
 import { alias } from "drizzle-orm/pg-core";
+import { cached } from "@/lib/cache";
 import { db } from "@/db/client";
 import {
   assumptionSets,
@@ -121,7 +122,7 @@ export function driverRefOrNull(p: {
  * winner / fastest-pace drivers as they were identified in that session (session_entries +
  * session_teams give the code, team name and colour of the day; drivers gives the full name).
  */
-export async function getRaceList(year: number): Promise<RaceListRow[]> {
+async function getRaceListRaw(year: number): Promise<RaceListRow[]> {
   const sprint = alias(sessions, "sprint");
   const wEntry = alias(sessionEntries, "w_entry");
   const wTeam = alias(sessionTeams, "w_team");
@@ -207,12 +208,13 @@ export async function getRaceList(year: number): Promise<RaceListRow[]> {
     fastestPace: driverRefOrNull(r.fastestPace),
   }));
 }
+export const getRaceList = cached("season.getRaceList", getRaceListRaw);
 
 /**
  * Standings snapshot at `seasons.standings_after_round`; null until `season.recompute` has run
  * for the year (no seasons row, or `standings_after_round` still NULL).
  */
-export async function getStandings(
+async function getStandingsRaw(
   year: number,
 ): Promise<{ afterRound: number; drivers: StandingRow[]; constructors: ConstructorRow[] } | null> {
   const season = await db
@@ -262,9 +264,10 @@ export async function getStandings(
 
   return { afterRound, drivers: driverRows, constructors: constructorRows };
 }
+export const getStandings = cached("season.getStandings", getStandingsRaw);
 
 /** Everything the season page needs; null when the `seasons` row is missing (→ 404). */
-export async function getSeason(year: number): Promise<SeasonData | null> {
+async function getSeasonRaw(year: number): Promise<SeasonData | null> {
   const rows = await db
     .select({
       year: seasons.year,
@@ -296,6 +299,7 @@ export async function getSeason(year: number): Promise<SeasonData | null> {
     races,
   };
 }
+export const getSeason = cached("season.getSeason", getSeasonRaw);
 
 // ---------------------------------------------------------------------------
 // MODE1_SPEC §2 / §7.2 — title odds (simulated) and magic numbers (exact arithmetic).
@@ -412,7 +416,7 @@ async function seasonDriverRefs(year: number): Promise<Map<string, DriverRef>> {
  * identifiable); the section picks the §7.6 reason from the season's round count.
  * `bootstrapRefits` is TITLE_THETA_BOOTSTRAP read off the run's own assumption snapshot.
  */
-export async function getTitleOdds(year: number): Promise<TitleOdds | null> {
+async function getTitleOddsRaw(year: number): Promise<TitleOdds | null> {
   const rows = await db
     .select({
       afterRound: titleOdds.afterRound,
@@ -491,6 +495,7 @@ export async function getTitleOdds(year: number): Promise<TitleOdds | null> {
     bootstrapRefits: Number.isFinite(refits) ? refits : 0,
   };
 }
+export const getTitleOdds = cached("season.getTitleOdds", getTitleOddsRaw);
 
 /**
  * §2.5 — exact arithmetic at the latest `after_round` stored for the year. Nothing here
@@ -498,7 +503,7 @@ export async function getTitleOdds(year: number): Promise<TitleOdds | null> {
  * returned ordered by points descending (the standings order the arithmetic is read in).
  * `racesLeft` / `sprintsLeft` are counted from `sessions` with `round > after_round`.
  */
-export async function getTitleClinch(year: number): Promise<TitleClinch | null> {
+async function getTitleClinchRaw(year: number): Promise<TitleClinch | null> {
   const latest = await db
     .select({ afterRound: titleClinch.afterRound })
     .from(titleClinch)
@@ -587,3 +592,4 @@ export async function getTitleClinch(year: number): Promise<TitleClinch | null> 
     clinchedAtRound: champion ? (clinched?.afterRound ?? null) : null,
   };
 }
+export const getTitleClinch = cached("season.getTitleClinch", getTitleClinchRaw);

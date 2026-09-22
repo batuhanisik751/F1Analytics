@@ -4,6 +4,7 @@
 // f1lab wrote at ingest time; the only reshaping is getRaceTrace's pivot and sorting.
 import { and, asc, desc, eq, inArray, sql } from "drizzle-orm";
 import { alias } from "drizzle-orm/pg-core";
+import { cached } from "@/lib/cache";
 import { db } from "@/db/client";
 import {
   assumptionSets,
@@ -320,7 +321,7 @@ async function neighbourRace(
 // ---------------------------------------------------------------------------
 
 /** Null when there is no `sessions` row (kind 'R') for (year, round). */
-export async function getRaceHeader(year: number, round: number): Promise<RaceHeader | null> {
+async function getRaceHeaderRaw(year: number, round: number): Promise<RaceHeader | null> {
   const rows = await db
     .select({
       sessionId: sessions.sessionId,
@@ -403,9 +404,10 @@ export async function getRaceHeader(year: number, round: number): Promise<RaceHe
     next,
   };
 }
+export const getRaceHeader = cached("race.getRaceHeader", getRaceHeaderRaw);
 
 /** Team and compound hex maps for the session (session_teams / compound_colours). */
-export async function getRaceColours(sessionId: number): Promise<ColourMap> {
+async function getRaceColoursRaw(sessionId: number): Promise<ColourMap> {
   const [teamRows, compoundMap] = await Promise.all([
     db
       .select({ teamId: sessionTeams.teamId, colour: sessionTeams.colour })
@@ -418,9 +420,10 @@ export async function getRaceColours(sessionId: number): Promise<ColourMap> {
     compounds: Object.fromEntries(compoundMap),
   };
 }
+export const getRaceColours = cached("race.getRaceColours", getRaceColoursRaw);
 
 /** pace_ranking rows ORDER BY rank, joined to identity, colours and finishing position. */
-export async function getPaceRanking(sessionId: number): Promise<PaceRow[]> {
+async function getPaceRankingRaw(sessionId: number): Promise<PaceRow[]> {
   const rows = await db
     .select({
       ...entryColumns,
@@ -477,13 +480,14 @@ export async function getPaceRanking(sessionId: number): Promise<PaceRow[]> {
     finishPosition: r.finishPosition ?? null,
   }));
 }
+export const getPaceRanking = cached("race.getPaceRanking", getPaceRankingRaw);
 
 /**
  * order = drivers by results.position asc NULLS LAST, laps_completed desc (retired drivers
  * keep their rows); stints ordered by that driver order, then start_lap. A driver's first
  * stored stint need not start at lap 1 (SPEC §0.3).
  */
-export async function getStints(
+async function getStintsRaw(
   sessionId: number,
 ): Promise<{ order: DriverRef[]; stints: StintRow[] }> {
   const [order, stintRows, compoundMap] = await Promise.all([
@@ -540,13 +544,14 @@ export async function getStints(
     stints: sorted,
   };
 }
+export const getStints = cached("race.getStints", getStintsRaw);
 
 /**
  * fits = compound_degradation (most laps first, as pace.compound_degradation iterates);
  * points = representative laps with tyre_life >= 2 on a compound that has a fit;
  * perStint = degradation_fits by driver code, stint.
  */
-export async function getDegradation(
+async function getDegradationRaw(
   sessionId: number,
 ): Promise<{ points: DegPoint[]; fits: CompoundFit[]; perStint: DegFitRow[] }> {
   const [fitRows, perStintRows, compoundMap] = await Promise.all([
@@ -655,13 +660,14 @@ export async function getDegradation(
 
   return { points, fits, perStint };
 }
+export const getDegradation = cached("race.getDegradation", getDegradationRaw);
 
 /**
  * Pivot of laps(driver_id, lap_number, gap_to_leader_s, position) into per-driver arrays,
  * series ordered like getStints().order. totalLaps = sessions.total_laps (or the highest lap
  * number stored, whichever is larger, so no lap falls off the end of an array).
  */
-export async function getRaceTrace(
+async function getRaceTraceRaw(
   sessionId: number,
 ): Promise<{ totalLaps: number; series: TraceSeries[]; lapStatus: LapStatusRow[] }> {
   const [sessionRows, order, lapRows, statusRows] = await Promise.all([
@@ -734,12 +740,13 @@ export async function getRaceTrace(
 
   return { totalLaps, series, lapStatus: statusRows };
 }
+export const getRaceTrace = cached("race.getRaceTrace", getRaceTraceRaw);
 
 /**
  * rows ORDER BY gap_pct DESC; unpaired = session_teams without a teammate_deltas row, with the
  * reason derived from how many of the team's drivers appear in pace_ranking.
  */
-export async function getTeammateDeltas(
+async function getTeammateDeltasRaw(
   sessionId: number,
 ): Promise<{ rows: TeammateRow[]; unpaired: { team: TeamRef; reason: string }[] }> {
   const fasterEntry = alias(sessionEntries, "faster_entry");
@@ -846,12 +853,13 @@ export async function getTeammateDeltas(
 
   return { rows, unpaired };
 }
+export const getTeammateDeltas = cached("race.getTeammateDeltas", getTeammateDeltasRaw);
 
 /**
  * values = distinct fuel constants asc; baseValue = params.FUEL_EFFECT_S_PER_KG of the
  * session's assumption set; rows ORDER BY rank at baseValue; movers = rows whose rank changes.
  */
-export async function getFuelSensitivity(
+async function getFuelSensitivityRaw(
   sessionId: number,
 ): Promise<{ values: number[]; baseValue: number; rows: SensitivityRow[]; movers: number }> {
   const [cellRows, entries, paramRows] = await Promise.all([
@@ -915,9 +923,10 @@ export async function getFuelSensitivity(
 
   return { values, baseValue, rows, movers: rows.filter((r) => r.moves).length };
 }
+export const getFuelSensitivity = cached("race.getFuelSensitivity", getFuelSensitivityRaw);
 
 /** lap_exclusion_report ORDER BY rule_order; rawLaps from session_ingests. */
-export async function getExclusionReport(
+async function getExclusionReportRaw(
   sessionId: number,
 ): Promise<{ rawLaps: number; rows: ExclusionRow[] }> {
   const [reportRows, ingestRows] = await Promise.all([
@@ -948,9 +957,10 @@ export async function getExclusionReport(
     })),
   };
 }
+export const getExclusionReport = cached("race.getExclusionReport", getExclusionReportRaw);
 
 /** results ORDER BY position NULLS LAST, laps_completed DESC. */
-export async function getRaceResults(sessionId: number): Promise<RaceResultRow[]> {
+async function getRaceResultsRaw(sessionId: number): Promise<RaceResultRow[]> {
   const rows = await db
     .select({
       ...entryColumns,
@@ -995,9 +1005,10 @@ export async function getRaceResults(sessionId: number): Promise<RaceResultRow[]
     resultTimeS: r.resultTimeS ?? null,
   }));
 }
+export const getRaceResults = cached("race.getRaceResults", getRaceResultsRaw);
 
 /** session_ingests + assumption_sets for the session; null when never ingested. */
-export async function getAssumptions(sessionId: number): Promise<AssumptionsView | null> {
+async function getAssumptionsRaw(sessionId: number): Promise<AssumptionsView | null> {
   const rows = await db
     .select({
       params: assumptionSets.params,
@@ -1032,6 +1043,7 @@ export async function getAssumptions(sessionId: number): Promise<AssumptionsView
     warnings: r.warnings ?? [],
   };
 }
+export const getAssumptions = cached("race.getAssumptions", getAssumptionsRaw);
 
 /**
  * `analytics_status` is a free-form jsonb and its values have not all been strings since
@@ -1183,7 +1195,7 @@ async function currentWpRun(): Promise<WpRunRow | null> {
  * or the session has no stored (out-of-fold) probabilities. Series are ordered by final
  * finishing position, winner first (§7.3 stack order).
  */
-export async function getWinProbability(sessionId: number): Promise<WinProbability | null> {
+async function getWinProbabilityRaw(sessionId: number): Promise<WinProbability | null> {
   const run = await currentWpRun();
   if (!run) return null;
   const rows = await db
@@ -1241,6 +1253,7 @@ export async function getWinProbability(sessionId: number): Promise<WinProbabili
     modelVersion: run.modelVersion,
   };
 }
+export const getWinProbability = cached("race.getWinProbability", getWinProbabilityRaw);
 
 const SWING_CAUSES = new Set([
   "safety_car",
@@ -1256,7 +1269,7 @@ function asSwingCause(s: string): WinProbSwing["cause"] {
 }
 
 /** The flagged laps of one race, biggest swing first (`rank_in_race` asc). */
-export async function getWinProbSwings(sessionId: number): Promise<WinProbSwing[]> {
+async function getWinProbSwingsRaw(sessionId: number): Promise<WinProbSwing[]> {
   const run = await currentWpRun();
   if (!run) return [];
   const rows = await db
@@ -1292,6 +1305,7 @@ export async function getWinProbSwings(sessionId: number): Promise<WinProbSwing[
   }
   return out;
 }
+export const getWinProbSwings = cached("race.getWinProbSwings", getWinProbSwingsRaw);
 
 /** §1.8.1 — the two evaluation scopes and the caption label each carries. */
 const TRUST_SCOPES: { scope: "loro" | "loco"; label: string }[] = [
@@ -1316,7 +1330,7 @@ function variantFor(calibration: string): string {
  * one entry per scope. Null when no run exists or neither scope has metrics.
  * `variant` is the run's own calibration setting (§1.7).
  */
-export async function getWinProbTrust(): Promise<WinProbTrust | null> {
+async function getWinProbTrustRaw(): Promise<WinProbTrust | null> {
   const run = await currentWpRun();
   if (!run) return null;
   const variant = variantFor(run.calibration);
@@ -1393,13 +1407,14 @@ export async function getWinProbTrust(): Promise<WinProbTrust | null> {
     calibration: run.calibration,
   };
 }
+export const getWinProbTrust = cached("race.getWinProbTrust", getWinProbTrustRaw);
 
 /**
  * Detected moments for one race. Every stored row counts toward `hiddenCount`; the
  * `shown` list is the MOMENTS_MAX_PER_RACE most severe (§4.2), returned in lap order so
  * it reads alongside the trace. Empty when nothing crossed the thresholds.
  */
-export async function getRaceMoments(sessionId: number): Promise<RaceMoments> {
+async function getRaceMomentsRaw(sessionId: number): Promise<RaceMoments> {
   const rows = await db
     .select({
       lapNumber: raceMoment.lapNumber,
@@ -1435,9 +1450,10 @@ export async function getRaceMoments(sessionId: number): Promise<RaceMoments> {
   shown.sort((a, b) => a.lapNumber - b.lapNumber);
   return { shown, hiddenCount: Math.max(0, rows.length - shown.length) };
 }
+export const getRaceMoments = cached("race.getRaceMoments", getRaceMomentsRaw);
 
 /** One row per dry compound with a usable slope (§4.4). Empty when nothing qualified. */
-export async function getOptimalStint(sessionId: number): Promise<OptimalStintRow[]> {
+async function getOptimalStintRaw(sessionId: number): Promise<OptimalStintRow[]> {
   const rows = await db
     .select({
       compound: optimalStint.compound,
@@ -1461,6 +1477,7 @@ export async function getOptimalStint(sessionId: number): Promise<OptimalStintRo
     actualMedianLaps: r.actualMedianLaps ?? null,
   }));
 }
+export const getOptimalStint = cached("race.getOptimalStint", getOptimalStintRaw);
 
 /**
  * TELEMETRY_SPEC §5.6 row 1 — "absent (never attempted): the tab is **not rendered at
@@ -1474,7 +1491,7 @@ export async function getOptimalStint(sessionId: number): Promise<OptimalStintRo
  * all three carry zero rows. Any session of the round counts, because the tab resolves
  * Q, then SQ, then R (T10 puts the flagship where it can exist).
  */
-export async function roundHasTelemetryTab(year: number, round: number): Promise<boolean> {
+async function roundHasTelemetryTabRaw(year: number, round: number): Promise<boolean> {
   const rows = await db.execute(sql`
     SELECT 1
       FROM sessions s
@@ -1484,3 +1501,4 @@ export async function roundHasTelemetryTab(year: number, round: number): Promise
      LIMIT 1`);
   return rows.rows.length > 0;
 }
+export const roundHasTelemetryTab = cached("race.roundHasTelemetryTab", roundHasTelemetryTabRaw);

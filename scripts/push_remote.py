@@ -99,19 +99,24 @@ def redact(text: str) -> str:
     return re.sub(r"(://[^:/@\s]+:)[^@\s]+@", r"\1***@", str(text))
 
 
-def load_remote_dsn(path: Path = REMOTE_ENV, env: dict[str, str] | None = None) -> str | None:
-    """The push credential: the environment, else `~/.config/f1analytics/remote.env`.
+def read_remote_env(names: list[str], path: Path = REMOTE_ENV,
+                    env: dict[str, str] | None = None) -> dict[str, str]:
+    """The named credentials: the environment first, then `~/.config/f1analytics/remote.env`.
 
-    The file must be a regular file owned by this user with mode exactly 0600 (F6). Anything
-    looser is a refusal rather than a warning, because the value is the only secret the nightly
-    job holds and a group- or world-readable file is how it would leak.
+    Returns only the names that were found. The file is consulted for whatever the
+    environment did not supply; it must be a regular file owned by this user with mode
+    exactly 0600 (F6). Anything looser is a refusal rather than a warning, because the values
+    are the only secrets the nightly job holds and a group- or world-readable file is how they
+    would leak. The file is parsed line by line here (`NAME=value`, optional quotes) and never
+    sourced, so nothing in it is ever interpreted by a shell.
     """
     env = os.environ if env is None else env
-    if env.get(REMOTE_ENV_KEY):
-        log.info("target credential: %s from the environment", REMOTE_ENV_KEY)
-        return env[REMOTE_ENV_KEY]
-    if not path.exists():
-        return None
+    found = {n: env[n] for n in names if env.get(n)}
+    for n in found:
+        log.info("target credential: %s from the environment", n)
+    missing = [n for n in names if n not in found]
+    if not missing or not path.exists():
+        return found
     st = path.stat()
     if not stat.S_ISREG(st.st_mode):
         raise Refusal(f"{path} is not a regular file")
@@ -122,11 +127,18 @@ def load_remote_dsn(path: Path = REMOTE_ENV, env: dict[str, str] | None = None) 
         raise Refusal(f"{path} is mode {mode:04o}; it must be 0600 (chmod 600 {path})")
     for line in path.read_text().splitlines():
         line = line.strip()
-        if line.startswith(REMOTE_ENV_KEY + "="):
-            value = line.split("=", 1)[1].strip().strip("'\"")
-            log.info("target credential: %s from %s", REMOTE_ENV_KEY, path)
-            return value or None
-    return None
+        for n in missing:
+            if n not in found and line.startswith(n + "="):
+                value = line.split("=", 1)[1].strip().strip("'\"")
+                if value:
+                    found[n] = value
+                    log.info("target credential: %s from %s", n, path)
+    return found
+
+
+def load_remote_dsn(path: Path = REMOTE_ENV, env: dict[str, str] | None = None) -> str | None:
+    """The push credential (F6): `REMOTE_DATABASE_URL` via `read_remote_env`."""
+    return read_remote_env([REMOTE_ENV_KEY], path, env).get(REMOTE_ENV_KEY)
 
 
 LOCAL_HOSTS = {"localhost", "127.0.0.1", "::1", "host.docker.internal", "f1-postgres"}
